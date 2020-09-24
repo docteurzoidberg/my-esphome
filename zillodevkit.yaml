@@ -1,0 +1,72 @@
+esphome:
+  name: zillodevkit
+  platform: ESP32
+  board: esp32doit-devkit-v1
+
+wifi:
+  ssid: !secret home_wifi_ap
+  password: !secret home_wifi_pass
+  ap:
+    ssid: "Loragateway Fallback Hotspot"
+    password: !secret fallback_wifi_pass
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+# Example configuration entry
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO27
+    num_leds: 64
+    rgb_order: GRB
+    name: "Zillo Devkit Matrix"
+    effects:
+      - strobe:
+          name: Strobe police
+          colors:
+            - state: True
+              brightness: 50%
+              red: 100%
+              green: 0%
+              blue: 0%
+              duration: 10ms
+            - state: False
+              duration: 5ms
+            - state: True
+              brightness: 50%
+              red: 0%
+              green: 0%
+              blue: 100%
+              duration: 10ms
+      - strobe:
+          name: notification charge complete
+          colors:
+            - state: True
+              brightness: 30%
+              red: 100%
+              green: 100%
+              blue: 0%
+              duration: 1000ms
+            - state: False
+              duration: 750ms
+      - addressable_color_wipe:
+          name: Color Wipe Effect With Custom Values
+          colors:
+            - red: 100%
+              green: 100%
+              blue: 100%
+              num_leds: 1
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 1
+          add_led_interval: 100ms
+          reverse: False

@@ -1,0 +1,61 @@
+esphome:
+  name: lorareceiver
+  platform: ESP32
+  board: heltec_wifi_lora_32_V2
+  includes:
+    - src/custom_lora_receiver/custom_lora_receiver.h
+    - src/custom_lora_receiver/images.h
+    - src/custom_lora_receiver/myoleddisplay.h
+    - src/custom_lora_receiver/structures.h
+    - src/custom_lora_receiver/myoleddisplay.cpp
+  libraries:
+    - "LoRa"
+    - "ESP8266_SSD1306"
+    - "https://github.com/docteurzoidberg/esplib-lorasensorpackets/archive/master.zip"
+sensor:
+- platform: custom
+  lambda: |-
+    auto lora_receiver = new LoraReceiver();
+    App.register_component(lora_receiver);
+    return {
+      lora_receiver->device_J7_batt_voltage,
+      lora_receiver->device_J7_batt_percent,
+      lora_receiver->device_J7_batt_islow,
+      lora_receiver->device_J7_pir_state,
+      lora_receiver->device_J7_alarm_isactive
+    };
+  sensors:
+  - name: "J7 IDS battery voltage"
+    accuracy_decimals: 1
+    icon: mdi:battery
+    unit_of_measurement: v
+  - name: "J7 IDS battery percentage"
+    accuracy_decimals: 1
+    icon: mdi:percent
+    unit_of_measurement: '%'
+  - name: "J7 IDS battery is low"
+    accuracy_decimals: 0
+    icon: mdi:battery
+  - name: "J7 IDS PIR state"
+    accuracy_decimals: 0
+    icon: mdi:eye
+  - name: "J7 IDS Alarm is active"
+    accuracy_decimals: 0
+    icon: mdi:bell
+
+wifi:
+  ssid: !secret home_wifi_ap
+  password: !secret home_wifi_pass
+  ap:
+    ssid: "Loragateway Fallback Hotspot"
+    password: !secret fallback_wifi_pass
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+ota:
+  password: "ha"

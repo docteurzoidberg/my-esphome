@@ -1,0 +1,60 @@
+esphome:
+  name: idslorareceiver
+  platform: ESP32
+  board: heltec_wifi_lora_32_V2
+  includes:
+    - src/custom_ids_lora_receiver/custom_ids_lora_receiver.h
+    - src/custom_ids_lora_receiver/images.h
+    - src/custom_ids_lora_receiver/myoleddisplay.h
+    - src/custom_ids_lora_receiver/structures.h
+    - src/custom_ids_lora_receiver/myoleddisplay.cpp
+  libraries:
+    - "LoRa"
+    - "ESP8266_SSD1306"
+sensor:
+- platform: custom
+  lambda: |-
+    auto ids_lora_receiver = new IDSLoraReceiver();
+    App.register_component(ids_lora_receiver);
+    return {
+      ids_lora_receiver->ids_device_batt_voltage,
+      ids_lora_receiver->ids_device_batt_percent,
+      ids_lora_receiver->ids_device_batt_islow,
+      ids_lora_receiver->ids_device_pir_state,
+      ids_lora_receiver->ids_device_alarm_isactive
+    };
+  sensors:
+  - name: "IDS battery voltage"
+    accuracy_decimals: 1
+    icon: mdi:battery
+    unit_of_measurement: v
+  - name: "IDS battery percentage"
+    accuracy_decimals: 1
+    icon: mdi:percent
+    unit_of_measurement: '%'
+  - name: "IDS battery is low"
+    accuracy_decimals: 0
+    icon: mdi:battery
+  - name: "IDS PIR state"
+    accuracy_decimals: 0
+    icon: mdi:eye
+  - name: "IDS Alarm is active"
+    accuracy_decimals: 0
+    icon: mdi:bell
+
+wifi:
+  ssid: !secret home_wifi_ap
+  password: !secret home_wifi_pass
+  ap:
+    ssid: "Loragateway Fallback Hotspot"
+    password: !secret fallback_wifi_pass
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+ota:
+  password: "ha"

@@ -1,0 +1,96 @@
+substitutions:
+  devicename: "testespcam"
+  friendly_name: "test espcam"
+
+esphome:
+  name: $devicename
+  platform: ESP32
+  board: esp-wrover-kit
+
+wifi:
+  ssid: !secret home_wifi_ap
+  password: !secret home_wifi_pass
+  ap:
+    ssid: "$devicename Fallback Hotspot"
+    password: !secret fallback_wifi_pass
+
+captive_portal:
+api:
+ota:
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO19
+    name: "$friendly_name PIR"
+    device_class: "motion"
+    id: "motion"
+  - platform: gpio
+    pin:
+      number: GPIO15
+      mode: INPUT_PULLUP
+      inverted: True
+    name: "$friendly_name Button"
+    id: button
+  - platform: status
+    name: "$friendly_name Status"
+
+switch:
+  - platform: restart
+    name: "$friendly_name Restart"
+
+sensor:
+  - platform: wifi_signal
+    name: "$friendly_name WiFi Signal"
+    update_interval: 10s
+  - platform: "uptime"
+    name: "$friendly_name Uptime"
+
+font:
+  - file: "Roboto-Regular.ttf"
+    id: tnr1
+    size: 20
+  - file: "Roboto-Regular.ttf"
+    id: tnr2
+    size: 24
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    rotation: 180
+    lambda: |-
+      it.strftime(64, 0, id(tnr1), TextAlign::TOP_CENTER,"%m-%d-%Y", id(homeassistant_time).now());
+      it.strftime(64, 64, id(tnr2), TextAlign::BASELINE_CENTER, "%I:%M:%S%p", id(homeassistant_time).now());
+
+esp32_camera:
+  name: $friendly_name
+  external_clock:
+    pin: GPIO4
+  i2c_pins:
+    sda: GPIO18
+    scl: GPIO23
+
+  #Wrong pinout, as labeled in the picture
+  #data_pins: [GPIO34, GPIO13, GPIO14, GPIO35, GPIO39, GPIO12, GPIO15, GPIO36]
+
+  #Good pinout, as labeled on silkscreen
+  data_pins: [GPIO34, GPIO13, GPIO14, GPIO35, GPIO39, GPIO38, GPIO37, GPIO36]
+
+  vsync_pin: GPIO5
+  href_pin: GPIO27
+  pixel_clock_pin: GPIO25
+
+  resolution: 640X480
+  jpeg_quality: 12
+  vertical_flip: true
+  horizontal_mirror: true
+  idle_framerate: 0.1fps
+  max_framerate: 7fps
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22

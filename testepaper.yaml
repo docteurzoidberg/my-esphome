@@ -1,0 +1,41 @@
+esphome:
+  name: testepaper
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: !secret home_wifi_ap
+  password: !secret home_wifi_pass
+  ap:
+    ssid: "Loragateway Fallback Hotspot"
+    password: !secret fallback_wifi_pass
+
+captive_portal:
+logger:
+api:
+ota:
+
+font:
+  - file: 'Roboto-Regular.ttf'
+    id: roboto
+
+spi:
+  clk_pin: 18
+  mosi_pin: 23
+
+time:
+  - platform: homeassistant
+    id: esptime
+
+display:
+  - platform: waveshare_epaper
+    cs_pin: 5
+    dc_pin: 17
+    busy_pin: 4
+    reset_pin: 16
+    model: 2.13in-ttgo-b73
+    full_update_every: 30
+    update_interval: 120s
+    rotation: 90
+    lambda: |-
+      it.strftime(0, 0, id(roboto), "%Y-%m-%d %H:%M", id(esptime).now());

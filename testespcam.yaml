@@ -46,10 +46,10 @@ sensor:
     name: "$friendly_name Uptime"
 
 font:
-  - file: "Roboto-Regular.ttf"
+  - file: "fonts/Roboto-Regular.ttf"
     id: tnr1
     size: 20
-  - file: "Roboto-Regular.ttf"
+  - file: "fonts/Roboto-Regular.ttf"
     id: tnr2
     size: 24
 

@@ -16,7 +16,7 @@ api:
 ota:
 
 font:
-  - file: 'Roboto-Regular.ttf'
+  - file: 'fonts/Roboto-Regular.ttf'
     id: roboto
 
 spi:

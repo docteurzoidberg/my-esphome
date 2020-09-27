@@ -1,5 +1,9 @@
+substitutions:
+  devicename: "idslorareceiver"
+  friendly_name: "IDS Lora receiver"
+
 esphome:
-  name: idslorareceiver
+  name: $devicename
   platform: ESP32
   board: heltec_wifi_lora_32_V2
   includes:
@@ -11,6 +15,13 @@ esphome:
   libraries:
     - "LoRa"
     - "ESP8266_SSD1306"
+
+wifi: !include "common/wifi.yaml"
+captive_portal:
+logger:
+api:
+ota:
+
 sensor:
 - platform: custom
   lambda: |-
@@ -42,19 +53,3 @@ sensor:
     accuracy_decimals: 0
     icon: mdi:bell
 
-wifi:
-  ssid: !secret home_wifi_ap
-  password: !secret home_wifi_pass
-  ap:
-    ssid: "Loragateway Fallback Hotspot"
-    password: !secret fallback_wifi_pass
-
-captive_portal:
-
-# Enable logging
-logger:
-
-# Enable Home Assistant API
-api:
-ota:
-  password: "ha"

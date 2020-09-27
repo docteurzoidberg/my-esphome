@@ -7,13 +7,7 @@ esphome:
   platform: ESP32
   board: esp-wrover-kit
 
-wifi:
-  ssid: !secret home_wifi_ap
-  password: !secret home_wifi_pass
-  ap:
-    ssid: "$devicename Fallback Hotspot"
-    password: !secret fallback_wifi_pass
-
+wifi: !include "common/wifi.yaml"
 captive_portal:
 api:
 ota:

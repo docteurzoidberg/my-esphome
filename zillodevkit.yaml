@@ -1,33 +1,25 @@
+substitutions:
+  devicename: "zillodevkit"
+  friendly_name: "Zillo Devkit"
+
 esphome:
-  name: zillodevkit
+  name: $devicename
   platform: ESP32
   board: esp32doit-devkit-v1
 
-wifi:
-  ssid: !secret home_wifi_ap
-  password: !secret home_wifi_pass
-  ap:
-    ssid: "Loragateway Fallback Hotspot"
-    password: !secret fallback_wifi_pass
-
+wifi: !include "common/wifi.yaml"
 captive_portal:
-
-# Enable logging
 logger:
-
-# Enable Home Assistant API
 api:
-
 ota:
 
-# Example configuration entry
 light:
   - platform: fastled_clockless
     chipset: WS2812B
     pin: GPIO27
     num_leds: 64
     rgb_order: GRB
-    name: "Zillo Devkit Matrix"
+    name: "$friendly_name Matrix"
     effects:
       - strobe:
           name: Strobe police

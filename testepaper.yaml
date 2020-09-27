@@ -1,15 +1,13 @@
+substitutions:
+  devicename: "testepaper"
+  friendly_name: "test waveshare_epaper"
+
 esphome:
-  name: testepaper
+  name: $devicename
   platform: ESP32
   board: esp32dev
 
-wifi:
-  ssid: !secret home_wifi_ap
-  password: !secret home_wifi_pass
-  ap:
-    ssid: "Loragateway Fallback Hotspot"
-    password: !secret fallback_wifi_pass
-
+wifi: !include "common/wifi.yaml"
 captive_portal:
 logger:
 api:

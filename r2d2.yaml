@@ -1,0 +1,38 @@
+substitutions:
+  devicename: "r2d2"
+  friendly_name: "R2D2 controller"
+
+esphome:
+  name: $devicename
+  platform: ESP32
+  board: heltec_wifi_lora_32_V2
+  includes:
+    - src/custom_r2d2/custom_r2d2.h
+  libraries:
+    - "https://github.com/docteurzoidberg/legoino"
+
+custom_component:
+  - lambda: |-
+      auto custom_r2d2 = new R2D2();
+      return {custom_r2d2};
+
+binary_sensor:
+  - platform: status
+    name: "$friendly_name Status"
+
+switch:
+  - platform: restart
+    name: "$friendly_name Restart"
+
+sensor:
+  - platform: wifi_signal
+    name: "$friendly_name WiFi Signal"
+    update_interval: 10s
+  - platform: "uptime"
+    name: "$friendly_name Uptime"
+
+wifi: !include "common/wifi.yaml"
+captive_portal:
+logger:
+api:
+ota:

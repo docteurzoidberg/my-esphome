@@ -22,6 +22,7 @@ light:
     num_leds: 64
     rgb_order: GRB
     name: "$friendly_name Matrix"
+    color_correct: [50%, 50%, 50%]
     effects:
       - addressable_lambda:
           name: "Fire2012"

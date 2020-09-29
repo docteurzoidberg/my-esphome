@@ -26,7 +26,7 @@ light:
       - addressable_lambda:
           name: "Fire2012"
           update_interval: 16ms
-          lambda:
+          lambda: |-
             static byte heat[64];
 
             // Step 1.  Cool down every cell a little
@@ -74,15 +74,15 @@ light:
               red: 100%
               green: 0%
               blue: 0%
-              duration: 10ms
+              duration: 30ms
             - state: False
-              duration: 5ms
+              duration: 15ms
             - state: True
               brightness: 50%
               red: 0%
               green: 0%
               blue: 100%
-              duration: 10ms
+              duration: 30ms
       - strobe:
           name: notification charge complete
           colors:

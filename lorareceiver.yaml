@@ -25,34 +25,66 @@ api:
 ota:
 
 sensor:
-- platform: custom
-  lambda: |-
-    auto lora_receiver = new LoraReceiver();
-    App.register_component(lora_receiver);
-    return {
-      lora_receiver->device_J7_batt_voltage,
-      lora_receiver->device_J7_batt_percent,
-      lora_receiver->device_J7_batt_islow,
-      lora_receiver->device_J7_pir_state,
-      lora_receiver->device_J7_alarm_isactive
-    };
-  sensors:
-  - name: "J7 IDS battery voltage"
-    accuracy_decimals: 1
-    icon: mdi:battery
-    unit_of_measurement: v
-  - name: "J7 IDS battery percentage"
-    accuracy_decimals: 1
+  - platform: custom
+    lambda: |-
+      auto lora_receiver = new LoraReceiver();
+      App.register_component(lora_receiver);
+      return {
+        lora_receiver->device_J7_batt_voltage,
+        lora_receiver->device_J7_batt_percent,
+        lora_receiver->device_J7_batt_islow,
+        lora_receiver->device_J7_pir_state,
+        lora_receiver->device_J7_alarm_isactive,
+        lora_receiver->device_PT_batt_voltage,
+        lora_receiver->device_PT_water_level
+      };
+    sensors:
+  #J7
+    - name: "J7 IDS battery voltage"
+      accuracy_decimals: 1
+      icon: mdi:battery
+      unit_of_measurement: v
+    - name: "J7 IDS battery percentage"
+      accuracy_decimals: 1
+      icon: mdi:percent
+      unit_of_measurement: '%'
+    - name: "J7 IDS battery is low"
+      accuracy_decimals: 0
+      icon: mdi:battery
+    - name: "J7 IDS PIR state"
+      accuracy_decimals: 0
+      icon: mdi:eye
+    - name: "J7 IDS Alarm is active"
+      accuracy_decimals: 0
+      icon: mdi:bell
+  #Puit
+    - name: "Well battery voltage"
+      id: well_bat_voltage
+      accuracy_decimals: 2
+      icon: mdi:battery
+      unit_of_measurement: v
+      filters:
+        - multiply: 0.001
+    - name: "Well water level"
+      unit_of_measurement : cm
+      accuracy_decimals: 0
+      icon: mdi:water
+  - platform: template
+    name: "Well battery percentage"
     icon: mdi:percent
     unit_of_measurement: '%'
-  - name: "J7 IDS battery is low"
     accuracy_decimals: 0
-    icon: mdi:battery
-  - name: "J7 IDS PIR state"
+    update_interval: 5s
+    lambda: |-
+      return id(well_bat_voltage).state;
+    filters:
+      calibrate_linear:
+        - 3.3 -> 0
+        - 4.2 -> 100
+  - platform: template
+    name: "Well battery is low"
     accuracy_decimals: 0
-    icon: mdi:eye
-  - name: "J7 IDS Alarm is active"
-    accuracy_decimals: 0
-    icon: mdi:bell
-
-
+    update_interval: 5s
+    lambda: |-
+      return id(well_bat_voltage).state < 3.5;
+    icon: mdi:battery-alert-variant-outline

@@ -11,4 +11,12 @@ struct DeviceJ7DataStruct {
 	bool        deviceLowBatt;
 };
 
+
+struct DevicePTDataStruct {
+	float     	deviceBattVoltage;
+	uint8_t     deviceBattPercent;
+	uint16_t		deviceWaterLevel;
+	bool        deviceLowBatt;
+};
+
 #endif

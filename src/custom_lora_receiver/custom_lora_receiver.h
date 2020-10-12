@@ -45,6 +45,13 @@ static DeviceJ7DataStruct state = {
   .deviceLowBatt=false
 };
 
+static DevicePTDataStruct pt_state = {
+  .deviceBattVoltage=0.0f,
+  .deviceBattPercent=0,
+  .deviceWaterLevel=0,
+  .deviceLowBatt=false
+};
+
 class LoraReceiver : public Component {
   private:
 
@@ -109,9 +116,38 @@ class LoraReceiver : public Component {
         Serial.printf("[PACKET][FROM:%s][DATA] Alarm=%d|LowBatt=%d|BattVoltage=%0.2f|BattPercent=%d|Presence=%d\n", devicestring, state.deviceAlarmActive, state.deviceLowBatt, state.deviceBattVoltage, state.deviceBattPercent, state.devicePirState);
       }
       //ANOTHER DEVICE
-      else if(packet.is_from_device("XX")) {
+      else if(packet.is_from_device("PT")) {
         //another device
         Serial.printf("[PACKET][FROM:%s][DATA] data...\n", devicestring);
+
+        if(reader.get_value(dzb::PacketType::BATT_LOW, 0, pt_state.deviceLowBatt)) {
+          device_PT_batt_islow->publish_state(pt_state.deviceLowBatt);
+        }
+        else {
+          Serial.printf("[PACKET][FROM:%s][ERROR] Could not get BATT_LOW\n" , devicestring);
+        }
+
+        if(reader.get_value(dzb::PacketType::BATT_PERCENT, 0, pt_state.deviceBattPercent)) {
+          device_PT_batt_percent->publish_state(pt_state.deviceBattPercent);
+        }
+        else {
+          Serial.printf("[PACKET][FROM:%s][ERROR] Could not get BATT_PERCENT\n", devicestring);
+        }
+
+        if(reader.get_value(dzb::PacketType::BATT_VOLTAGE, 0, pt_state.deviceBattVoltage)) {
+          device_PT_batt_voltage->publish_state(pt_state.deviceBattVoltage);
+        }
+        else {
+          Serial.printf("[PACKET][FROM:%s][ERROR] Could not get BATT_VOLTAGE\n", devicestring);
+        }
+
+        if(reader.get_value(dzb::PacketType::DISTANCE, 0, pt_state.deviceWaterLevel)) {
+          device_PT_water_level->publish_state(pt_state.deviceWaterLevel);
+        }
+        else {
+          Serial.printf("[PACKET][FROM:%s][ERROR] Could not get WATER LEVEL\n", devicestring);
+        }
+
       }
       //UNKNOWN DEVICE
       else {
@@ -146,6 +182,11 @@ class LoraReceiver : public Component {
     sensor::Sensor *device_J7_batt_islow = new sensor::Sensor();
     sensor::Sensor *device_J7_pir_state = new sensor::Sensor();
     sensor::Sensor *device_J7_alarm_isactive = new sensor::Sensor();
+
+    sensor::Sensor *device_PT_batt_voltage = new sensor::Sensor();
+    sensor::Sensor *device_PT_batt_percent = new sensor::Sensor();
+    sensor::Sensor *device_PT_batt_islow = new sensor::Sensor();
+    sensor::Sensor *device_PT_water_level = new sensor::Sensor();
 
     LoraReceiver() : Component() {
     }
@@ -184,16 +225,6 @@ class LoraReceiver : public Component {
       delay(1500);
       display.drawMainFrame(&state, 0, true, 0);
       display.display();
-
-      //clear filters???
-      device_J7_batt_voltage->clear_filters();
-      device_J7_batt_percent->clear_filters();
-      device_J7_batt_islow->clear_filters();
-      device_J7_pir_state->clear_filters();
-      device_J7_alarm_isactive->clear_filters();
-
-      //LoRa.onReceive(on_lora_packet_received);
-      //LoRa.receive();
     }
 
     void loop() override {

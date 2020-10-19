@@ -4,6 +4,7 @@ substitutions:
 
 esphome:
   name: $devicename
+  build_path: build/$devicename
   platform: ESP32
   board: heltec_wifi_lora_32_V2
   includes:
@@ -17,8 +18,8 @@ esphome:
     - "ESP8266_SSD1306"
     - "https://github.com/docteurzoidberg/esplib-lorasensorpackets/archive/master.zip"
 
-
 wifi: !include "common/wifi.yaml"
+#mqtt: !include "common/mqtt.yaml"
 captive_portal:
 logger:
 api:
@@ -26,10 +27,13 @@ ota:
 
 sensor:
   - platform: custom
+    id: lorareceiver
     lambda: |-
       auto lora_receiver = new LoraReceiver();
       App.register_component(lora_receiver);
       return {
+        lora_receiver->last_packet_rssi,
+        lora_receiver->packet_counter,
         lora_receiver->device_J7_batt_voltage,
         lora_receiver->device_J7_batt_percent,
         lora_receiver->device_J7_batt_islow,
@@ -39,7 +43,9 @@ sensor:
         lora_receiver->device_PT_water_level
       };
     sensors:
-  #J7
+    - name: "LoRa Station last received packet rssi"
+    - name: "LoRa Station received packets counter"
+      accuracy_decimals: 0
     - name: "J7 IDS battery voltage"
       accuracy_decimals: 1
       icon: mdi:battery
@@ -57,7 +63,6 @@ sensor:
     - name: "J7 IDS Alarm is active"
       accuracy_decimals: 0
       icon: mdi:bell
-  #Puit
     - name: "Well battery voltage"
       id: well_bat_voltage
       accuracy_decimals: 2
@@ -69,22 +74,36 @@ sensor:
       unit_of_measurement : cm
       accuracy_decimals: 0
       icon: mdi:water
+
   - platform: template
     name: "Well battery percentage"
     icon: mdi:percent
     unit_of_measurement: '%'
     accuracy_decimals: 0
-    update_interval: 5s
+    update_interval: 15s
     lambda: |-
       return id(well_bat_voltage).state;
     filters:
       calibrate_linear:
-        - 3.3 -> 0
+        - 3.0 -> 0
         - 4.2 -> 100
+
   - platform: template
     name: "Well battery is low"
     accuracy_decimals: 0
-    update_interval: 5s
+    update_interval: 15s
     lambda: |-
-      return id(well_bat_voltage).state < 3.5;
+      return id(well_bat_voltage).state < 3.3;
     icon: mdi:battery-alert-variant-outline
+
+text_sensor:
+  - platform: custom
+    text_sensors:
+      - name: "LoRa Station last received packet data"
+        id: last_packet_received
+    lambda: |-
+      auto lora_packet_sensor = new LoraPacketSensor();
+      App.register_component(lora_packet_sensor);
+      return {
+        lora_packet_sensor->last_packet_received
+      };

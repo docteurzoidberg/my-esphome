@@ -4,6 +4,7 @@ substitutions:
 
 esphome:
   name: $devicename
+  build_path: build/$devicename
   platform: ESP32
   board: esp32doit-devkit-v1
   includes:
@@ -15,13 +16,29 @@ logger:
 api:
 ota:
 
+binary_sensor:
+  - platform: status
+    name: "$friendly_name Status"
+
+switch:
+  - platform: restart
+    name: "$friendly_name Restart"
+
+sensor:
+  - platform: wifi_signal
+    name: "$friendly_name WiFi Signal"
+    update_interval: 10s
+  - platform: "uptime"
+    name: "$friendly_name Uptime"
+
 light:
   - platform: fastled_clockless
-    chipset: WS2812B
+    chipset: SK6812
     pin: GPIO27
-    num_leds: 64
+    num_leds: 3
     rgb_order: GRB
     name: "$friendly_name Matrix"
+    gamma_correct: 0
     color_correct: [50%, 50%, 50%]
     effects:
       - addressable_lambda:
@@ -67,6 +84,8 @@ light:
               num_leds: 64
           add_led_interval: 100ms
           reverse: False
+      - addressable_rainbow:
+          name: Rainbow
       - strobe:
           name: Strobe police
           colors:
@@ -95,18 +114,3 @@ light:
               duration: 1000ms
             - state: False
               duration: 750ms
-
-binary_sensor:
-  - platform: status
-    name: "$friendly_name Status"
-
-switch:
-  - platform: restart
-    name: "$friendly_name Restart"
-
-sensor:
-  - platform: wifi_signal
-    name: "$friendly_name WiFi Signal"
-    update_interval: 10s
-  - platform: "uptime"
-    name: "$friendly_name Uptime"

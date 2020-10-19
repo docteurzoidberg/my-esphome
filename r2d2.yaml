@@ -4,6 +4,7 @@ substitutions:
 
 esphome:
   name: $devicename
+  build_path: build/$devicename
   platform: ESP32
   board: heltec_wifi_lora_32_V2
   includes:

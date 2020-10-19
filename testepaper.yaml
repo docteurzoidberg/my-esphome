@@ -4,6 +4,7 @@ substitutions:
 
 esphome:
   name: $devicename
+  build_path: build/$devicename
   platform: ESP32
   board: esp32dev
 

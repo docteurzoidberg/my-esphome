@@ -1,0 +1,4 @@
+id: mqtt_client
+broker: 192.168.77.66
+username: !secret mqtt_user
+password: !secret mqtt_password

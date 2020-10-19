@@ -4,6 +4,7 @@ substitutions:
 
 esphome:
   name: $devicename
+  build_path: build/$devicename
   platform: ESP32
   board: esp-wrover-kit
 
@@ -13,24 +14,8 @@ api:
 ota:
 
 binary_sensor:
-  - platform: gpio
-    pin: GPIO19
-    name: "$friendly_name PIR"
-    device_class: "motion"
-    id: "motion"
-  - platform: gpio
-    pin:
-      number: GPIO15
-      mode: INPUT_PULLUP
-      inverted: True
-    name: "$friendly_name Button"
-    id: button
   - platform: status
     name: "$friendly_name Status"
-
-switch:
-  - platform: restart
-    name: "$friendly_name Restart"
 
 sensor:
   - platform: wifi_signal

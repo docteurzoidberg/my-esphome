@@ -1,0 +1,35 @@
+esphome:
+  name: testultrasonic
+  platform: ESP32
+  board: ttgo-t-beam
+  build_path: build/testultrasonic
+
+wifi: !include "common/wifi.yaml"
+captive_portal:
+logger:
+api:
+ota:
+
+sensor:
+  - platform: ultrasonic
+    trigger_pin: GPIO23
+    echo_pin: GPIO04
+    name: "Ultrasonic Sensor"
+    timeout: 5m
+    update_interval: 60s
+
+  - platform: axp192
+    address: 0x34
+    i2c_id: bus_a
+    update_interval: 60s
+    battery_level:
+      name: "testultrasonic Battery Level"
+      id: "testultrasonic_batterylevel"
+
+i2c:
+  - id: bus_a
+    sda: GPIO21
+    scl: GPIO22
+    scan: true
+
+

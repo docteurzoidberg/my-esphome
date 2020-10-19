@@ -8,8 +8,5 @@
 **/platformio.ini
 **/secrets.yaml
 /secrets.yaml
-/idslorareceiver
-/zillodevkit
-/lorareceiver
-/testepaper
-/testespcam
+/build
+**/__pycache__

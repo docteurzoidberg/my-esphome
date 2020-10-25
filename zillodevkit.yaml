@@ -35,7 +35,7 @@ light:
   - platform: fastled_clockless
     chipset: SK6812
     pin: GPIO27
-    num_leds: 3
+    num_leds: 64
     rgb_order: GRB
     name: "$friendly_name Matrix"
     gamma_correct: 0

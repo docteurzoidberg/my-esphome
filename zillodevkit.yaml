@@ -33,7 +33,7 @@ sensor:
 
 light:
   - platform: fastled_clockless
-    chipset: SK6812
+    chipset: WS2812B
     pin: GPIO27
     num_leds: 64
     rgb_order: GRB

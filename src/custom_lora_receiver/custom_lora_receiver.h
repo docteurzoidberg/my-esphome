@@ -10,7 +10,6 @@
 #include <dzb/PacketReader.h>
 #include <dzb/Serialization.h>
 
-#include "myoleddisplay.h"
 #include "structures.h"
 
 using namespace esphome;
@@ -27,13 +26,13 @@ static const char* host = "lora-station1";
 #define  BAND       433E6
 #define  PABOOST    true
 
-MyOledDisplay 	display(0x3c, 4, 15);
+//MyOledDisplay 	display(0x3c, 4, 15);
 
 uint16_t packetCounter=0;
 
 //timers
 volatile uint32_t lastPacketReceived=0;
-volatile uint32_t lastScreenUpdate=0;
+//volatile uint32_t lastScreenUpdate=0;
 
 static DeviceJ7DataStruct state = {
   .header="J7",
@@ -60,7 +59,7 @@ class LoraPacketSensor : public Component {
 class LoraReceiver : public Component {
   private:
 
-    char const hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A',   'B','C','D','E','F'};
+    char const hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
     std::string byte_2_str(unsigned char* bytes, int size) {
       std::string str;
@@ -202,18 +201,18 @@ class LoraReceiver : public Component {
 
   public:
     Sensor *last_packet_rssi = new Sensor();
-    Sensor *packet_counter = new sensor::Sensor();
+    Sensor *packet_counter = new Sensor();
 
-    Sensor *device_J7_batt_voltage = new sensor::Sensor();
-    Sensor *device_J7_batt_percent = new sensor::Sensor();
-    Sensor *device_J7_batt_islow = new sensor::Sensor();
-    Sensor *device_J7_pir_state = new sensor::Sensor();
-    Sensor *device_J7_alarm_isactive = new sensor::Sensor();
+    Sensor *device_J7_batt_voltage = new Sensor();
+    Sensor *device_J7_batt_percent = new Sensor();
+    Sensor *device_J7_batt_islow = new Sensor();
+    Sensor *device_J7_pir_state = new Sensor();
+    Sensor *device_J7_alarm_isactive = new Sensor();
 
-    Sensor *device_PT_batt_voltage = new sensor::Sensor();
-    Sensor *device_PT_batt_percent = new sensor::Sensor();
-    Sensor *device_PT_batt_islow = new sensor::Sensor();
-    Sensor *device_PT_water_level = new sensor::Sensor();
+    Sensor *device_PT_batt_voltage = new Sensor();
+    Sensor *device_PT_batt_percent = new Sensor();
+    Sensor *device_PT_batt_islow = new Sensor();
+    Sensor *device_PT_water_level = new Sensor();
 
     LoraReceiver() : Component() {
     }
@@ -222,9 +221,9 @@ class LoraReceiver : public Component {
 
       ESP_LOGCONFIG(TAG, "Setting up ...");
 
-      pinMode(16,OUTPUT);
-      pinMode(25,OUTPUT);
-      digitalWrite(16, LOW);
+      //pinMode(16,OUTPUT);
+      //pinMode(25,OUTPUT);
+      //digitalWrite(16, LOW);
 
       SPI.begin(PIN_SCK,PIN_MISO,PIN_MOSI,PIN_SS);
       LoRa.setPins(PIN_SS,PIN_RST,PIN_DI00);
@@ -236,36 +235,12 @@ class LoraReceiver : public Component {
           delay(1000);
         }
       }
-
       ESP_LOGCONFIG(TAG, "[LORA] Started!");
-
       dzb::init_packet_type_meta();
       dzb::init_crc_table();
-
-      delay(50);
-      digitalWrite(16, HIGH);
-      display.init();
-      display.flipScreenVertically();
-      display.setFont(ArialMT_Plain_10);
-      display.drawLogoFrame();
-      display.display();
-      delay(1500);
-      display.drawMainFrame(&state, 0, true, 0);
-      display.display();
     }
 
     void loop() override {
-
-      //TODO: better way to get wifi connection status from esphome?
-      display.drawMainFrame(&state, packetCounter, WiFi.status()==WL_CONNECTED, lastPacketReceived);
-
-      //refresh screen @24 fps
-      if((millis()-lastScreenUpdate)>(1000/24)){
-        display.display();
-        lastScreenUpdate=millis();
-        return;
-      }
-
       //check incoming lora message
       int packetSize = LoRa.parsePacket();
       if(packetSize){

@@ -9,13 +9,9 @@ esphome:
   board: heltec_wifi_lora_32_V2
   includes:
     - src/custom_lora_receiver/custom_lora_receiver.h
-    - src/custom_lora_receiver/images.h
-    - src/custom_lora_receiver/myoleddisplay.h
     - src/custom_lora_receiver/structures.h
-    - src/custom_lora_receiver/myoleddisplay.cpp
   libraries:
     - "LoRa"
-    - "ESP8266_SSD1306"
     - "https://github.com/docteurzoidberg/esplib-lorasensorpackets/archive/master.zip"
 
 wifi: !include "common/wifi.yaml"
@@ -24,6 +20,30 @@ captive_portal:
 logger:
 api:
 ota:
+
+i2c:
+  sda: 4
+  scl: 15
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    reset_pin: 16
+    address: 0x3C
+    rotation: 90
+    brightness: 20%
+    lambda: |-
+      it.image(0, 32, id(img_lora_logo));
+
+font:
+  - file: "fonts/Roboto-Regular.ttf"
+    id: font_roboto_8
+    size: 8
+
+image:
+  - file: "img/lora_64x64.png"
+    id: img_lora_logo
+    resize: 64x64
 
 sensor:
   - platform: custom

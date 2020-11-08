@@ -1,0 +1,145 @@
+substitutions:
+  devicename: "alarmkeypad"
+  friendly_name: "Alarm Keypad"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32doit-devkit-v1
+  includes:
+    - src/custom_alarmkeypad/custom_alarmkeypad.h
+
+wifi: !include "common/wifi.yaml"
+captive_portal:
+logger:
+api:
+ota:
+
+i2c:
+  sda: 21
+  scl: 22
+
+spi:
+  clk_pin: 33
+  miso_pin: 32
+  mosi_pin: 17
+
+pn532:
+  cs_pin: 16
+  update_interval: 1s
+  on_tag:
+    then:
+    - homeassistant.tag_scanned: !lambda 'return x;'
+
+custom_component:
+  - lambda: |-
+      auto custom_alarmkeypad = new AlarmKeypad();
+      return {custom_alarmkeypad};
+
+display:
+  - platform: ht16k33_alpha
+    id: "alpha1"
+    address: 0x70
+    lambda: |-
+      if(id(text).state.length()>4) {
+        it.print(id(text).state.substr(0,4));
+      }
+      else {
+        it.print(id(text).state);
+      }
+
+  - platform: ht16k33_alpha
+    id: "alpha2"
+    address: 0x71
+    lambda: |-
+      if(id(text).state.length()>4) {
+        it.print(id(text).state.substr(4,4));
+      }
+      else {
+        it.print("");
+      }
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: 13
+    num_leds: 13
+    rgb_order: GRB
+    name: "$friendly_name key backlight leds"
+    gamma_correct: 0
+    color_correct: [50%, 50%, 50%]
+
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: 19
+    num_leds: 8
+    rgb_order: GRB
+    name: "$friendly_name case glow leds"
+    gamma_correct: 0
+    color_correct: [50%, 50%, 50%]
+
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: 18
+    num_leds: 8
+    rgb_order: GRB
+    name: "$friendly_name Rfid ring leds"
+    gamma_correct: 0
+    color_correct: [50%, 50%, 50%]
+
+text_sensor:
+
+    #Text set from/to home assistant
+  - platform: homeassistant
+    name: "$friendly_name text"
+    entity_id: input_text.alarm_keypad_text
+    id: text
+
+    #Home assistant alarm status
+  - platform: homeassistant
+    name: "$friendly_name alarm state"
+    entity_id: alarm_control_panel.alarme
+    id: alarmtext
+    on_value:
+      then:
+        lambda: !lambda |-
+
+          if(x=="armed_home") {
+            id(text).publish_state("A-HOME");
+          }
+          else if(x=="armed_night") {
+            id(text).publish_state("A-NIGHT");
+          }
+          else if(x=="armed_away") {
+            id(text).publish_state("ARMED");
+          }
+          else if(x=="arming") {
+            id(text).publish_state("ARMING");
+          }
+          else if(x=="disarmed") {
+            id(text).publish_state("DISARMED");
+          }
+          else {
+            id(text).publish_state(x);
+          }
+
+binary_sensor:
+  - <<: !include "common/common_binary_sensors.yaml"
+
+switch:
+  - <<: !include "common/common_switchs.yaml"
+
+sensor:
+  - <<: !include "common/common_sensors.yaml"
+
+  #Brightness set from home assistant
+  - platform: homeassistant
+    name: "$friendly_name brightness"
+    entity_id: input_number.alarm_keypad_brightness
+    id: brightness
+    on_value:
+      then:
+        lambda: !lambda |-
+          id(alpha1).set_brightness(x);
+          id(alpha2).set_brightness(x);

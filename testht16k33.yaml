@@ -1,0 +1,79 @@
+substitutions:
+  devicename: "testht16k33"
+  friendly_name: "test ht16k33"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32doit-devkit-v1
+
+wifi: !include "common/wifi.yaml"
+captive_portal:
+logger:
+api:
+ota:
+
+i2c:
+  sda: 21
+  scl: 22
+
+display:
+  - platform: ht16k33_alpha
+    id: "alpha1"
+    address: 0x70
+    lambda: |-
+      it.set_brightness(5);
+      if(id(text).state.length()>4) {
+        it.print(id(text).state.substr(0,4));
+      }
+      else {
+        it.print(id(text).state);
+      }
+
+  - platform: ht16k33_alpha
+    id: "alpha2"
+    address: 0x71
+    lambda: |-
+      it.set_brightness(5);
+      if(id(text).state.length()>4) {
+        it.print(id(text).state.substr(4,4));
+      }
+      else {
+        it.print("");
+      }
+
+# Example configuration entry
+text_sensor:
+  - platform: homeassistant
+    name: "Alarm Keypad Text"
+    entity_id: input_text.alarm_keypad_text
+    id: text
+
+  - platform: homeassistant
+    name: "Alarm is on"
+    entity_id: alarm_control_panel.alarme
+    id: alarmtext
+    on_value:
+      then:
+        lambda: !lambda |-
+
+          if(x=="armed_home") {
+            id(text).publish_state("A-HOME");
+          }
+          else if(x=="armed_night") {
+            id(text).publish_state("A-NIGHT");
+          }
+          else if(x=="armed_away") {
+            id(text).publish_state("ARMED");
+          }
+          else if(x=="arming") {
+            id(text).publish_state("ARMING");
+          }
+          else if(x=="disarmed") {
+            id(text).publish_state("DISARMED");
+          }
+          else {
+            id(text).publish_state(x);
+          }
+

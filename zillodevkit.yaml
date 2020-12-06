@@ -17,19 +17,13 @@ api:
 ota:
 
 binary_sensor:
-  - platform: status
-    name: "$friendly_name Status"
+  - <<: !include "common/common_binary_sensors.yaml"
 
 switch:
-  - platform: restart
-    name: "$friendly_name Restart"
+  - <<: !include "common/common_switchs.yaml"
 
 sensor:
-  - platform: wifi_signal
-    name: "$friendly_name WiFi Signal"
-    update_interval: 10s
-  - platform: "uptime"
-    name: "$friendly_name Uptime"
+  - <<: !include "common/common_sensors.yaml"
 
 light:
   - platform: fastled_clockless

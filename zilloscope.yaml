@@ -1,0 +1,67 @@
+substitutions:
+  devicename: "zilloscope"
+  friendly_name: "Zilloscope"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32doit-devkit-v1
+  includes:
+    - "src/custom_zilloscope/effect_zillofeu.h"
+
+wifi: !include "common/wifi.yaml"
+captive_portal:
+logger:
+api:
+ota:
+
+binary_sensor:
+  - <<: !include "common/common_binary_sensors.yaml"
+
+switch:
+  - <<: !include "common/common_switchs.yaml"
+
+sensor:
+  - <<: !include "common/common_sensors.yaml"
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO5
+    num_leds: 256
+    rgb_order: GRB
+    name: "$friendly_name Matrix"
+    effects:
+      - addressable_lambda:
+          name: "Fire2012"
+          update_interval: 16ms
+          lambda: |-
+            static byte heat[256];
+
+            // Step 1.  Cool down every cell a little
+            for( int i = 0; i < 256; i++) {
+              heat[i] = qsub8( heat[i],  random8(0, ((COOLING * 10) / 256) + 2));
+            }
+            // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+            for( int k= 256 - 1; k >= 2; k--) {
+              heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
+            }
+            // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+            if( random8() < SPARKING ) {
+              int y = random8(7);
+              heat[y] = qadd8( heat[y], random8(160,255) );
+            }
+            // Step 4.  Map from heat cells to LED colors
+            for( int j = 0; j < 256; j++) {
+              CRGB color = HeatColor( heat[j]);
+              int pixelnumber;
+              if( gReverseDirection ) {
+                pixelnumber = (256-1) - j;
+              } else {
+                pixelnumber = j;
+              }
+              it[pixelnumber] = ESPColor(color.red, color.green, color.blue);
+            }
+      - addressable_rainbow:
+          name: Rainbow

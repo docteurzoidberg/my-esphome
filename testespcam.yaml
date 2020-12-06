@@ -9,13 +9,30 @@ esphome:
   board: esp-wrover-kit
 
 wifi: !include "common/wifi.yaml"
+logger:
 captive_portal:
 api:
 ota:
 
 binary_sensor:
+  - platform: gpio
+    pin: GPIO19
+    name: "$friendly_name PIR"
+    device_class: "motion"
+    id: "motion"
+  - platform: gpio
+    pin:
+      number: GPIO15
+      mode: INPUT_PULLUP
+      inverted: True
+    name: "$friendly_name Button"
+    id: button
   - platform: status
     name: "$friendly_name Status"
+
+switch:
+  - platform: restart
+    name: "$friendly_name Restart"
 
 sensor:
   - platform: wifi_signal
@@ -44,7 +61,6 @@ display:
     lambda: |-
       it.strftime(64, 0, id(tnr1), TextAlign::TOP_CENTER,"%m-%d-%Y", id(homeassistant_time).now());
       it.strftime(64, 64, id(tnr2), TextAlign::BASELINE_CENTER, "%I:%M:%S%p", id(homeassistant_time).now());
-
 esp32_camera:
   name: $friendly_name
   external_clock:

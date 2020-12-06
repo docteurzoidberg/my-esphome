@@ -133,7 +133,7 @@ switch:
 sensor:
   - <<: !include "common/common_sensors.yaml"
 
-  #Brightness set from home assistant
+    #Brightness set from home assistant
   - platform: homeassistant
     name: "$friendly_name brightness"
     entity_id: input_number.alarm_keypad_brightness

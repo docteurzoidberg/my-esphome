@@ -11,7 +11,6 @@ struct DeviceJ7DataStruct {
 	bool        deviceLowBatt;
 };
 
-
 struct DevicePTDataStruct {
 	float     	deviceBattVoltage;
 	uint8_t     deviceBattPercent;

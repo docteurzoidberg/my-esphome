@@ -1,2 +1,2 @@
 - platform: status
-  name: "$friendly_name Status"
+  name: "$friendly_name status"

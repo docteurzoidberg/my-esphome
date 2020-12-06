@@ -1,0 +1,61 @@
+substitutions:
+  devicename: "zillominee"
+  friendly_name: "Zillominée"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32doit-devkit-v1
+  includes:
+    - "src/custom_zillominee/effect_zillofeu.h"
+
+wifi: !include "common/wifi.yaml"
+captive_portal:
+logger:
+api:
+ota:
+
+binary_sensor:
+  - <<: !include "common/common_binary_sensors.yaml"
+
+switch:
+  - <<: !include "common/common_switchs.yaml"
+  - platform: gpio
+    name: "Relay"
+    pin: GPIO15
+
+sensor:
+  - <<: !include "common/common_sensors.yaml"
+
+  - platform: ct_clamp
+    sensor: adc_sensor
+    name: "Measured Current"
+    update_interval: 60s
+    filters:
+      - calibrate_linear:
+          # Measured value of 0 maps to 0A
+          - 0 -> 0
+          # Known load: 4.0A
+          # Value shown in logs: 0.1333A
+          - 0.1333 -> 4.0
+
+  # Example source sensor
+  - platform: adc
+    pin: GPIO5
+    id: adc_sensor
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO25
+    num_leds: 875
+    rgb_order: GRB
+    name: "$friendly_name Matrix"
+    effects:
+      - addressable_rainbow:
+          name: Rainbow
+
+#relai pin
+#temperature pin
+#current sensor pin

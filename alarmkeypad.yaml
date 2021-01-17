@@ -32,6 +32,57 @@ pn532:
     then:
     - homeassistant.tag_scanned: !lambda 'return x;'
 
+pcf8574:
+  - id: 'pcf8574_hub'
+    address: 0x38
+    pcf8575: False
+
+keypad:
+  id: mykeypad
+  rows:
+    - pin:
+        pcf8574: pcf8574_hub
+        number: 0
+        mode: INPUT
+        inverted: False
+    - pin:
+        pcf8574: pcf8574_hub
+        number: 1
+        mode: INPUT
+        inverted: False
+    - pin:
+        pcf8574: pcf8574_hub
+        number: 2
+        mode: INPUT
+        inverted: False
+    - pin:
+        pcf8574: pcf8574_hub
+        number: 3
+        mode: INPUT
+        inverted: False
+  columns:
+    - pin:
+        pcf8574: pcf8574_hub
+        number: 4
+        mode: INPUT
+        inverted: False
+    - pin:
+        pcf8574: pcf8574_hub
+        number: 5
+        mode: INPUT
+        inverted: False
+    - pin:
+        pcf8574: pcf8574_hub
+        number: 6
+        mode: INPUT
+        inverted: False
+    - pin:
+        pcf8574: pcf8574_hub
+        number: 7
+        mode: INPUT
+        inverted: False
+  keys: "789D456B123A0DDD"
+
 custom_component:
   - lambda: |-
       auto custom_alarmkeypad = new AlarmKeypad();
@@ -69,6 +120,9 @@ light:
     name: "$friendly_name key backlight leds"
     gamma_correct: 0
     color_correct: [50%, 50%, 50%]
+    effects:
+      - addressable_rainbow:
+          name: Rainbow
 
   - platform: fastled_clockless
     chipset: WS2812B
@@ -89,6 +143,36 @@ light:
     color_correct: [50%, 50%, 50%]
 
 text_sensor:
+
+    #Input text from keypad
+  - platform: keypad
+    id: reader
+    keypad_id: mykeypad
+    max_length: 4
+    end_keys: "AB"
+    back_keys: "D"
+    allowed_keys: "0123456789"
+    on_progress:
+      #TODO:
+      #Set id(text).publish_state(progress) for the display
+      then:
+        - lambda: !lambda |-
+            id(text).publish_state(x);
+        - logger.log:
+            format: "input progress: '%s'"
+            args: [ 'x.c_str()' ]
+    on_value:
+      #TODO:
+      #if alarm status is armed then disarm with code
+      #if alarm status is disarmed then arm_home if A pressed with value as code
+      #if alarm status is disarmed then arm_away if B pressed with value as code
+      then:
+        - lambda: !lambda |-
+            id(text).publish_state(x);
+        - delay: 2s
+        - logger.log:
+            format: "input result: '%s'"
+            args: [ 'x.c_str()' ]
 
     #Text set from/to home assistant
   - platform: homeassistant

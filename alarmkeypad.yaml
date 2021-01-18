@@ -112,6 +112,8 @@ display:
       }
 
 light:
+
+  #Keypad adressable rgb backlight leds
   - platform: fastled_clockless
     chipset: WS2812B
     pin: 13
@@ -119,11 +121,12 @@ light:
     rgb_order: GRB
     name: "$friendly_name key backlight leds"
     gamma_correct: 0
-    color_correct: [50%, 50%, 50%]
+    color_correct: [70%, 70%, 70%]
     effects:
       - addressable_rainbow:
           name: Rainbow
 
+  #Case inside glow adressable rgb leds
   - platform: fastled_clockless
     chipset: WS2812B
     pin: 19
@@ -132,7 +135,11 @@ light:
     name: "$friendly_name case glow leds"
     gamma_correct: 0
     color_correct: [50%, 50%, 50%]
+    effects:
+      - addressable_rainbow:
+          name: Rainbow
 
+  #Rfid status addressable rgb led ring
   - platform: fastled_clockless
     chipset: WS2812B
     pin: 18
@@ -141,6 +148,9 @@ light:
     name: "$friendly_name Rfid ring leds"
     gamma_correct: 0
     color_correct: [50%, 50%, 50%]
+    effects:
+      - addressable_rainbow:
+          name: Rainbow
 
 text_sensor:
 

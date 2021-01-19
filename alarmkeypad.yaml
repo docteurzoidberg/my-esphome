@@ -7,8 +7,6 @@ esphome:
   build_path: build/$devicename
   platform: ESP32
   board: esp32doit-devkit-v1
-  includes:
-    - src/custom_alarmkeypad/custom_alarmkeypad.h
 
 wifi: !include "common/wifi.yaml"
 captive_portal:
@@ -83,33 +81,30 @@ keypad:
         inverted: False
   keys: "789D456B123A0DDD"
 
-custom_component:
-  - lambda: |-
-      auto custom_alarmkeypad = new AlarmKeypad();
-      return {custom_alarmkeypad};
+#custom_component:
+#
+#  - id: 'mainobj'
+#    lambda: |-
+#      auto custom_alarmkeypad = new AlarmKeypad();
+#      return {custom_alarmkeypad};
+
+alarm_keypad_component:
+  id: mainobj
 
 display:
   - platform: ht16k33_alpha
     id: "alpha1"
     address: 0x70
+    update_interval : 33ms
     lambda: |-
-      if(id(text).state.length()>4) {
-        it.print(id(text).state.substr(0,4));
-      }
-      else {
-        it.print(id(text).state);
-      }
+      id(mainobj).display1_lambdacall(it);
 
   - platform: ht16k33_alpha
     id: "alpha2"
     address: 0x71
+    update_interval : 33ms
     lambda: |-
-      if(id(text).state.length()>4) {
-        it.print(id(text).state.substr(4,4));
-      }
-      else {
-        it.print("");
-      }
+      id(mainobj).display2_lambdacall(it);
 
 light:
 
@@ -167,7 +162,9 @@ text_sensor:
       #Set id(text).publish_state(progress) for the display
       then:
         - lambda: !lambda |-
-            id(text).publish_state(x);
+            id(mainobj).keypress();
+            if(x!="")
+              id(text).publish_state(x);
         - logger.log:
             format: "input progress: '%s'"
             args: [ 'x.c_str()' ]
@@ -180,6 +177,8 @@ text_sensor:
         - lambda: !lambda |-
             id(text).publish_state(x);
         - delay: 2s
+        - lambda: !lambda |-
+            id(text).publish_state("");
         - logger.log:
             format: "input result: '%s'"
             args: [ 'x.c_str()' ]

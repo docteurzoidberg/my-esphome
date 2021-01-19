@@ -34,7 +34,7 @@ void AlarmKeypadComponent::dump_config(){
 void display1_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it) {
 
       if(_state==STATE_BOOTING) {
-        it->print("BOOT");
+        it.print("BOOT");
       }
       else if(_state==STATE_ALARM_STATUS_DISPLAY) {
         //if(text.length()>4) {
@@ -52,7 +52,7 @@ void display1_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it) {
 void display2_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it) {
 
       if(_state==STATE_BOOTING) {
-        it->print("ING");
+        it.print("ING");
       }
       else if(_state==STATE_ALARM_STATUS_DISPLAY) {
         //if(text.length()>4) {

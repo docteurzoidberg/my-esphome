@@ -20,8 +20,8 @@ class AlarmKeypadComponent : public Component {
   uint8_t get_state();
 
   //ht16k33 displays
-  void display1_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay * it);
-  void display2_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay * it);
+  void display1_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it);
+  void display2_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it);
 
   //fastled leds
   //void keyboard_leds_lambdacall();

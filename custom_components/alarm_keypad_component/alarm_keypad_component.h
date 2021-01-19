@@ -1,8 +1,10 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/homeassistant/text_sensor/homeassistant_text_sensor.h"
 #include "esphome/components/ht16k33_alpha/ht16k33_display.h"
+#include <string>
 
 #define STATE_BOOTING 0
 #define STATE_ALARM_STATUS_DISPLAY 1
@@ -27,6 +29,7 @@ class AlarmKeypadComponent : public Component {
   void set_display1(ht16k33_alpha::HT16K33AlphaDisplay * it);
   void set_display2(ht16k33_alpha::HT16K33AlphaDisplay * it);
   void set_alarmstatusentity(homeassistant::HomeassistantTextSensor *hatext);
+  void set_keypadtext(text_sensor::TextSensor *kptext);
   //fastled leds
   //void keyboard_leds_lambdacall();
   //void rfid_leds_lambdacall();
@@ -34,7 +37,8 @@ class AlarmKeypadComponent : public Component {
 
   void start_typing();
   void typing_timeout();
-  void keypress();
+  void keypad_progress(std::string x);
+  void keypad_value(std::string x);
   void network_connected();
   void network_disconnected();
 };

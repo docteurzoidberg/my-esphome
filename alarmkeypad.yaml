@@ -14,6 +14,7 @@ esphome:
           id(mainobj).set_display1(id(alpha1));
           id(mainobj).set_display2(id(alpha2));
           id(mainobj).set_alarmstatusentity(id(alarmtext));
+          id(mainobj).set_keypadtext(id(reader));
 
 
 wifi: !include "common/wifi.yaml"
@@ -166,30 +167,13 @@ text_sensor:
     back_keys: "D"
     allowed_keys: "0123456789"
     on_progress:
-      #TODO:
-      #Set id(text).publish_state(progress) for the display
       then:
         - lambda: !lambda |-
-            id(mainobj).keypress();
-            if(x!="")
-              id(text).publish_state(x);
-        - logger.log:
-            format: "input progress: '%s'"
-            args: [ 'x.c_str()' ]
+            id(mainobj).keypad_progress(x);
     on_value:
-      #TODO:
-      #if alarm status is armed then disarm with code
-      #if alarm status is disarmed then arm_home if A pressed with value as code
-      #if alarm status is disarmed then arm_away if B pressed with value as code
       then:
         - lambda: !lambda |-
-            id(text).publish_state(x);
-        - delay: 2s
-        - lambda: !lambda |-
-            id(text).publish_state("");
-        - logger.log:
-            format: "input result: '%s'"
-            args: [ 'x.c_str()' ]
+            id(mainobj).keypad_value(x);
 
     #Text set from/to home assistant
   - platform: homeassistant

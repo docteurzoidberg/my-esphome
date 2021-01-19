@@ -7,6 +7,14 @@ esphome:
   build_path: build/$devicename
   platform: ESP32
   board: esp32doit-devkit-v1
+  on_boot:
+    priority: 1000
+    then:
+      - lambda: |-
+          id(mainobj).set_display1(id(alpha1));
+          id(mainobj).set_display2(id(alpha2));
+          id(mainobj).set_alarmstatusentity(id(alarmtext));
+
 
 wifi: !include "common/wifi.yaml"
 captive_portal:
@@ -97,14 +105,14 @@ display:
     address: 0x70
     update_interval : 33ms
     lambda: |-
-      id(mainobj).display1_lambdacall(it);
+      id(mainobj).display1_lambdacall(id(text).state);
 
   - platform: ht16k33_alpha
     id: "alpha2"
     address: 0x71
     update_interval : 33ms
     lambda: |-
-      id(mainobj).display2_lambdacall(it);
+      id(mainobj).display2_lambdacall(id(text).state);
 
 light:
 

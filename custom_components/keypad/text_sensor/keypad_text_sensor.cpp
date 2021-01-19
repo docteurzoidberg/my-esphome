@@ -36,10 +36,13 @@ void KeypadTextSensor::key_pressed(unsigned char key) {
   }
   if (!this->allowed_keys_.empty() && (this->allowed_keys_.find(key) == std::string::npos))
     return;
-  this->result_.push_back(key);
+  //if ((this->max_length_ > 0)
+
   if ((this->max_length_ > 0) && (this->result_.size() == this->max_length_)) {
-    this->publish_state(this->result_);
-    this->result_.clear();
+    //this->publish_state(this->result_);
+    //this->result_.clear();
+  } else {
+    this->result_.push_back(key);
   }
   this->progress_trigger_->trigger(this->result_);
 }

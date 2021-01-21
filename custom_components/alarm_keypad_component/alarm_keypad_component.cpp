@@ -1,17 +1,16 @@
 #include "esphome/core/log.h"
 #include "alarm_keypad_component.h"
 
-
 namespace esphome {
 namespace alarm_keypad_component {
 
 static const char *TAG = "alarm_keypad_component.component";
 
 static unsigned long _typing_timer=0;
-static uint8_t _typing_len=0;
 static std::string _typing_progress="";
 static uint8_t _state=STATE_BOOTING;
 static bool _has_state=false;
+static char _arm_key='?';
 
 static ht16k33_alpha::HT16K33AlphaDisplay *_display1=NULL;
 static ht16k33_alpha::HT16K33AlphaDisplay *_display2=NULL;
@@ -20,6 +19,7 @@ static text_sensor::TextSensor *_keypadtext=NULL;
 
 //void register_text_sensor(text_sensor::TextSensor *obj) { this->text_sensors_.push_back(obj); }
 
+// component
 void AlarmKeypadComponent::setup() {
 
 }
@@ -52,75 +52,6 @@ void AlarmKeypadComponent::dump_config(){
   ESP_LOGCONFIG(TAG, "Alarm keypad component");
 }
 
-void AlarmKeypadComponent::display1_lambdacall(std::string text) {
-      if(_display1==NULL)
-        return;
-
-      if(_state==STATE_BOOTING) {
-        _display1->print("BOOT");
-      }
-      else if(_state==STATE_ALARM_STATUS_DISPLAY) {
-        if(text.length()>4) {
-          _display1->print(text.substr(0,4));
-        }
-        else {
-          _display1->print(text);
-        }
-      }
-      else if(_state==STATE_TYPING){
-        if(_keypadtext==NULL)
-          return;
-
-        //Works
-        if(_typing_progress.length()==1){
-          _display1->print("*___");
-        }
-        else if(_typing_progress.length()==2){
-          _display1->print("**__");
-        }
-        else if(_typing_progress.length()==3){
-          _display1->print("***_");
-        }
-        else if(_typing_progress.length()==4){
-          _display1->print("****");
-        }
-        else {
-          _display1->print("____");
-        }
-
-        //Doesn't works. because i'm dumb:
-        //_display1->print(std::string('*',_typing_len).c_str());
-      }
-}
-
-void AlarmKeypadComponent::display2_lambdacall(std::string text) {
-      if(_display2==NULL)
-        return;
-
-      if(_state==STATE_BOOTING) {
-        _display2->print("ING");
-      }
-      else if(_state==STATE_ALARM_STATUS_DISPLAY) {
-        if(text.length()>4) {
-          _display2->print(text.substr(4,4));
-        }
-        else {
-          _display2->print("");
-        }
-      }
-      else if(_state==STATE_TYPING){
-        _display2->print("");
-      }
-}
-
-void AlarmKeypadComponent::network_connected() {
-  ESP_LOGD(TAG, "network connected");
-}
-
-void AlarmKeypadComponent::network_disconnected() {
-  ESP_LOGD(TAG, "network disconnected");
-}
-
 void AlarmKeypadComponent::start_typing() {
   ESP_LOGD(TAG, "typing");
   _typing_timer=millis();
@@ -133,7 +64,125 @@ void AlarmKeypadComponent::typing_timeout() {
   _state = STATE_ALARM_STATUS_DISPLAY;
 }
 
-void AlarmKeypadComponent::keypad_progress(std::string x) {
+// lambdas
+
+void AlarmKeypadComponent::display1_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
+
+  if(_state==STATE_BOOTING) {
+    it.set_brightness(.2);
+    it.print("BOOT");
+  }
+  else if(_state==STATE_ALARM_STATUS_DISPLAY) {
+    if(text.length()>4) {
+      it.print(text.substr(0,4));
+    }
+    else {
+      it.print(text);
+    }
+  }
+  else if(_state==STATE_TYPING) {
+
+    if(_keypadtext==NULL)
+      return;
+
+    //Works
+    if(_typing_progress.length()==1){
+      it.print("*___");
+    }
+    else if(_typing_progress.length()==2){
+      it.print("**__");
+    }
+    else if(_typing_progress.length()==3){
+      it.print("***_");
+    }
+    else if(_typing_progress.length()==4){
+      it.print("****");
+    }
+    else {
+      it.print("____");
+    }
+
+    //Doesn't works. because i'm dumb:
+    //it.print(std::string('*',_typing_progress.length()).c_str());
+  }
+  else if(_state==STATE_SHUTDOWN){
+      //TODO: fancier
+      it.print("OTA");
+    }
+}
+
+void AlarmKeypadComponent::display2_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
+
+  if(_state==STATE_BOOTING) {
+    it.set_brightness(.2); //doesn't work in on_boot both config lambda and internal method
+    it.print("ING");
+  }
+  else if(_state==STATE_ALARM_STATUS_DISPLAY) {
+    if(text.length()>4) {
+      it.print(text.substr(4,4));
+    }
+    else {
+      it.print("");
+    }
+  }
+  else if(_state==STATE_TYPING){
+    it.print("");
+  }
+  else if(_state==STATE_SHUTDOWN) {
+         //TODO: fancier
+        it.print("");
+      }
+}
+
+void AlarmKeypadComponent::leds_keypad_lambdacall(light::AddressableLight & it) {
+  if(_state==STATE_BOOTING) {
+    it.all() = light::ESPColor::ESPColor::WHITE;
+  }
+  else {
+    it.all() = light::ESPColor(120, 120, 0);
+  }
+}
+
+void AlarmKeypadComponent::leds_case_lambdacall(light::AddressableLight & it) {
+  if(_state==STATE_BOOTING) {
+    it.all() = light::ESPColor::ESPColor::WHITE;
+  }
+  else {
+    it.all() = light::ESPColor(120, 120, 0);
+  }
+}
+
+void AlarmKeypadComponent::leds_rfid_lambdacall(light::AddressableLight & it) {
+  if(_state==STATE_BOOTING) {
+    it.all() = light::ESPColor::ESPColor::WHITE;
+  }
+  else {
+    it.all() = light::ESPColor(120, 120, 0);
+  }
+}
+
+// events
+
+void AlarmKeypadComponent::on_boot() {
+  ESP_LOGD(TAG, "boot");
+
+  //doesn't seems to work?
+  _display1->set_brightness(.2);
+  _display1->update();
+  _display2->set_brightness(.2);
+  _display2->update();
+}
+
+void AlarmKeypadComponent::on_shutdown() {
+  ESP_LOGD(TAG, "shutdown");
+  _state=STATE_SHUTDOWN;
+  _display1->print("OTA");
+  _display1->update();
+  _display2->print("");
+  _display2->update();
+}
+
+void AlarmKeypadComponent::on_keypad_progress(std::string x) {
 
   _typing_progress=x;
 
@@ -148,14 +197,23 @@ void AlarmKeypadComponent::keypad_progress(std::string x) {
   }
 }
 
-void AlarmKeypadComponent::keypad_value(std::string x) {
+void AlarmKeypadComponent::on_keypad_value(std::string x) {
   ESP_LOGD(TAG,"keypad value: %s", x.c_str());
   if(_state==STATE_TYPING){
-    _typing_len=0;
     _typing_progress=x;
     _state=STATE_ALARM_STATUS_DISPLAY;
     return;
   }
+}
+
+// getters / setters
+
+char AlarmKeypadComponent::get_arm_key() {
+  return _arm_key;
+}
+
+void AlarmKeypadComponent::set_arm_key(char key) {
+  _arm_key=key;
 }
 
 uint8_t AlarmKeypadComponent::get_state() {

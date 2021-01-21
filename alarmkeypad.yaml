@@ -8,18 +8,39 @@ esphome:
   platform: ESP32
   board: esp32doit-devkit-v1
   on_boot:
-    priority: 1000
+    - priority: 1000
+      then:
+        - lambda: |-
+            id(mainobj).set_display1(id(alpha1));
+            id(mainobj).set_display2(id(alpha2));
+            id(mainobj).set_alarmstatusentity(id(alarmtext));
+            id(mainobj).set_keypadtext(id(reader));
+    - priority: 600
+      then:
+        - lambda: |-
+            id(mainobj).on_boot();
+            id(alpha1).set_brightness(.2);
+            id(alpha2).set_brightness(.2);
+        - light.turn_on:
+            id: leds_keypad
+            brightness: 0.5
+            effect: render
+        - light.turn_on:
+            id: leds_case
+            brightness: 0.5
+            effect: render
+  on_shutdown:
     then:
       - lambda: |-
-          id(mainobj).set_display1(id(alpha1));
-          id(mainobj).set_display2(id(alpha2));
-          id(mainobj).set_alarmstatusentity(id(alarmtext));
-          id(mainobj).set_keypadtext(id(reader));
+          id(mainobj).on_shutdown();
 
 
 wifi: !include "common/wifi.yaml"
 captive_portal:
+
 logger:
+  level: VERBOSE
+
 api:
 ota:
 
@@ -106,19 +127,20 @@ display:
     address: 0x70
     update_interval : 33ms
     lambda: |-
-      id(mainobj).display1_lambdacall(id(text).state);
+      id(mainobj).display1_lambdacall(it, id(text).state);
 
   - platform: ht16k33_alpha
     id: "alpha2"
     address: 0x71
     update_interval : 33ms
     lambda: |-
-      id(mainobj).display2_lambdacall(id(text).state);
+      id(mainobj).display2_lambdacall(it, id(text).state);
 
 light:
 
   #Keypad adressable rgb backlight leds
   - platform: fastled_clockless
+    id: leds_keypad
     chipset: WS2812B
     pin: 13
     num_leds: 13
@@ -129,9 +151,15 @@ light:
     effects:
       - addressable_rainbow:
           name: Rainbow
+      - addressable_lambda:
+          name: "render"
+          update_interval: 16ms
+          lambda: |-
+            id(mainobj).leds_keypad_lambdacall(it);
 
   #Case inside glow adressable rgb leds
   - platform: fastled_clockless
+    id: leds_case
     chipset: WS2812B
     pin: 19
     num_leds: 8
@@ -142,9 +170,15 @@ light:
     effects:
       - addressable_rainbow:
           name: Rainbow
+      - addressable_lambda:
+          name: "render"
+          update_interval: 22ms
+          lambda: |-
+            id(mainobj).leds_case_lambdacall(it);
 
   #Rfid status addressable rgb led ring
   - platform: fastled_clockless
+    id: leds_rfid
     chipset: WS2812B
     pin: 18
     num_leds: 8
@@ -155,6 +189,11 @@ light:
     effects:
       - addressable_rainbow:
           name: Rainbow
+      - addressable_lambda:
+          name: "render"
+          update_interval: 22ms
+          lambda: |-
+            id(mainobj).leds_rfid_lambdacall(it);
 
 text_sensor:
 
@@ -169,11 +208,24 @@ text_sensor:
     on_progress:
       then:
         - lambda: !lambda |-
-            id(mainobj).keypad_progress(x);
+            id(mainobj).on_keypad_progress(x);
     on_value:
       then:
         - lambda: !lambda |-
-            id(mainobj).keypad_value(x);
+            id(mainobj).on_keypad_value(x);
+        - homeassistant.service:
+            service: !lambda |-
+              if(id(alarmtext).state=="disarmed") {
+                return id(mainobj).get_arm_key()=='B' ? "alarm_control_panel.alarm_arm_home" : "alarm_control_panel.alarm_arm_away";
+              }
+              else {
+                return "alarm_control_panel.alarm_disarm";
+              }
+
+            data_template:
+              code: !lambda 'return id(reader).state.c_str();'
+              entity_id: "alarm_control_panel.alarme"
+
 
     #Text set from/to home assistant
   - platform: homeassistant
@@ -212,6 +264,24 @@ text_sensor:
 binary_sensor:
   - <<: !include "common/common_binary_sensors.yaml"
 
+  - platform: keypad
+    keypad_id: mykeypad
+    id: keyB
+    key: B
+    on_press:
+      then:
+        - lambda: !lambda |-
+            id(mainobj).set_arm_key('B');
+
+
+  - platform: keypad
+    keypad_id: mykeypad
+    id: keyA
+    key: A
+    on_press:
+      then:
+        - lambda: !lambda |-
+            id(mainobj).set_arm_key('A');
 switch:
   - <<: !include "common/common_switchs.yaml"
 

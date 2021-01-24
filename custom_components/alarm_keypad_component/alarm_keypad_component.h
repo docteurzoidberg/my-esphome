@@ -27,15 +27,14 @@ namespace esphome {
       uint8_t get_state();
       char get_arm_key();
       void set_arm_key(char key);
-      void set_display1(ht16k33_alpha::HT16K33AlphaDisplay * it);
-      void set_display2(ht16k33_alpha::HT16K33AlphaDisplay * it);
+      void set_display(ht16k33_alpha::HT16K33AlphaDisplay * it);
+
       void set_alarmstatusentity(homeassistant::HomeassistantTextSensor *hatext);
       void set_keypadtext(text_sensor::TextSensor *kptext);
       void set_leds_keypad(light::AddressableLight *it);
 
-      //ht16k33 displays
-      void display1_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text);
-      void display2_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text);
+      //ht16k33 display
+      void display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text);
 
       //leds
       void leds_keypad_lambdacall(light::AddressableLight & it);

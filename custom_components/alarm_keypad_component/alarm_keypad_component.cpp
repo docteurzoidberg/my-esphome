@@ -15,8 +15,7 @@ static uint8_t _state=STATE_BOOTING;
 static bool _has_state=false;
 static char _arm_key='?';
 
-static ht16k33_alpha::HT16K33AlphaDisplay *_display1=NULL;
-static ht16k33_alpha::HT16K33AlphaDisplay *_display2=NULL;
+static ht16k33_alpha::HT16K33AlphaDisplay *_display=NULL;
 static homeassistant::HomeassistantTextSensor *_alarmstatus=NULL;
 static text_sensor::TextSensor *_keypadtext=NULL;
 
@@ -103,18 +102,13 @@ void AlarmKeypadComponent::service_timeout() {
 }
 // lambdas
 
-void AlarmKeypadComponent::display1_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
+void AlarmKeypadComponent::display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
   if(_state==STATE_BOOTING) {
     it.set_brightness(.1);
-    it.print("BOOT");
+    it.print("BOOTING");
   }
   else if(_state==STATE_ALARM_STATUS_DISPLAY) {
-    if(text.length()>4) {
-      it.print(text.substr(0,4));
-    }
-    else {
-      it.print(text);
-    }
+    it.print(text);
   }
   else if(_state==STATE_TYPING) {
 
@@ -142,37 +136,12 @@ void AlarmKeypadComponent::display1_lambdacall(ht16k33_alpha::HT16K33AlphaDispla
     //it.print(std::string('*',_typing_progress.length()).c_str());
   }
   else if(_state==STATE_SERVICE_WAIT){
-    it.print("----");
+    it.print("--------");
   }
   else if(_state==STATE_SHUTDOWN){
       //TODO: fancier
       it.print("OTA");
     }
-}
-
-void AlarmKeypadComponent::display2_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
-  if(_state==STATE_BOOTING) {
-    it.set_brightness(.1); //doesn't work in on_boot both config lambda and internal method
-    it.print("ING");
-  }
-  else if(_state==STATE_ALARM_STATUS_DISPLAY) {
-    if(text.length()>4) {
-      it.print(text.substr(4,4));
-    }
-    else {
-      it.print("");
-    }
-  }
-  else if(_state==STATE_TYPING){
-    it.print("");
-  }
-  else if(_state==STATE_SERVICE_WAIT){
-    it.print("----");
-  }
-  else if(_state==STATE_SHUTDOWN) {
-         //TODO: fancier
-        it.print("");
-      }
 }
 
 void AlarmKeypadComponent::leds_keypad_lambdacall(light::AddressableLight & it) {
@@ -208,19 +177,15 @@ void AlarmKeypadComponent::on_boot() {
   ESP_LOGD(TAG, "boot");
 
   //doesn't seems to work?
-  _display1->set_brightness(.2);
-  _display1->update();
-  _display2->set_brightness(.2);
-  _display2->update();
+  _display->set_brightness(.2);
+  _display->update();
 }
 
 void AlarmKeypadComponent::on_shutdown() {
   ESP_LOGD(TAG, "shutdown");
   _state=STATE_SHUTDOWN;
-  _display1->print("OTA");
-  _display1->update();
-  _display2->print("");
-  _display2->update();
+  _display->print("OTA");
+  _display->update();
 }
 
 void AlarmKeypadComponent::on_keypad_progress(std::string x) {
@@ -261,12 +226,8 @@ uint8_t AlarmKeypadComponent::get_state() {
   return _state;
 }
 
-void AlarmKeypadComponent::set_display1(ht16k33_alpha::HT16K33AlphaDisplay *it) {
-  _display1=it;
-}
-
-void AlarmKeypadComponent::set_display2(ht16k33_alpha::HT16K33AlphaDisplay *it) {
-  _display2=it;
+void AlarmKeypadComponent::set_display(ht16k33_alpha::HT16K33AlphaDisplay *it) {
+  _display=it;
 }
 
 void AlarmKeypadComponent::set_alarmstatusentity(homeassistant::HomeassistantTextSensor *hatext) {

@@ -11,16 +11,14 @@ esphome:
     - priority: 1000
       then:
         - lambda: |-
-            id(mainobj).set_display1(id(alpha1));
-            id(mainobj).set_display2(id(alpha2));
+            id(mainobj).set_display(id(alpha));
             id(mainobj).set_alarmstatusentity(id(alarmtext));
             id(mainobj).set_keypadtext(id(reader));
     - priority: 600
       then:
         - lambda: |-
             id(mainobj).on_boot();
-            id(alpha1).set_brightness(.1);
-            id(alpha2).set_brightness(.1);
+            id(alpha).set_brightness(.1);
         - light.turn_on:
             id: leds_keypad
             brightness: 0.4
@@ -116,18 +114,13 @@ alarm_keypad_component:
 
 display:
   - platform: ht16k33_alpha
-    id: "alpha1"
-    address: 0x70
-    update_interval : 33ms
-    lambda: |-
-      id(mainobj).display1_lambdacall(it, id(text).state);
-
-  - platform: ht16k33_alpha
-    id: "alpha2"
+    id: "alpha"
     address: 0x71
+    secondary_displays:
+      - address: 0x71
     update_interval : 33ms
     lambda: |-
-      id(mainobj).display2_lambdacall(it, id(text).state);
+      id(mainobj).display_lambdacall(it, id(text).state);
 
 light:
 
@@ -288,5 +281,4 @@ sensor:
     on_value:
       then:
         lambda: !lambda |-
-          id(alpha1).set_brightness(x);
-          id(alpha2).set_brightness(x);
+          id(alpha).set_brightness(x);

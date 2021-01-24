@@ -25,7 +25,7 @@ display:
     secondary_displays:
       - address: 0x71
     lambda: |-
-      it.print(id(alarmtext).state.c_str());
+      it.print(id(text).state.c_str());
 
 # Example configuration entry
 text_sensor:

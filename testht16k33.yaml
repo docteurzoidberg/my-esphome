@@ -22,26 +22,10 @@ display:
   - platform: ht16k33_alpha
     id: "alpha1"
     address: 0x70
+    secondary_displays:
+      - address: 0x71
     lambda: |-
-      it.set_brightness(5);
-      if(id(text).state.length()>4) {
-        it.print(id(text).state.substr(0,4));
-      }
-      else {
-        it.print(id(text).state);
-      }
-
-  - platform: ht16k33_alpha
-    id: "alpha2"
-    address: 0x71
-    lambda: |-
-      it.set_brightness(5);
-      if(id(text).state.length()>4) {
-        it.print(id(text).state.substr(4,4));
-      }
-      else {
-        it.print("");
-      }
+      it.print(id(alarmtext).state.c_str());
 
 # Example configuration entry
 text_sensor:

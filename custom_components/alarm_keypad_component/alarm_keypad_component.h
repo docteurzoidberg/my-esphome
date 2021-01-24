@@ -11,11 +11,7 @@
 #define STATE_BOOTING 0
 #define STATE_ALARM_STATUS_DISPLAY 1
 #define STATE_TYPING 2
-#define STATE_ARMING_HOME 3
-#define STATE_ARMING_AWAY 4
-#define STATE_DISARMING 5
-#define STATE_FAILED 6
-#define STATE_DISCONNECTED 8
+#define STATE_SERVICE_WAIT 3
 #define STATE_SHUTDOWN 9
 
 
@@ -48,6 +44,8 @@ namespace esphome {
 
       void start_typing();
       void typing_timeout();
+      void start_service();
+      void service_timeout();
 
       //config triggers
       void on_keypad_progress(std::string x);

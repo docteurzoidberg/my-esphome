@@ -19,15 +19,15 @@ esphome:
       then:
         - lambda: |-
             id(mainobj).on_boot();
-            id(alpha1).set_brightness(.2);
-            id(alpha2).set_brightness(.2);
+            id(alpha1).set_brightness(.1);
+            id(alpha2).set_brightness(.1);
         - light.turn_on:
             id: leds_keypad
-            brightness: 0.5
+            brightness: 0.4
             effect: render
         - light.turn_on:
             id: leds_case
-            brightness: 0.5
+            brightness: 0.4
             effect: render
   on_shutdown:
     then:
@@ -110,13 +110,6 @@ keypad:
         mode: INPUT
         inverted: False
   keys: "789D456B123A0DDD"
-
-#custom_component:
-#
-#  - id: 'mainobj'
-#    lambda: |-
-#      auto custom_alarmkeypad = new AlarmKeypad();
-#      return {custom_alarmkeypad};
 
 alarm_keypad_component:
   id: mainobj
@@ -272,8 +265,6 @@ binary_sensor:
       then:
         - lambda: !lambda |-
             id(mainobj).set_arm_key('B');
-
-
   - platform: keypad
     keypad_id: mykeypad
     id: keyA
@@ -282,6 +273,7 @@ binary_sensor:
       then:
         - lambda: !lambda |-
             id(mainobj).set_arm_key('A');
+
 switch:
   - <<: !include "common/common_switchs.yaml"
 

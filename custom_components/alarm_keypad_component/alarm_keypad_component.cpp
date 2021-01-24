@@ -7,7 +7,10 @@ namespace alarm_keypad_component {
 static const char *TAG = "alarm_keypad_component.component";
 
 static unsigned long _typing_timer=0;
+static unsigned long _service_timer=0;
+
 static std::string _typing_progress="";
+static std::string _last_alarm_status="";
 static uint8_t _state=STATE_BOOTING;
 static bool _has_state=false;
 static char _arm_key='?';
@@ -46,6 +49,24 @@ void AlarmKeypadComponent::loop() {
       return;
     }
   }
+  else if(_state == STATE_SERVICE_WAIT) {
+
+    if(_alarmstatus!=NULL){
+      if(_alarmstatus->has_state()) {
+        if(_alarmstatus->state!=_last_alarm_status) {
+          //Response from service
+          _state = STATE_ALARM_STATUS_DISPLAY;
+          return;
+        }
+      }
+    }
+
+    //TODO: put timeout in settings
+    if(millis()-_service_timer > 5000) {
+      service_timeout();
+      return;
+    }
+  }
 }
 
 void AlarmKeypadComponent::dump_config(){
@@ -64,12 +85,27 @@ void AlarmKeypadComponent::typing_timeout() {
   _state = STATE_ALARM_STATUS_DISPLAY;
 }
 
+void AlarmKeypadComponent::start_service() {
+  ESP_LOGD(TAG, "service");
+  _service_timer=millis();
+  _state = STATE_SERVICE_WAIT;
+  if(_alarmstatus!=NULL){
+      if(_alarmstatus->has_state()) {
+        _last_alarm_status=_alarmstatus->state;
+      }
+  }
+}
+
+void AlarmKeypadComponent::service_timeout() {
+  ESP_LOGD(TAG, "service timeout");
+  _service_timer=millis();
+  _state = STATE_ALARM_STATUS_DISPLAY;
+}
 // lambdas
 
 void AlarmKeypadComponent::display1_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
-
   if(_state==STATE_BOOTING) {
-    it.set_brightness(.2);
+    it.set_brightness(.1);
     it.print("BOOT");
   }
   else if(_state==STATE_ALARM_STATUS_DISPLAY) {
@@ -105,6 +141,9 @@ void AlarmKeypadComponent::display1_lambdacall(ht16k33_alpha::HT16K33AlphaDispla
     //Doesn't works. because i'm dumb:
     //it.print(std::string('*',_typing_progress.length()).c_str());
   }
+  else if(_state==STATE_SERVICE_WAIT){
+    it.print("----");
+  }
   else if(_state==STATE_SHUTDOWN){
       //TODO: fancier
       it.print("OTA");
@@ -112,9 +151,8 @@ void AlarmKeypadComponent::display1_lambdacall(ht16k33_alpha::HT16K33AlphaDispla
 }
 
 void AlarmKeypadComponent::display2_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
-
   if(_state==STATE_BOOTING) {
-    it.set_brightness(.2); //doesn't work in on_boot both config lambda and internal method
+    it.set_brightness(.1); //doesn't work in on_boot both config lambda and internal method
     it.print("ING");
   }
   else if(_state==STATE_ALARM_STATUS_DISPLAY) {
@@ -128,6 +166,9 @@ void AlarmKeypadComponent::display2_lambdacall(ht16k33_alpha::HT16K33AlphaDispla
   else if(_state==STATE_TYPING){
     it.print("");
   }
+  else if(_state==STATE_SERVICE_WAIT){
+    it.print("----");
+  }
   else if(_state==STATE_SHUTDOWN) {
          //TODO: fancier
         it.print("");
@@ -139,7 +180,7 @@ void AlarmKeypadComponent::leds_keypad_lambdacall(light::AddressableLight & it) 
     it.all() = light::ESPColor::ESPColor::WHITE;
   }
   else {
-    it.all() = light::ESPColor(120, 120, 0);
+    it.all() = light::ESPColor(255, 64, 0);
   }
 }
 
@@ -148,7 +189,7 @@ void AlarmKeypadComponent::leds_case_lambdacall(light::AddressableLight & it) {
     it.all() = light::ESPColor::ESPColor::WHITE;
   }
   else {
-    it.all() = light::ESPColor(120, 120, 0);
+    it.all() = light::ESPColor(255, 64, 0);
   }
 }
 
@@ -157,7 +198,7 @@ void AlarmKeypadComponent::leds_rfid_lambdacall(light::AddressableLight & it) {
     it.all() = light::ESPColor::ESPColor::WHITE;
   }
   else {
-    it.all() = light::ESPColor(120, 120, 0);
+    it.all() = light::ESPColor::ESPColor::BLACK;
   }
 }
 
@@ -201,7 +242,7 @@ void AlarmKeypadComponent::on_keypad_value(std::string x) {
   ESP_LOGD(TAG,"keypad value: %s", x.c_str());
   if(_state==STATE_TYPING){
     _typing_progress=x;
-    _state=STATE_ALARM_STATUS_DISPLAY;
+    start_service();
     return;
   }
 }

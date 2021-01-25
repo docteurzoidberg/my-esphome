@@ -108,7 +108,7 @@ void AlarmKeypadComponent::display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay
     it.print("BOOTING");
   }
   else if(_state==STATE_ALARM_STATUS_DISPLAY) {
-    it.print(text);
+    it.print(text.substr(0,8));
   }
   else if(_state==STATE_TYPING) {
 

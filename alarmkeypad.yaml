@@ -115,7 +115,7 @@ alarm_keypad_component:
 display:
   - platform: ht16k33_alpha
     id: "alpha"
-    address: 0x71
+    address: 0x70
     secondary_displays:
       - address: 0x71
     update_interval : 33ms

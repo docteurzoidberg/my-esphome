@@ -134,8 +134,6 @@ keypad:
         inverted: False
   keys: "789D456B123A0DDD"
 
-alarm_keypad_component:
-  id: mainobj
 
 display:
   - platform: ht16k33_alpha
@@ -259,14 +257,6 @@ text_sensor:
     id: alarmtext
     on_value:
       then:
-      - light.turn_on:
-          id: leds_keypad
-          brightness: 0.2
-          effect: render
-      - light.turn_on:
-          id: leds_case
-          brightness: 0.2
-          effect: render
       - lambda: !lambda |-
           if(x=="armed_home") {
             id(text).publish_state("A-HOME");
@@ -322,3 +312,23 @@ sensor:
       then:
         lambda: !lambda |-
           id(alpha).set_brightness(x);
+
+
+alarm_keypad_component:
+  id: mainobj
+
+  #on_boot:
+  #on_ota:
+  #on_shutdown:
+  #on_alarm_armed:
+  #on_alarm_disarmed:
+  on_ready:
+    then:
+      - light.turn_on:
+          id: leds_keypad
+          brightness: 0.2
+          effect: render
+      - light.turn_on:
+          id: leds_case
+          brightness: 0.2
+          effect: render

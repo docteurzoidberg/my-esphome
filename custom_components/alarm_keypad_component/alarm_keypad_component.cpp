@@ -72,10 +72,6 @@ void AlarmKeypadComponent::dump_config(){
   ESP_LOGCONFIG(TAG, "Alarm keypad component");
 }
 
-void AlarmKeypadComponent::add_on_ready_callback(std::function<void()> callback);{
-  this->on_ready_callback_.add(std::move(callback));
-}
-
 void AlarmKeypadComponent::start_typing() {
   ESP_LOGD(TAG, "typing");
   _typing_timer=millis();

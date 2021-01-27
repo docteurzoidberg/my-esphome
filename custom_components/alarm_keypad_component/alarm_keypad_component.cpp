@@ -35,8 +35,8 @@ void AlarmKeypadComponent::loop() {
       _has_state = _alarmstatus->has_state();
       //_has_state=false;
       if(_has_state) {
-      _state = STATE_ALARM_STATUS_DISPLAY;
-      return;
+        _state = STATE_ALARM_STATUS_DISPLAY;
+        this->on_ready_callback_.call();
       }
     }
   }
@@ -70,6 +70,10 @@ void AlarmKeypadComponent::loop() {
 
 void AlarmKeypadComponent::dump_config(){
   ESP_LOGCONFIG(TAG, "Alarm keypad component");
+}
+
+void AlarmKeypadComponent::add_on_ready_callback(std::function<void()> callback);{
+  this->on_ready_callback_.add(std::move(callback));
 }
 
 void AlarmKeypadComponent::start_typing() {
@@ -146,7 +150,7 @@ void AlarmKeypadComponent::display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay
 
 void AlarmKeypadComponent::leds_keypad_lambdacall(light::AddressableLight & it) {
   if(_state==STATE_BOOTING) {
-    it.all() = light::ESPColor::ESPColor::WHITE;
+    it.all() = light::ESPColor::ESPColor::BLACK;
   }
   else {
     it.all() = light::ESPColor(255, 64, 0);
@@ -155,7 +159,7 @@ void AlarmKeypadComponent::leds_keypad_lambdacall(light::AddressableLight & it) 
 
 void AlarmKeypadComponent::leds_case_lambdacall(light::AddressableLight & it) {
   if(_state==STATE_BOOTING) {
-    it.all() = light::ESPColor::ESPColor::WHITE;
+    it.all() = light::ESPColor::ESPColor::BLACK;
   }
   else {
     it.all() = light::ESPColor(255, 64, 0);

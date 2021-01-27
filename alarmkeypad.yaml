@@ -14,6 +14,7 @@ esphome:
             id(mainobj).set_display(id(alpha));
             id(mainobj).set_alarmstatusentity(id(alarmtext));
             id(mainobj).set_keypadtext(id(reader));
+            fastled_base_fastledlightoutput->get_controller()->setDither(0);
     - priority: 600
       then:
         - lambda: |-
@@ -21,42 +22,66 @@ esphome:
             id(alpha).set_brightness(.1);
         - light.turn_on:
             id: leds_keypad
-            brightness: 0.4
-            effect: render
+            brightness: 0.2
+            effect: keypad_boot_effect
         - light.turn_on:
             id: leds_case
-            brightness: 0.4
-            effect: render
+            brightness: 0.2
+            effect: case_boot_effect
   on_shutdown:
     then:
       - lambda: |-
           id(mainobj).on_shutdown();
 
-
 wifi: !include "common/wifi.yaml"
+
 captive_portal:
 
 logger:
-  level: VERBOSE
+  level: DEBUG
+
+ota:
 
 api:
-ota:
+  services:
+
+    - service: rfidreader_tag_ok
+      then:
+      - rtttl.play: "beep:d=16,o=5,b=100:b"
+
+    - service: rfidreader_tag_ko
+      then:
+      - rtttl.play: "beep:d=8,o=5,b=100:b"
+
+    - service: play_rtttl
+      variables:
+        song_str: string
+      then:
+        - rtttl.play:
+            rtttl: !lambda 'return song_str;'
+
+output:
+  - platform: ledc
+    pin: GPIO25
+    id: rtttl_out
 
 i2c:
   sda: 21
   scl: 22
 
-spi:
-  clk_pin: 33
-  miso_pin: 32
-  mosi_pin: 17
+rtttl:
+  output: rtttl_out
+  id: buzzer
+  on_finished_playback:
+    - logger.log: 'Song ended!'
 
-pn532:
-  cs_pin: 16
+pn532_i2c:
+  id: rfid
   update_interval: 1s
   on_tag:
     then:
     - homeassistant.tag_scanned: !lambda 'return x;'
+    - rtttl.play: "success:d=24,o=5,b=100:c,g,b"
 
 pcf8574:
   - id: 'pcf8574_hub'
@@ -133,10 +158,14 @@ light:
     rgb_order: GRB
     name: "$friendly_name key backlight leds"
     gamma_correct: 0
-    color_correct: [70%, 70%, 70%]
+    color_correct: [30%, 30%, 30%]
     effects:
       - addressable_rainbow:
           name: Rainbow
+      - addressable_scan:
+          name: keypad_boot_effect
+          move_interval: 22ms
+          scan_width: 3
       - addressable_lambda:
           name: "render"
           update_interval: 16ms
@@ -148,14 +177,18 @@ light:
     id: leds_case
     chipset: WS2812B
     pin: 19
-    num_leds: 8
+    num_leds: 22
     rgb_order: GRB
     name: "$friendly_name case glow leds"
     gamma_correct: 0
-    color_correct: [50%, 50%, 50%]
+    color_correct: [30%, 30%, 30%]
     effects:
       - addressable_rainbow:
           name: Rainbow
+      - addressable_scan:
+          name: case_boot_effect
+          move_interval: 22ms
+          scan_width: 4
       - addressable_lambda:
           name: "render"
           update_interval: 22ms
@@ -226,8 +259,15 @@ text_sensor:
     id: alarmtext
     on_value:
       then:
-        lambda: !lambda |-
-
+      - light.turn_on:
+          id: leds_keypad
+          brightness: 0.2
+          effect: render
+      - light.turn_on:
+          id: leds_case
+          brightness: 0.2
+          effect: render
+      - lambda: !lambda |-
           if(x=="armed_home") {
             id(text).publish_state("A-HOME");
           }

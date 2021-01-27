@@ -24,6 +24,9 @@ namespace esphome {
       void loop() override;
       void dump_config() override;
 
+      void add_on_ready_callback(std::function<void()> callback);
+
+
       uint8_t get_state();
       char get_arm_key();
       void set_arm_key(char key);
@@ -51,6 +54,15 @@ namespace esphome {
       void on_keypad_value(std::string x);
       void on_boot();
       void on_shutdown();
+    protected:
+      CallbackManager<void()> on_ready_callback_;
+    };
+
+    class ReadyTrigger : public Trigger<> {
+    public:
+      explicit ReadyTrigger(AlarmKeypadComponent *parent) {
+        parent->add_on_ready_callback([this]() { this->trigger(); });
+      }
     };
 
 

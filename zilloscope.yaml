@@ -117,7 +117,9 @@ zilloscope:
   render_time: |-
     //TODO use text center
     it.strftime(5, -1, id(tinyfont),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H:%M.", id(homeassistant_time).now());
+
   render_ota: |-
     it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
+
   render_shutdown: |-
     it.print(0, 0, id(tinyfont), Color(0xFF0000), "STOP");

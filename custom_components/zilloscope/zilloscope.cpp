@@ -4,17 +4,21 @@
 namespace esphome {
 namespace zilloscope {
 
+//consts
 static const char *TAG = "zilloscope.component";
+static const Color _color_blue = Color(0x0000FF);
+static const Color _color_white = Color(0xFFFFFF);
+
+//state
 static state _state = state::booting;
+static bool _has_time=false;
+
+//references
 static display::DisplayBuffer *_display=NULL;
 static display::Font *_font=NULL;
 static time::RealTimeClock *_time=NULL;
 
-static Color _color_blue = Color(0x0000FF);
-static Color _color_white = Color(0xFFFFFF);
-
-static bool _has_time=false;
-
+//component
 
 void ZilloScope::setup() {
 }
@@ -29,6 +33,8 @@ void ZilloScope::loop() {
 void ZilloScope::dump_config(){
   ESP_LOGCONFIG(TAG, "Zilloscope component");
 }
+
+//display
 
 void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
   if(_state== state::booting) {
@@ -48,6 +54,8 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
   }
 }
 
+//events
+
 void ZilloScope::on_boot() {
   ESP_LOGD(TAG, "boot");
 }
@@ -61,6 +69,8 @@ void ZilloScope::on_shutdown() {
   ESP_LOGD(TAG, "shutdown");
   _state=state::shutdown;
 }
+
+//getters / setters
 
 state ZilloScope::get_state() {
   return _state;

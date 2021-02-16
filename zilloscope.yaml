@@ -7,8 +7,25 @@ esphome:
   build_path: build/$devicename
   platform: ESP32
   board: esp32doit-devkit-v1
-  includes:
-    - "src/custom_zilloscope/effect_zillofeu.h"
+
+  on_boot:
+    - priority: 1000
+      then:
+        - lambda: |-
+            fastled_base_fastledlightoutput->get_controller()->setDither(0);
+    - priority: -10
+      then:
+        - switch.turn_on: zilloscope_control_display
+    - priority: 0
+      then:
+        - lambda: |-
+            id(zilloscope_main).on_boot();
+
+  on_shutdown:
+    then:
+      - lambda: |-
+          id(zilloscope_main).on_shutdown();
+
 
 wifi: !include "common/wifi.yaml"
 captive_portal:
@@ -21,9 +38,33 @@ binary_sensor:
 
 switch:
   - <<: !include "common/common_switchs.yaml"
+  - platform: template
+    id: zilloscope_control_display
+    name: "${friendly_name} Control Display"
+    turn_on_action:
+      - lambda: |-
+          id(zilloscope_display).set_enabled(true);
+    turn_off_action:
+      - lambda: |-
+          id(zilloscope_display).set_enabled(false);
 
 sensor:
   - <<: !include "common/common_sensors.yaml"
+
+text_sensor:
+  - platform: homeassistant
+    id: extratext
+    entity_id: input_text.zilloscope_text
+
+font:
+  - id: tinyfont
+    file: "fonts/pixelmix.ttf"
+    size: 8
+    glyphs: '♡Ωäöüß!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
 
 light:
   - platform: fastled_clockless
@@ -32,36 +73,42 @@ light:
     num_leds: 256
     rgb_order: GRB
     name: "$friendly_name Matrix"
-    effects:
-      - addressable_lambda:
-          name: "Fire2012"
-          update_interval: 16ms
-          lambda: |-
-            static byte heat[256];
+    id: zilloscope_matrix
+    color_correct: [50%, 50%, 50%]
+    default_transition_length : 0s
+    #gamma_correct: 0
+    restore_mode : ALWAYS_ON
 
-            // Step 1.  Cool down every cell a little
-            for( int i = 0; i < 256; i++) {
-              heat[i] = qsub8( heat[i],  random8(0, ((COOLING * 10) / 256) + 2));
-            }
-            // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-            for( int k= 256 - 1; k >= 2; k--) {
-              heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
-            }
-            // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-            if( random8() < SPARKING ) {
-              int y = random8(7);
-              heat[y] = qadd8( heat[y], random8(160,255) );
-            }
-            // Step 4.  Map from heat cells to LED colors
-            for( int j = 0; j < 256; j++) {
-              CRGB color = HeatColor( heat[j]);
-              int pixelnumber;
-              if( gReverseDirection ) {
-                pixelnumber = (256-1) - j;
-              } else {
-                pixelnumber = j;
-              }
-              it[pixelnumber] = ESPColor(color.red, color.green, color.blue);
-            }
-      - addressable_rainbow:
-          name: Rainbow
+animation:
+  - file: "img/zillo/zilloscope1.gif"
+    id: my_animation
+    type: RGB24
+    resize: 32x8
+
+
+display:
+  - platform: addressable_light_display
+    id: zilloscope_display
+    addressable_light_id: zilloscope_matrix
+    width: 32
+    height: 8
+    update_interval: 16ms
+    lambda: |-
+      if(id(zilloscope_main).get_state()==esphome::zilloscope::state::booting){
+        id(my_animation).next_frame();
+        // Draw the animation my_animation at position [x=0,y=0]
+        it.image(0, 0, id(my_animation));
+        return;
+      }
+      id(zilloscope_main).display_lambdacall(it);
+    pixel_mapper: |-
+      if (x % 2 == 0) {
+        return (x * 8) + y;
+      }
+      return (x * 8) + (7 - y);
+
+zilloscope:
+  id: zilloscope_main
+  display_id: zilloscope_display
+  font_id: tinyfont
+  time_id: homeassistant_time

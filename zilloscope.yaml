@@ -85,7 +85,6 @@ animation:
     type: RGB24
     resize: 32x8
 
-
 display:
   - platform: addressable_light_display
     id: zilloscope_display
@@ -94,12 +93,6 @@ display:
     height: 8
     update_interval: 16ms
     lambda: |-
-      if(id(zilloscope_main).get_state()==esphome::zilloscope::state::booting){
-        id(my_animation).next_frame();
-        // Draw the animation my_animation at position [x=0,y=0]
-        it.image(0, 0, id(my_animation));
-        return;
-      }
       id(zilloscope_main).display_lambdacall(it);
     pixel_mapper: |-
       if (x % 2 == 0) {
@@ -112,3 +105,19 @@ zilloscope:
   display_id: zilloscope_display
   font_id: tinyfont
   time_id: homeassistant_time
+
+  render_boot: |-
+
+    //go next frame
+    id(my_animation).next_frame();
+
+    // Draw the animation at position [x=0,y=0]
+    id(zilloscope_display).image(0, 0, id(my_animation));
+
+  render_time: |-
+    //TODO use text center
+    it.strftime(5, -1, id(tinyfont),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H:%M.", id(homeassistant_time).now());
+  render_ota: |-
+    it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
+  render_shutdown: |-
+    it.print(0, 0, id(tinyfont), Color(0xFF0000), "STOP");

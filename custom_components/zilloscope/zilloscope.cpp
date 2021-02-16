@@ -32,37 +32,20 @@ void ZilloScope::dump_config(){
 
 void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
   if(_state== state::booting) {
-    display_boot();
-    return;
+    return render_boot_f_(it);
   }
   else if(_state==state::time) {
-    display_time();
+    return render_time_f_(it);
   }
   else if(_state==state::ota) {
-    display_ota();
+    return render_ota_f_(it);
   }
   else if(_state==state::shutdown) {
-    display_shutdown();
+    return render_shutdown_f_(it);
   }
   else {
     it.print(0,0, _font, _color_blue, "?" );
   }
-}
-
-void ZilloScope::display_boot() {
-  //_display->print(0,0,_font,_color_blue,"Boot");
-}
-
-void ZilloScope::display_time() {
-  _display->strftime(3, -1, _font, _color_white, ((millis()/1000)%2==0)?"%H:%M":"%H:%M.", _time->now());
-}
-
-void ZilloScope::display_ota() {
-  _display->print(0,0,_font,_color_blue,"ota");
-}
-
-void ZilloScope::display_shutdown() {
-  _display->print(0,0,_font,_color_blue,"Shutdown");
 }
 
 void ZilloScope::on_boot() {

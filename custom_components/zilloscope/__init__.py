@@ -14,6 +14,7 @@ CONF_RENDER_BOOT = 'render_boot'
 CONF_RENDER_TIME = 'render_time'
 CONF_RENDER_OTA = 'render_ota'
 CONF_RENDER_SHUTDOWN = 'render_shutdown'
+CONF_RENDER_NOTIFICATION = 'render_notification'
 
 zilloscope_ns = cg.esphome_ns.namespace('zilloscope')
 ZilloScope = zilloscope_ns.class_('ZilloScope', cg.Component)
@@ -28,6 +29,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_RENDER_TIME): cv.lambda_,
     cv.Required(CONF_RENDER_OTA): cv.lambda_,
     cv.Required(CONF_RENDER_SHUTDOWN): cv.lambda_,
+    cv.Required(CONF_RENDER_NOTIFICATION): cv.lambda_,
     cv.Optional(CONF_ON_READY): automation.validate_automation({
         cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(ReadyTrigger),
     }),
@@ -46,11 +48,13 @@ def to_code(config):
 
     render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
     render_time_template_ = yield cg.process_lambda(config[CONF_RENDER_TIME],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
+    render_notification_template_ = yield cg.process_lambda(config[CONF_RENDER_NOTIFICATION],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
     render_ota_template_ = yield cg.process_lambda(config[CONF_RENDER_OTA],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
     render_shutdown_template_ = yield cg.process_lambda(config[CONF_RENDER_SHUTDOWN],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
 
     cg.add(var.set_render_boot(render_boot_template_))
     cg.add(var.set_render_time(render_time_template_))
+    cg.add(var.set_render_notification(render_notification_template_))
     cg.add(var.set_render_ota(render_ota_template_))
     cg.add(var.set_render_shutdown(render_shutdown_template_))
 

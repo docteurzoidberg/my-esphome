@@ -32,12 +32,14 @@ namespace esphome {
 
     //getter/setters
       state get_state();
+      std::string get_notification_text();
       void set_state(state state);
       void set_display(display::DisplayBuffer * it);
       void set_font(display::Font * font);
       void set_time(time::RealTimeClock * time);
       void set_render_boot(display_writer_t  &&render_boot_f) { this->render_boot_f_ = render_boot_f; }
       void set_render_time(display_writer_t  &&render_time_f) { this->render_time_f_ = render_time_f; }
+      void set_render_notification(display_writer_t  &&render_notification_f) { this->render_notification_f_ = render_notification_f; }
       void set_render_ota(display_writer_t  &&render_ota_f) { this->render_ota_f_ = render_ota_f; }
       void set_render_shutdown(display_writer_t &&render_shutdown_f) { this->render_shutdown_f_ = render_shutdown_f; }
       void add_on_ready_callback(std::function<void()> callback) {this->on_ready_callback_.add(std::move(callback));}
@@ -50,6 +52,9 @@ namespace esphome {
       void on_ota();
       void on_shutdown();
 
+    //services
+      void service_notify(int type, std::string text, unsigned long timeout);
+
     protected:
       //triggers
       CallbackManager<void()> on_ready_callback_;
@@ -57,6 +62,7 @@ namespace esphome {
       //display lambdas
       display_writer_t render_boot_f_;
       display_writer_t render_time_f_;
+      display_writer_t render_notification_f_;
       display_writer_t render_ota_f_;
       display_writer_t render_shutdown_f_;
     };

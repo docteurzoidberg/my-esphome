@@ -30,7 +30,17 @@ esphome:
 wifi: !include "common/wifi.yaml"
 captive_portal:
 logger:
+
 api:
+  services:
+    - service: notify
+      variables:
+        type: int
+        text: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_notify(type,text,10000);
+
 ota:
 
 binary_sensor:
@@ -65,6 +75,7 @@ font:
 time:
   - platform: homeassistant
     id: homeassistant_time
+    timezone: Europe/Paris
 
 light:
   - platform: fastled_clockless
@@ -117,6 +128,9 @@ zilloscope:
   render_time: |-
     //TODO use text center
     it.strftime(5, -1, id(tinyfont),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H:%M.", id(homeassistant_time).now());
+
+  render_notification: |-
+    it.print(0, 0, id(tinyfont), Color(0xFFFFFF), id(zilloscope_main).get_notification_text().c_str());
 
   render_ota: |-
     it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");

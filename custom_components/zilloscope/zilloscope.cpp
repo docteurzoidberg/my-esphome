@@ -12,6 +12,9 @@ static const Color _color_white = Color(0xFFFFFF);
 //state
 static state _state = state::booting;
 static bool _has_time=false;
+static unsigned long _notify_start;
+static std::string _notification_text;
+static unsigned long _notification_timeout;
 
 //references
 static display::DisplayBuffer *_display=NULL;
@@ -28,6 +31,14 @@ void ZilloScope::loop() {
     _has_time=true;
     _state=state::time;
   }
+
+  if(_state==state::notify) {
+    //notification timeout
+    if(millis()-_notify_start>_notification_timeout) {
+      _state=state::time;
+    }
+  }
+
 }
 
 void ZilloScope::dump_config(){
@@ -46,12 +57,25 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
   else if(_state==state::ota) {
     return render_ota_f_(it);
   }
+  else if(_state==state::notify) {
+    return render_notification_f_(it);
+  }
   else if(_state==state::shutdown) {
     return render_shutdown_f_(it);
   }
   else {
     it.print(0,0, _font, _color_blue, "?" );
   }
+}
+
+//services
+
+void ZilloScope::service_notify(int type, std::string text, unsigned long timeout) {
+  //todo: add notification to a queue
+  _state=state::notify;
+  _notify_start = millis();
+  _notification_text = text;
+  _notification_timeout = timeout;
 }
 
 //events
@@ -74,6 +98,10 @@ void ZilloScope::on_shutdown() {
 
 state ZilloScope::get_state() {
   return _state;
+}
+
+std::string ZilloScope::get_notification_text() {
+  return _notification_text;
 }
 
 void ZilloScope::set_state(state state) {

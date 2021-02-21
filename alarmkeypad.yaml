@@ -11,10 +11,10 @@ esphome:
     - priority: 1000
       then:
         - lambda: |-
+            fastled_base_fastledlightoutput->get_controller()->setDither(0);
             id(mainobj).set_display(id(alpha));
             id(mainobj).set_alarmstatusentity(id(alarmtext));
             id(mainobj).set_keypadtext(id(reader));
-            fastled_base_fastledlightoutput->get_controller()->setDither(0);
     - priority: 600
       then:
         - lambda: |-
@@ -23,11 +23,16 @@ esphome:
         - light.turn_on:
             id: leds_keypad
             brightness: 0.2
-            effect: keypad_boot_effect
+            effect: Rainbow
         - light.turn_on:
             id: leds_case
             brightness: 0.2
             effect: case_boot_effect
+        - light.turn_on:
+            id: leds_rfid
+            brightness: 0.2
+            effect: Raibow
+
   on_shutdown:
     then:
       - lambda: |-
@@ -38,7 +43,7 @@ wifi: !include "common/wifi.yaml"
 captive_portal:
 
 logger:
-  level: DEBUG
+  level: VERBOSE
 
 ota:
 
@@ -134,7 +139,6 @@ keypad:
         inverted: False
   keys: "789D456B123A0DDD"
 
-
 display:
   - platform: ht16k33_alpha
     id: "alpha"
@@ -160,6 +164,7 @@ light:
     effects:
       - addressable_rainbow:
           name: Rainbow
+          width: 13
       - addressable_scan:
           name: keypad_boot_effect
           move_interval: 22ms
@@ -198,20 +203,14 @@ light:
     id: leds_rfid
     chipset: WS2812B
     pin: 18
-    num_leds: 8
+    num_leds: 12
     rgb_order: GRB
     name: "$friendly_name Rfid ring leds"
     gamma_correct: 0
-    color_correct: [50%, 50%, 50%]
+    color_correct: [30%, 30%, 30%]
     effects:
       - addressable_rainbow:
           name: Rainbow
-      - addressable_lambda:
-          name: "render"
-          update_interval: 22ms
-          lambda: |-
-            id(mainobj).leds_rfid_lambdacall(it);
-
 text_sensor:
 
     #Input text from keypad
@@ -313,9 +312,11 @@ sensor:
         lambda: !lambda |-
           id(alpha).set_brightness(x);
 
-
 alarm_keypad_component:
   id: mainobj
+  #case_leds_id: ''
+  #keys_leds_id: ''
+  #alarm_status_id: ''
 
   #on_boot:
   #on_ota:
@@ -332,3 +333,7 @@ alarm_keypad_component:
           id: leds_case
           brightness: 0.2
           effect: render
+      - light.turn_on:
+          id: leds_rfid
+          brightness: 0.2
+          effect: Rainbow

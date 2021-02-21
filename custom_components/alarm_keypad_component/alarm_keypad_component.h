@@ -29,7 +29,6 @@ namespace esphome {
         this->on_ready_callback_.add(std::move(callback));
       }
 
-
       uint8_t get_state();
       char get_arm_key();
       void set_arm_key(char key);

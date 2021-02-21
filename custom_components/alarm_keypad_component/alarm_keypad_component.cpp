@@ -8,6 +8,8 @@ static const char *TAG = "alarm_keypad_component.component";
 
 static unsigned long _typing_timer=0;
 static unsigned long _service_timer=0;
+static uint8_t _wait_counter=0;
+static const char *_wait_chars = "-\\|/-";
 
 static std::string _typing_progress="";
 static std::string _last_alarm_status="";
@@ -23,7 +25,7 @@ static text_sensor::TextSensor *_keypadtext=NULL;
 
 // component
 void AlarmKeypadComponent::setup() {
-
+  //fastled_base_fastledlightoutput->get_controller()->setDither(0);
 }
 
 void AlarmKeypadComponent::loop() {
@@ -88,6 +90,7 @@ void AlarmKeypadComponent::start_service() {
   ESP_LOGD(TAG, "service");
   _service_timer=millis();
   _state = STATE_SERVICE_WAIT;
+  _wait_counter=0;
   if(_alarmstatus!=NULL){
       if(_alarmstatus->has_state()) {
         _last_alarm_status=_alarmstatus->state;
@@ -105,10 +108,24 @@ void AlarmKeypadComponent::service_timeout() {
 void AlarmKeypadComponent::display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
   if(_state==STATE_BOOTING) {
     it.set_brightness(.1);
-    it.print("BOOTING");
+    std::string toprint ("  BOOT  ");
+    toprint.front()=_wait_chars[_wait_counter];
+    toprint.back()=_wait_chars[_wait_counter];
+    it.print(toprint);
+    _wait_counter++;
+    if(_wait_counter>4)
+      _wait_counter=0;
   }
   else if(_state==STATE_ALARM_STATUS_DISPLAY) {
-    it.print(text.substr(0,8));
+    if(text=="ARMING") {
+      if(((int)(millis()/1000)) % 2 == 0) {
+        it.print("");
+      } else {
+        it.print(" ARMING ");
+      }
+    } else {
+      it.print(text.substr(0,8));
+    }
   }
   else if(_state==STATE_TYPING) {
 
@@ -117,30 +134,36 @@ void AlarmKeypadComponent::display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay
 
     //Works
     if(_typing_progress.length()==1){
-      it.print("*___");
+      it.print("  *___  ");
     }
     else if(_typing_progress.length()==2){
-      it.print("**__");
+      it.print("  **__  ");
     }
     else if(_typing_progress.length()==3){
-      it.print("***_");
+      it.print("  ***_  ");
     }
     else if(_typing_progress.length()==4){
-      it.print("****");
+      it.print("  ****  ");
     }
     else {
-      it.print("____");
+      it.print("  ____  ");
     }
 
     //Doesn't works. because i'm dumb:
     //it.print(std::string('*',_typing_progress.length()).c_str());
   }
   else if(_state==STATE_SERVICE_WAIT){
-    it.print("--------");
+    std::string toprint ("  WAIT  ");
+    toprint.front()=_wait_chars[_wait_counter];
+    toprint.back()=_wait_chars[_wait_counter];
+    it.print(toprint);
+    _wait_counter++;
+    if(_wait_counter>4)
+      _wait_counter=0;
   }
   else if(_state==STATE_SHUTDOWN){
       //TODO: fancier
-      it.print("OTA");
+      it.print("SHUTDOWN");
     }
 }
 

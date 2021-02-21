@@ -7,13 +7,38 @@ esphome:
   build_path: build/$devicename
   platform: ESP32
   board: esp32doit-devkit-v1
-  includes:
-    - "src/custom_zillominee/effect_zillofeu.h"
+  on_boot:
+    - priority: 0
+      then: # stop the flickering
+        - lambda: |-
+            fastled_base_fastledlightoutput->get_controller()->setDither(0);
+            id(zilloscope_main).on_boot();
+        - light.turn_on:
+            id: "zillominee_matrix"
+            brightness: 50%
+            effect: "none"
+        - switch.turn_on: zillominee_control_display
+  on_shutdown:
+    then:
+      - lambda: |-
+          id(zilloscope_main).on_shutdown();
 
 wifi: !include "common/wifi.yaml"
+
 captive_portal:
+
 logger:
+
 api:
+  services:
+    - service: notify
+      variables:
+        type: int
+        text: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_notify(type,text,10000);
+
 ota:
 
 binary_sensor:
@@ -22,39 +47,142 @@ binary_sensor:
 switch:
   - <<: !include "common/common_switchs.yaml"
   - platform: gpio
-    name: "Relay"
-    pin: GPIO15
+    name: "$friendly_name psu relay"
+    pin: GPIO32
+    id: relay
+    restore_mode: ALWAYS_OFF
+    inverted: no
+
+  - platform: template
+    id: zillominee_control_display
+    name: "${friendly_name} Control Display"
+    lambda: |-
+      return id(zillominee_display).get_enabled();
+    turn_on_action:
+      - lambda: |-
+          id(zillominee_display).set_enabled(true);
+    turn_off_action:
+      - lambda: |-
+          id(zillominee_display).set_enabled(false);
 
 sensor:
   - <<: !include "common/common_sensors.yaml"
 
-  - platform: ct_clamp
-    sensor: adc_sensor
-    name: "Measured Current"
-    update_interval: 60s
-    filters:
-      - calibrate_linear:
-          # Measured value of 0 maps to 0A
-          - 0 -> 0
-          # Known load: 4.0A
-          # Value shown in logs: 0.1333A
-          - 0.1333 -> 4.0
+#  - platform: homeassistant
+#    id: zillominee_test_bandes
+#    entity_id: input_number.zillominee_test_bandes
+#  - platform: homeassistant
+#    id: zillominee_test_start
+#    entity_id: input_number.zillominee_test_start
+
+#  - platform: ct_clamp
+#    sensor: adc_sensor
+#    name: "$friendly_name current"
+#    update_interval: 5s
+    #filters:
+    #  - calibrate_linear:
+    #      # Measured value of 0 maps to 0A
+    #      - 0 -> 0
+    #      # Known load: 4.0A
+    #      # Value shown in logs: 0.1333A
+    #      - 0.1333 -> 4.0
 
   # Example source sensor
-  - platform: adc
-    pin: GPIO5
-    id: adc_sensor
+#  - platform: adc
+#    pin: GPIO33
+#    id: adc_sensor
+
+#e131:
+#  method: multicast
 
 light:
   - platform: fastled_clockless
-    chipset: WS2812B
+    chipset: WS2813
     pin: GPIO25
-    num_leds: 875
+    num_leds: 600
     rgb_order: GRB
+    id: "zillominee_matrix"
     name: "$friendly_name Matrix"
-    effects:
-      - addressable_rainbow:
-          name: Rainbow
+    default_transition_length : 0s
+    #gamma_correct: 0
+    restore_mode : ALWAYS_OFF
+
+
+    on_turn_on:
+    - switch.turn_on: relay
+    on_turn_off:
+    - switch.turn_off: relay
+
+animation:
+  - file: "img/zillo/zilloscope1.gif"
+    id: boot_animation
+    type: RGB24
+    resize: 35x25
+  - file: "img/zillo/drzoid.gif"
+    id: drzoid
+    type: RGB24
+    resize: 35x25
+
+font:
+  - id: tinyfont
+    file: "fonts/pixelmix.ttf"
+    size: 8
+    glyphs: '♡Ωäöüß!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Paris
+
+display:
+  - platform: addressable_light_display
+    id: zillominee_display
+    addressable_light_id: zillominee_matrix
+    width: 24
+    height: 25
+    update_interval: 16ms
+    lambda: |-
+      id(zilloscope_main).display_lambdacall(it);
+    pixel_mapper: |-
+      if (x % 2 == 0) {
+        return (x * 25) + (24 - y);
+      }
+      return (x * 25) + y;
+
+zilloscope:
+  id: zilloscope_main
+  display_id: zillominee_display
+  font_id: tinyfont
+  time_id: homeassistant_time
+
+  render_boot: |-
+    id(drzoid).next_frame();
+    id(zillominee_display).image(0, 0, id(drzoid));
+
+  render_time: |-
+    //it.strftime(0, 0, id(tinyfont),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"a:":"a:.", id(homeassistant_time).now());
+
+    it.draw_pixel_at(1, 1,  ((millis()/1000)%2==0)? Color(0xFFFFFF): Color(0x000000));
+
+    //ESP_LOGD("toto", ((millis()/1000)%2==0)?"true":"false");
+    //TODO: use text center
+    //TODO: fancier clock display
+    //it.strftime(0, 0, id(tinyfont),  Color(0xFFFFFF), (millis()%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
+    //ESP_LOGD("toto", "refresh");
+    //it.printf(0, 0, id(tinyfont),  Color(0xFFFFFF), "%lu",millis());
+
+  render_notification: |-
+    //TODO: display icon. scroll text. etc
+    it.print(0, 0, id(tinyfont), Color(0xFFFFFF), id(zilloscope_main).get_notification_text().c_str());
+
+  render_ota: |-
+    //TODO
+    it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
+
+  render_shutdown: |-
+    //TODO
+    it.print(0, 0, id(tinyfont), Color(0xFF0000), "STOP");
+
 
 #relai pin
 #temperature pin

@@ -47,21 +47,50 @@ void ZilloScope::dump_config(){
 
 //display
 
+
+uint32_t _frame_counter_boot=0;
+uint32_t _frame_counter_time=0;
+uint32_t _frame_counter_ota=0;
+uint32_t _frame_counter_notify=0;
+uint32_t _frame_counter_shutdown=0;
+
+
 void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
+
   if(_state== state::booting) {
-    return render_boot_f_(it);
+    if(render_boot_f_(it,_frame_counter_boot))
+      _frame_counter_boot++;
+    else
+      _frame_counter_boot=0;
+    return;
   }
   else if(_state==state::time) {
-    return render_time_f_(it);
+    if(render_time_f_(it,_frame_counter_time))
+      _frame_counter_time++;
+    else
+      _frame_counter_time=0;
+    return;
   }
   else if(_state==state::ota) {
-    return render_ota_f_(it);
+    if(render_ota_f_(it,_frame_counter_ota))
+      _frame_counter_ota++;
+    else
+      _frame_counter_ota=0;
+    return;
   }
   else if(_state==state::notify) {
-    return render_notification_f_(it);
+    if(render_notification_f_(it,_frame_counter_notify))
+      _frame_counter_notify++;
+    else
+      _frame_counter_notify=0;
+    return;
   }
   else if(_state==state::shutdown) {
-    return render_shutdown_f_(it);
+    if(render_shutdown_f_(it,_frame_counter_shutdown))
+      _frame_counter_shutdown++;
+    else
+      _frame_counter_shutdown=0;
+    return;
   }
   else {
     it.print(0,0, _font, _color_blue, "?" );

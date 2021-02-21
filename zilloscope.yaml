@@ -115,20 +115,26 @@ zilloscope:
   render_boot: |-
     id(boot_animation).next_frame();
     id(zilloscope_display).image(0, 0, id(boot_animation));
+    return false;
 
   render_time: |-
     //TODO: use text center
     //TODO: fancier clock display
     it.strftime(5, -1, id(tinyfont),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H:%M.", id(homeassistant_time).now());
+    return false;
 
   render_notification: |-
     //TODO: display icon. scroll text. etc
-    it.print(0, 0, id(tinyfont), Color(0xFFFFFF), id(zilloscope_main).get_notification_text().c_str());
+    //it.print(0, 0, id(tinyfont), Color(0xFFFFFF), id(zilloscope_main).get_notification_text().c_str());
+    it.printf(0, 0, id(tinyfont), Color(0xFFFFFF), "%lu", (unsigned long)frame);
+    return true;
 
   render_ota: |-
     //TODO
     it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
+    return false;
 
   render_shutdown: |-
     //TODO
     it.print(0, 0, id(tinyfont), Color(0xFF0000), "STOP");
+    return false;

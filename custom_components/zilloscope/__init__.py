@@ -46,11 +46,11 @@ def to_code(config):
     cg.add(var.set_time(wrapped_time))
     yield cg.register_component(var, config)
 
-    render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
-    render_time_template_ = yield cg.process_lambda(config[CONF_RENDER_TIME],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
-    render_notification_template_ = yield cg.process_lambda(config[CONF_RENDER_NOTIFICATION],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
-    render_ota_template_ = yield cg.process_lambda(config[CONF_RENDER_OTA],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
-    render_shutdown_template_ = yield cg.process_lambda(config[CONF_RENDER_SHUTDOWN],[(display.DisplayBufferRef, 'it')],return_type=cg.void)
+    render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+    render_time_template_ = yield cg.process_lambda(config[CONF_RENDER_TIME],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+    render_notification_template_ = yield cg.process_lambda(config[CONF_RENDER_NOTIFICATION],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+    render_ota_template_ = yield cg.process_lambda(config[CONF_RENDER_OTA],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+    render_shutdown_template_ = yield cg.process_lambda(config[CONF_RENDER_SHUTDOWN],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
 
     cg.add(var.set_render_boot(render_boot_template_))
     cg.add(var.set_render_time(render_time_template_))

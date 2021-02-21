@@ -8,7 +8,7 @@
 namespace esphome {
   namespace zilloscope {
 
-    using display_writer_t = std::function<void(display::DisplayBuffer &)>;
+    using display_writer_t = std::function<bool(display::DisplayBuffer &, uint32_t)>;
 
     //states of the zilloscope
     enum state

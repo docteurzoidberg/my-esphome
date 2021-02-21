@@ -1,0 +1,39 @@
+substitutions:
+  devicename: "tentionlatete"
+  friendly_name: "Tentionlatete"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32doit-devkit-v1
+
+
+wifi: !include "common/wifi.yaml"
+captive_portal:
+
+logger:
+  level: VERBOSE
+
+api:
+ota:
+
+spi:
+  clk_pin: 25
+  mosi_pin: 27
+
+font:
+  - file: "fonts/PressStart2P-Regular.ttf"
+    id: digit_font
+    size: 6
+
+display:
+  - platform: max7219digit
+    cs_pin: 14
+    num_chips: 20
+    intensity: 5
+    lambda: |-
+      it.print(0, 0, id(digit_font), "        ATTENTION A LA TETE        ATTENTION A LA TETE        ATTENTION A LA TETE        ATTENTION A LA TETE");
+    scroll_enable: true
+    scroll_mode : continuous
+

@@ -3,8 +3,6 @@
 #include "esphome/core/component.h"
 #include "esphome/core/automation.h"
 #include "esphome/components/display/display_buffer.h"
-#include "esphome/components/text_sensor/text_sensor.h"
-#include "esphome/components/homeassistant/text_sensor/homeassistant_text_sensor.h"
 #include <string>
 
 namespace esphome {

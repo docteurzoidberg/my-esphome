@@ -67,11 +67,15 @@ font:
   - id: tinyfont
     file: "fonts/pixelmix.ttf"
     size: 8
-    glyphs: '♡Ωäöüß!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
   - id: font6px
     file: "fonts/6px-Normal.ttf"
     size: 8
-    glyphs: '♡Ωäöüß!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_8bithud
+    file: "fonts/8-bit-hud.ttf"
+    size: 5
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
 
 time:
   - platform: homeassistant
@@ -126,7 +130,7 @@ zilloscope:
   render_time: |-
     //TODO: use text center
     //TODO: fancier clock display
-    it.strftime(5, -1, id(font6px),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
+    it.strftime(2, 0, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
     return false;
 
   render_notification: |-
@@ -137,7 +141,7 @@ zilloscope:
     //Notification type
     if(frame<((2*1000)/16)) {
       //for first 2 seconds
-      it.print(16, 3, id(font6px), Color(0x61d3e3), TextAlign::CENTER, "Info");
+      it.print(16, 3, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");
       return true;
     }
 

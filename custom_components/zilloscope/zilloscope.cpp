@@ -21,6 +21,12 @@ static display::DisplayBuffer *_display=NULL;
 static display::Font *_font=NULL;
 static time::RealTimeClock *_time=NULL;
 
+uint32_t _frame_counter_boot=0;
+uint32_t _frame_counter_time=0;
+uint32_t _frame_counter_ota=0;
+uint32_t _frame_counter_notify=0;
+uint32_t _frame_counter_shutdown=0;
+
 //component
 
 void ZilloScope::setup() {
@@ -35,6 +41,7 @@ void ZilloScope::loop() {
   if(_state==state::notify) {
     //notification timeout
     if(millis()-_notify_start>_notification_timeout) {
+      _frame_counter_notify=0;
       _state=state::time;
     }
   }
@@ -46,14 +53,6 @@ void ZilloScope::dump_config(){
 }
 
 //display
-
-
-uint32_t _frame_counter_boot=0;
-uint32_t _frame_counter_time=0;
-uint32_t _frame_counter_ota=0;
-uint32_t _frame_counter_notify=0;
-uint32_t _frame_counter_shutdown=0;
-
 
 void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
 
@@ -96,6 +95,28 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
     it.print(0,0, _font, _color_blue, "?" );
   }
 }
+
+void ZilloScope::color_line_setup(int width, int height, int ppc) {
+  _cl = new ColorLine(width, height, ppc);
+
+}
+void ZilloScope::color_line_draw(int xpos, int ypos) {
+  _cl->render(_display,xpos,ypos);
+}
+
+void ZilloScope::text_scroller_setup(display::Font * font, std::string text, int times, int xoffset, int ypos) {
+  _ts = new TextScroller(_display,font,text,times,xoffset,ypos);
+}
+
+bool ZilloScope::text_scroller_scroll() {
+  return _ts->scroll();
+}
+
+void ZilloScope::text_scroller_draw(display::Font * font, Color color) {
+  _ts->render(_display,font,color);
+}
+
+
 
 //services
 

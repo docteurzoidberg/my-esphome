@@ -20,6 +20,7 @@ esphome:
       then:
         - lambda: |-
             id(zilloscope_main).on_boot();
+            id(zilloscope_main).color_line_setup(32,1,4);
 
   on_shutdown:
     then:
@@ -40,6 +41,7 @@ api:
       then:
         - lambda: |-
             id(zilloscope_main).service_notify(type,text,10000);
+            id(zilloscope_main).text_scroller_setup(id(font6px),id(zilloscope_main).get_notification_text(),2,1,-1);
 
 ota:
 
@@ -64,6 +66,10 @@ sensor:
 font:
   - id: tinyfont
     file: "fonts/pixelmix.ttf"
+    size: 8
+    glyphs: '♡Ωäöüß!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font6px
+    file: "fonts/6px-Normal.ttf"
     size: 8
     glyphs: '♡Ωäöüß!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
 
@@ -120,13 +126,30 @@ zilloscope:
   render_time: |-
     //TODO: use text center
     //TODO: fancier clock display
-    it.strftime(5, -1, id(tinyfont),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H:%M.", id(homeassistant_time).now());
+    it.strftime(5, -1, id(font6px),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
     return false;
 
   render_notification: |-
-    //TODO: display icon. scroll text. etc
-    //it.print(0, 0, id(tinyfont), Color(0xFFFFFF), id(zilloscope_main).get_notification_text().c_str());
-    it.printf(0, 0, id(tinyfont), Color(0xFFFFFF), "%lu", (unsigned long)frame);
+
+    //Rainbow line
+    id(zilloscope_main).color_line_draw(0,7);
+
+    //Notification type
+    if(frame<((2*1000)/16)) {
+      //for first 2 seconds
+      it.print(16, 3, id(font6px), Color(0x61d3e3), TextAlign::CENTER, "Info");
+      return true;
+    }
+
+    //Text scroller
+    if(frame%5==0) {
+      //scroll every 5 frame
+      if(id(zilloscope_main).text_scroller_scroll()) {
+        return false;
+      }
+    }
+
+    id(zilloscope_main).text_scroller_draw(id(font6px),Color(0xFFFFFF));
     return true;
 
   render_ota: |-

@@ -187,6 +187,7 @@ namespace esphome {
       void add_on_ready_callback(std::function<void()> callback) {this->on_ready_callback_.add(std::move(callback));}
 
       void next_notification();
+      void end_notification();
 
     //display
       void display_lambdacall(display::DisplayBuffer & it);

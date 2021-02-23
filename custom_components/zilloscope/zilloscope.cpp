@@ -72,6 +72,13 @@ void ZilloScope::next_notification() {
   _queue.pop();
 }
 
+void ZilloScope::end_notification() {
+   _current_notification->end();
+   if(!_queue.empty()) {
+    next_notification();
+   }
+}
+
 //display
 
 void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {

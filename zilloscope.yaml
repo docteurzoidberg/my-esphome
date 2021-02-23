@@ -153,6 +153,7 @@ zilloscope:
     if(frame%5==0) {
       //scroll every 5 frame
       if(id(zilloscope_main).text_scroller_scroll()) {
+        id(zilloscope_main).end_notification();
         return false;
       }
     }

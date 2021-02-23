@@ -13,11 +13,9 @@ esphome:
       then:
         - lambda: |-
             fastled_base_fastledlightoutput->get_controller()->setDither(0);
-    - priority: -10
-      then:
+    #- priority: 600
+    #  then:
         - switch.turn_on: zilloscope_control_display
-    - priority: 0
-      then:
         - lambda: |-
             id(zilloscope_main).on_boot();
             id(zilloscope_main).color_line_setup(32,1,4);
@@ -41,7 +39,6 @@ api:
       then:
         - lambda: |-
             id(zilloscope_main).service_notify(type,text,10000);
-            //id(zilloscope_main).text_scroller_setup(id(font6px),id(zilloscope_main).get_notification_text(),2,1,-1);
 
 ota:
 
@@ -96,10 +93,13 @@ light:
     restore_mode : ALWAYS_ON
 
 animation:
-  - file: "img/zillo/zilloscope1.gif"
-    id: boot_animation
+  - file: "img/zilloscope/boot0.gif"
+    id: boot_animation0
     type: RGB24
-    resize: 32x8
+
+  - file: "img/zilloscope/boot1.gif"
+    id: boot_animation1
+    type: RGB24
 
 display:
   - platform: addressable_light_display
@@ -123,9 +123,17 @@ zilloscope:
   time_id: homeassistant_time
 
   render_boot: |-
-    id(boot_animation).next_frame();
-    id(zilloscope_display).image(0, 0, id(boot_animation));
-    return false;
+    if(frame>210) {
+      id(boot_animation1).next_frame();
+      id(zilloscope_display).image(0, 0, id(boot_animation1));
+      return true;
+    }
+    if(frame<=9 || frame==109) {
+      id(boot_animation0).next_frame();
+    }
+    id(zilloscope_display).image(0, 0, id(boot_animation0));
+    return true;
+
 
   render_time: |-
     //TODO: use text center

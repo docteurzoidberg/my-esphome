@@ -5,7 +5,6 @@
 ## alarmkeypad.yaml
 
 //TODO: insert pictures / videos
-//TODO: insert project repo url
 
 A homeassistant physical alarm keypad + display
 Using keypad and ht16k33 custom components from ssied

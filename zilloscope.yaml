@@ -41,7 +41,7 @@ api:
       then:
         - lambda: |-
             id(zilloscope_main).service_notify(type,text,10000);
-            id(zilloscope_main).text_scroller_setup(id(font6px),id(zilloscope_main).get_notification_text(),2,1,-1);
+            //id(zilloscope_main).text_scroller_setup(id(font6px),id(zilloscope_main).get_notification_text(),2,1,-1);
 
 ota:
 
@@ -134,6 +134,10 @@ zilloscope:
     return false;
 
   render_notification: |-
+
+    if(frame==0){
+      id(zilloscope_main).text_scroller_setup(id(font6px),id(zilloscope_main).get_notification_text(),2,1,-1);
+    }
 
     //Rainbow line
     id(zilloscope_main).color_line_draw(0,7);

@@ -5,6 +5,7 @@
 #include "esphome/components/display/display_buffer.h"
 
 #include <string>
+#include <queue>
 
 namespace esphome {
   namespace zilloscope {
@@ -108,8 +109,61 @@ namespace esphome {
       }
     };
 
+    enum NotificationType
+    {
+      INFO,
+      WARNING,
+      ALERT,
+      OTHER
+    };
 
+    class Notification {
+    public:
+      uint8_t _type;
+      std::string _text;
+      unsigned long _timeout;
 
+      Notification(uint8_t type, std::string text, unsigned long timeout) {
+        _type = type;
+        _text = text;
+        _timeout = timeout;
+      }
+      bool is_started() {
+        return _started>0;
+      }
+      bool is_finished() {
+        return _finished;
+      }
+      bool is_timed_out() {
+        if(_started==0 || _timeout==0)
+          return false;
+        return (millis()-_started) > _timeout;
+      }
+
+      uint8_t get_type() {
+        return _type;
+      }
+      std::string get_text() {
+        return _text;
+      }
+      unsigned long get_timeout() {
+        return _timeout;
+      }
+      unsigned long get_started() {
+        return _started;
+      }
+      void start() {
+        _started=millis();
+      }
+      void end() {
+        _finished=true;
+      }
+
+    private:
+      bool _finished=false;
+      unsigned long _started=0;   //ts when set to current
+      uint32_t _framecounter=0;   //ellapsed frames
+    };
 
     class ZilloScope : public Component {
     public:
@@ -118,7 +172,6 @@ namespace esphome {
       void setup() override;
       void loop() override;
       void dump_config() override;
-
     //getter/setters
       state get_state();
       std::string get_notification_text();
@@ -132,6 +185,8 @@ namespace esphome {
       void set_render_ota(display_writer_t  &&render_ota_f) { this->render_ota_f_ = render_ota_f; }
       void set_render_shutdown(display_writer_t &&render_shutdown_f) { this->render_shutdown_f_ = render_shutdown_f; }
       void add_on_ready_callback(std::function<void()> callback) {this->on_ready_callback_.add(std::move(callback));}
+
+      void next_notification();
 
     //display
       void display_lambdacall(display::DisplayBuffer & it);

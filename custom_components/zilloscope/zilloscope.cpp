@@ -12,9 +12,6 @@ static const Color _color_white = Color(0xFFFFFF);
 //state
 static state _state = state::booting;
 static bool _has_time=false;
-static unsigned long _notify_start;
-static std::string _notification_text;
-static unsigned long _notification_timeout;
 
 //references
 static display::DisplayBuffer *_display=NULL;
@@ -27,29 +24,52 @@ uint32_t _frame_counter_ota=0;
 uint32_t _frame_counter_notify=0;
 uint32_t _frame_counter_shutdown=0;
 
+std::queue<Notification*> _queue;
+Notification* _current_notification;
+
 //component
 
 void ZilloScope::setup() {
 }
 
 void ZilloScope::loop() {
+
+  //Waiting until we got a valid time to enter state::time after boot
   if(!_has_time && _time->now().is_valid()) {
     _has_time=true;
     _state=state::time;
+    return;
   }
 
+  //Start new notification if present in queue and in time mode
+  if(_state==state::time && !_queue.empty()) {
+    next_notification();
+    _state=state::notify;
+    return;
+  }
+
+  //notification finished ?
   if(_state==state::notify) {
-    //notification timeout
-    if(millis()-_notify_start>_notification_timeout) {
-      _frame_counter_notify=0;
-      _state=state::time;
+    if(_current_notification->is_finished() || _current_notification->is_timed_out()) {
+      if(_queue.empty()) {
+        _state=state::time;
+        return;
+      }
+      next_notification();
+      return;
     }
   }
-
 }
 
 void ZilloScope::dump_config(){
   ESP_LOGCONFIG(TAG, "Zilloscope component");
+}
+
+void ZilloScope::next_notification() {
+  _frame_counter_notify=0;
+  _current_notification = _queue.front();
+  _current_notification->start();//update started timer
+  _queue.pop();
 }
 
 //display
@@ -100,6 +120,7 @@ void ZilloScope::color_line_setup(int width, int height, int ppc) {
   _cl = new ColorLine(width, height, ppc);
 
 }
+
 void ZilloScope::color_line_draw(int xpos, int ypos) {
   _cl->render(_display,xpos,ypos);
 }
@@ -116,16 +137,10 @@ void ZilloScope::text_scroller_draw(display::Font * font, Color color) {
   _ts->render(_display,font,color);
 }
 
-
-
 //services
 
 void ZilloScope::service_notify(int type, std::string text, unsigned long timeout) {
-  //todo: add notification to a queue
-  _state=state::notify;
-  _notify_start = millis();
-  _notification_text = text;
-  _notification_timeout = timeout;
+  _queue.push(new Notification(type,text,timeout));
 }
 
 //events
@@ -151,7 +166,7 @@ state ZilloScope::get_state() {
 }
 
 std::string ZilloScope::get_notification_text() {
-  return _notification_text;
+  return _current_notification->get_text();
 }
 
 void ZilloScope::set_state(state state) {
@@ -169,7 +184,6 @@ void ZilloScope::set_font(display::Font *font) {
 void ZilloScope::set_time(time::RealTimeClock *time) {
   _time=time;
 }
-
 
 } // namespace zilloscope
 

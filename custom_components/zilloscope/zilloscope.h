@@ -22,93 +22,6 @@ namespace esphome {
       shutdown
     };
 
-    class ColorLine {
-    public:
-      uint16_t _color_pixels=5;
-      uint16_t _width=35;
-      uint16_t _height=2;
-
-      std::vector<Color> _palette = {
-        Color(0xa271ff),
-        Color(0xff61b2),
-        Color(0x61d3e3),
-        Color(0x71e392),
-        Color(0xebd320),
-        Color(0xff7930),
-        Color(0xa23000)
-      };
-      std::vector<Color> _buffer;
-
-      int _indexscroll=0;
-      uint8_t _bufferindex=0;
-
-      ColorLine(uint16_t width, uint16_t height, uint16_t pixels_per_color) {
-        _width=width;
-        _height=height;
-        _color_pixels = pixels_per_color;
-        _buffer.resize(_width);
-        for(uint8_t c=0;c<_palette.size();c++) {
-          for(int i=0; i<_color_pixels;i++){
-              if(_bufferindex+1>=width)
-                return;
-              _buffer[_bufferindex++] = _palette[c];
-          }
-        }
-      }
-
-      void render(display::DisplayBuffer * it,int xpos=0, int ypos=0) {
-        for(int x=0;x<_width;x++){
-          for(int y=0;y<_height;y++) {
-            _bufferindex = (x + _indexscroll + _width) % _width;
-            Color c = _buffer[_bufferindex];
-            it->draw_pixel_at(xpos+x,ypos+y,c);
-          }
-        }
-        _indexscroll = (_indexscroll + 1) % _width;
-      }
-    };
-
-    class TextScroller {
-    public:
-
-      int _indexscroll=0;
-      int _times=2;   //negative = repeat
-      int _screen_width=0;
-      int _text_width = 0;
-      int _text_height = 0;
-      int _text_x1 = 0;
-      int _text_y1 = 0;
-      int _ypos=0;
-      int _xoffset=1;
-
-      std::string _text;
-
-      TextScroller(display::DisplayBuffer * it, display::Font * font, std::string text, int times, int xoffset=1, int ypos=0) {
-        _times=times;
-        _text=text;
-        _screen_width=it->get_width();
-        _indexscroll=_screen_width+xoffset;
-        _ypos=ypos;
-        _xoffset=xoffset;
-        it->get_text_bounds(0,0,_text.c_str(), font, display::TextAlign::LEFT, &_text_x1,&_text_y1,&_text_width,&_text_height);
-      }
-      bool scroll() {
-        _indexscroll--;
-        if(_indexscroll< -_text_width) {
-          _indexscroll=_screen_width+_xoffset;
-          _times--;
-          if(_times==0) {
-            return true;
-          }
-        }
-        return false;
-      }
-      void render(display::DisplayBuffer * it, display::Font * font, Color color) {
-        //TODO
-        it->print(_indexscroll,_ypos,font,color,_text.c_str());
-      }
-    };
-
     enum NotificationType
     {
       INFO,
@@ -192,13 +105,6 @@ namespace esphome {
     //display
       void display_lambdacall(display::DisplayBuffer & it);
 
-      void color_line_setup(int width, int height, int ppc);
-      void color_line_draw(int xpos, int ypos);
-
-      void text_scroller_setup(display::Font * font, std::string text, int times, int xoffset, int ypos);
-      bool text_scroller_scroll();
-      void text_scroller_draw(display::Font * font, Color color);
-
     //events
       void on_boot();
       void on_ota();
@@ -208,9 +114,6 @@ namespace esphome {
       void service_notify(int type, std::string text, unsigned long timeout);
 
     protected:
-
-      ColorLine *_cl;
-      TextScroller *_ts;
 
       //triggers
       CallbackManager<void()> on_ready_callback_;

@@ -123,27 +123,6 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
   }
 }
 
-void ZilloScope::color_line_setup(int width, int height, int ppc) {
-  _cl = new ColorLine(width, height, ppc);
-
-}
-
-void ZilloScope::color_line_draw(int xpos, int ypos) {
-  _cl->render(_display,xpos,ypos);
-}
-
-void ZilloScope::text_scroller_setup(display::Font * font, std::string text, int times, int xoffset, int ypos) {
-  _ts = new TextScroller(_display,font,text,times,xoffset,ypos);
-}
-
-bool ZilloScope::text_scroller_scroll() {
-  return _ts->scroll();
-}
-
-void ZilloScope::text_scroller_draw(display::Font * font, Color color) {
-  _ts->render(_display,font,color);
-}
-
 //services
 
 void ZilloScope::service_notify(int type, std::string text, unsigned long timeout) {

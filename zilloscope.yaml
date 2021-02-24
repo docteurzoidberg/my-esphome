@@ -13,9 +13,9 @@ esphome:
       then:
         - lambda: |-
             fastled_base_fastledlightoutput->get_controller()->setDither(0);
+            id(notif_colorline_scroller).setup(32,1,4);
         - switch.turn_on: zilloscope_control_display
         - lambda: |-
-            id(notif_colorline_scroller).setup(32,1,4);
             id(zilloscope_main).on_boot();
 
   on_shutdown:
@@ -37,7 +37,7 @@ api:
         text: string
       then:
         - lambda: |-
-            id(zilloscope_main).service_notify(type,text,10000);
+            id(zilloscope_main).service_notify(type,text,-1);
 
 ota:
 
@@ -93,11 +93,11 @@ light:
 
 animation:
   - file: "img/zilloscope/boot0.gif"
-    id: boot_animation0
+    id: splash_animation
     type: RGB24
 
   - file: "img/zilloscope/boot1.gif"
-    id: boot_animation1
+    id: boot_animation
     type: RGB24
 
 display:
@@ -126,19 +126,40 @@ zilloscope:
   display_id: zilloscope_display
   font_id: tinyfont
   time_id: homeassistant_time
+  use_splash: "true"
 
+
+  on_boot:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is booting
+  on_splash:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is displaying splash screen
+  on_ready:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is ready
+
+
+
+  #boot animation forever
   render_boot: |-
-    if(frame>210) {
-      id(boot_animation1).next_frame();
-      id(zilloscope_display).image(0, 0, id(boot_animation1));
-      return true;
-    }
-    if(frame<=9 || frame==109) {
-      id(boot_animation0).next_frame();
-    }
-    id(zilloscope_display).image(0, 0, id(boot_animation0));
+    id(boot_animation).next_frame();
+    id(zilloscope_display).image(0, 0, id(boot_animation));
     return true;
 
+  #pause on frame 10 for 100 frames, then 110 for 100 frames. then end
+  render_splash: |-
+    if(frame==210) {
+      return false; //if returning false, it goes to on_ready component side
+    }
+    if(frame<=9 || frame==109) {
+      id(splash_animation).next_frame();
+    }
+    id(zilloscope_display).image(0, 0, id(splash_animation));
+    return true;  //splash continue
 
   render_time: |-
     //TODO: use text center

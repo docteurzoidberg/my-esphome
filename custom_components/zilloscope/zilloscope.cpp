@@ -13,19 +13,25 @@ static const Color _color_white = Color(0xFFFFFF);
 static state _state = state::booting;
 static bool _has_time=false;
 
+//config
+static bool _config_use_splash = false;
+
 //references
 static display::DisplayBuffer *_display=NULL;
 static display::Font *_font=NULL;
 static time::RealTimeClock *_time=NULL;
 
-uint32_t _frame_counter_boot=0;
-uint32_t _frame_counter_time=0;
-uint32_t _frame_counter_ota=0;
-uint32_t _frame_counter_notify=0;
-uint32_t _frame_counter_shutdown=0;
+//display frame counters
+static uint32_t _frame_counter_boot=0;
+static uint32_t _frame_counter_splash=0;
+static uint32_t _frame_counter_time=0;
+static uint32_t _frame_counter_ota=0;
+static uint32_t _frame_counter_notify=0;
+static uint32_t _frame_counter_shutdown=0;
 
-std::queue<Notification*> _queue;
-Notification* _current_notification;
+//notifications
+static std::queue<Notification*> _queue;
+static Notification* _current_notification;
 
 //component
 
@@ -37,7 +43,7 @@ void ZilloScope::loop() {
   //Waiting until we got a valid time to enter state::time after boot
   if(!_has_time && _time->now().is_valid()) {
     _has_time=true;
-    _state=state::time;
+    on_splash();
     return;
   }
 
@@ -90,6 +96,16 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
       _frame_counter_boot=0;
     return;
   }
+  else if(_state==state::splash) {
+    if(render_splash_f_(it,_frame_counter_splash))
+      _frame_counter_splash++;
+    else {
+      _frame_counter_splash=0;
+      if(_has_time)
+        on_ready();
+    }
+    return;
+  }
   else if(_state==state::time) {
     if(render_time_f_(it,_frame_counter_time))
       _frame_counter_time++;
@@ -125,7 +141,7 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
 
 //services
 
-void ZilloScope::service_notify(int type, std::string text, unsigned long timeout) {
+void ZilloScope::service_notify(int type, std::string text, unsigned long timeout=-1) {
   _queue.push(new Notification(type,text,timeout));
 }
 
@@ -133,6 +149,21 @@ void ZilloScope::service_notify(int type, std::string text, unsigned long timeou
 
 void ZilloScope::on_boot() {
   ESP_LOGD(TAG, "boot");
+  _state=state::booting; //already set at boot at startup
+}
+
+void ZilloScope::on_splash() {
+  if(!_config_use_splash) {
+    on_ready();
+    return;
+  }
+  ESP_LOGD(TAG, "splash");
+  _state=state::splash;
+}
+
+void ZilloScope::on_ready() {
+  ESP_LOGD(TAG, "ready");
+  _state=state::time;
 }
 
 void ZilloScope::on_ota() {
@@ -169,6 +200,10 @@ void ZilloScope::set_font(display::Font *font) {
 
 void ZilloScope::set_time(time::RealTimeClock *time) {
   _time=time;
+}
+
+void ZilloScope::set_config_use_splash(bool value) {
+  _config_use_splash=value;
 }
 
 } // namespace zilloscope

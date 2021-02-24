@@ -16,6 +16,7 @@ namespace esphome {
     enum state
     {
       booting,
+      splash,
       time,
       notify,
       ota,
@@ -48,7 +49,7 @@ namespace esphome {
         return _finished;
       }
       bool is_timed_out() {
-        if(_started==0 || _timeout==0)
+        if(_started==0 || _timeout<=0)
           return false;
         return (millis()-_started) > _timeout;
       }
@@ -89,24 +90,31 @@ namespace esphome {
       state get_state();
       std::string get_notification_text();
       void set_state(state state);
-      void set_display(display::DisplayBuffer * it);
       void set_font(display::Font * font);
       void set_time(time::RealTimeClock * time);
-      void set_render_boot(display_writer_t  &&render_boot_f) { this->render_boot_f_ = render_boot_f; }
-      void set_render_time(display_writer_t  &&render_time_f) { this->render_time_f_ = render_time_f; }
-      void set_render_notification(display_writer_t  &&render_notification_f) { this->render_notification_f_ = render_notification_f; }
-      void set_render_ota(display_writer_t  &&render_ota_f) { this->render_ota_f_ = render_ota_f; }
-      void set_render_shutdown(display_writer_t &&render_shutdown_f) { this->render_shutdown_f_ = render_shutdown_f; }
+      void set_display(display::DisplayBuffer * it);
+      void set_config_use_splash(bool value);
+
+      void add_on_boot_callback(std::function<void()> callback) {this->on_boot_callback_.add(std::move(callback));}
+      void add_on_splash_callback(std::function<void()> callback) {this->on_splash_callback_.add(std::move(callback));}
       void add_on_ready_callback(std::function<void()> callback) {this->on_ready_callback_.add(std::move(callback));}
 
       void next_notification();
       void end_notification();
 
     //display
+      void set_render_boot(display_writer_t  &&render_boot_f) { this->render_boot_f_ = render_boot_f; }
+      void set_render_splash(display_writer_t  &&render_splash_f) { this->render_splash_f_ = render_splash_f; }
+      void set_render_time(display_writer_t  &&render_time_f) { this->render_time_f_ = render_time_f; }
+      void set_render_notification(display_writer_t  &&render_notification_f) { this->render_notification_f_ = render_notification_f; }
+      void set_render_ota(display_writer_t  &&render_ota_f) { this->render_ota_f_ = render_ota_f; }
+      void set_render_shutdown(display_writer_t &&render_shutdown_f) { this->render_shutdown_f_ = render_shutdown_f; }
       void display_lambdacall(display::DisplayBuffer & it);
 
     //events
       void on_boot();
+      void on_splash();
+      void on_ready();
       void on_ota();
       void on_shutdown();
 
@@ -116,14 +124,31 @@ namespace esphome {
     protected:
 
       //triggers
+      CallbackManager<void()> on_boot_callback_;    //not used
+      CallbackManager<void()> on_splash_callback_;  //not used
       CallbackManager<void()> on_ready_callback_;
 
       //display lambdas
       display_writer_t render_boot_f_;
+      display_writer_t render_splash_f_;
       display_writer_t render_time_f_;
       display_writer_t render_notification_f_;
       display_writer_t render_ota_f_;
       display_writer_t render_shutdown_f_;
+    };
+
+    //Automation triggers
+    class BootTrigger : public Trigger<> {
+    public:
+      explicit BootTrigger(ZilloScope *parent) {
+        parent->add_on_boot_callback([this]() { this->trigger(); });
+      }
+    };
+    class SplashTrigger : public Trigger<> {
+    public:
+      explicit SplashTrigger(ZilloScope *parent) {
+        parent->add_on_splash_callback([this]() { this->trigger(); });
+      }
     };
 
     class ReadyTrigger : public Trigger<> {

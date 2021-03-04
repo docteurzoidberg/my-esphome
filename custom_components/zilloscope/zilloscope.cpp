@@ -121,7 +121,7 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
     return;
   }
   else if(_state==state::notify) {
-    if(render_notification_f_(it,_frame_counter_notify))
+    if(render_notification_f_(it,_frame_counter_notify, get_notification_text(), get_notification_type()))
       _frame_counter_notify++;
     else
       _frame_counter_notify=0;
@@ -142,7 +142,7 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
 //services
 
 void ZilloScope::service_notify(int type, std::string text, unsigned long timeout=-1) {
-  _queue.push(new Notification(type,text,timeout));
+  _queue.push(new Notification((uint32_t) type,text,timeout));
 }
 
 //events
@@ -180,6 +180,10 @@ void ZilloScope::on_shutdown() {
 
 state ZilloScope::get_state() {
   return _state;
+}
+
+uint32_t ZilloScope::get_notification_type() {
+  return _current_notification->get_type();
 }
 
 std::string ZilloScope::get_notification_text() {

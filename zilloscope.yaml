@@ -49,6 +49,8 @@ switch:
   - platform: template
     id: zilloscope_control_display
     name: "${friendly_name} Control Display"
+    lambda: |-
+      return id(zilloscope_display).get_enabled();
     turn_on_action:
       - lambda: |-
           id(zilloscope_display).set_enabled(true);
@@ -58,20 +60,6 @@ switch:
 
 sensor:
   - <<: !include "common/common_sensors.yaml"
-
-font:
-  - id: tinyfont
-    file: "fonts/pixelmix.ttf"
-    size: 8
-    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
-  - id: font6px
-    file: "fonts/6px-Normal.ttf"
-    size: 8
-    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
-  - id: font_8bithud
-    file: "fonts/8-bit-hud.ttf"
-    size: 5
-    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
 
 time:
   - platform: homeassistant
@@ -91,15 +79,6 @@ light:
     #gamma_correct: 0
     restore_mode : ALWAYS_ON
 
-animation:
-  - file: "img/zilloscope/boot0.gif"
-    id: splash_animation
-    type: RGB24
-
-  - file: "img/zilloscope/boot1.gif"
-    id: boot_animation
-    type: RGB24
-
 display:
   - platform: addressable_light_display
     id: zilloscope_display
@@ -114,6 +93,29 @@ display:
         return (x * 8) + y;
       }
       return (x * 8) + (7 - y);
+
+font:
+  - id: tinyfont
+    file: "fonts/pixelmix.ttf"
+    size: 8
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font6px
+    file: "fonts/6px-Normal.ttf"
+    size: 8
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_8bithud
+    file: "fonts/8-bit-hud.ttf"
+    size: 5
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+
+animation:
+  - file: "img/zilloscope/boot0.gif"
+    id: splash_animation
+    type: RGB24
+
+  - file: "img/zilloscope/boot1.gif"
+    id: boot_animation
+    type: RGB24
 
 color_line_scroller:
   - id: notif_colorline_scroller
@@ -146,12 +148,18 @@ zilloscope:
 
   #boot animation forever
   render_boot: |-
+    //it=display
+    //frame= frame counter
+
     id(boot_animation).next_frame();
     id(zilloscope_display).image(0, 0, id(boot_animation));
     return true;
 
   #pause on frame 10 for 100 frames, then 110 for 100 frames. then end
   render_splash: |-
+    //it=display
+    //frame= frame counter
+
     if(frame==210) {
       return false; //if returning false, it goes to on_ready component side
     }
@@ -162,15 +170,20 @@ zilloscope:
     return true;  //splash continue
 
   render_time: |-
-    //TODO: use text center
-    //TODO: fancier clock display
+    //it=display
+    //frame= frame counter
+
     it.strftime(2, 0, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
     return false;
 
   render_notification: |-
+    //it=display
+    //frame= frame counter
+    //text= notification text
+    //type= notification type
 
     if(frame==0){
-      id(notif_text_scroller).setup(it,id(font6px),id(zilloscope_main).get_notification_text(),2,1,-1);
+      id(notif_text_scroller).setup(it,id(font6px),text,2,1,-1);
     }
 
     //Multicolor line scroller
@@ -180,7 +193,12 @@ zilloscope:
     //Notification type
     if(frame<((2*1000)/16)) {
       //for first 2 seconds
-      it.print(16, 3, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");
+      if(type==-1) {
+        //todo: do something with notification's type
+      }
+      else {
+        it.print(16, 3, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");
+      }
       return true;
     }
 
@@ -196,11 +214,13 @@ zilloscope:
     return true;
 
   render_ota: |-
-    //TODO
+    //it=display
+    //frame= frame counter
     it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
     return false;
 
   render_shutdown: |-
-    //TODO
+    //it=display
+    //frame= frame counter
     it.print(0, 0, id(tinyfont), Color(0xFF0000), "STOP");
     return false;

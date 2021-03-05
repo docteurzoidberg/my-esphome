@@ -28,15 +28,23 @@ namespace esphome {
       void add_on_ready_callback(std::function<void()> callback) {
         this->on_ready_callback_.add(std::move(callback));
       }
+      void add_on_code_check_callback(std::function<void()> callback) {
+        this->on_code_check_callback_.add(std::move(callback));
+      }
+      void add_on_code_ok_callback(std::function<void()> callback) {
+        this->on_code_ok_callback_.add(std::move(callback));
+      }
+      void add_on_code_ko_callback(std::function<void()> callback) {
+        this->on_code_ko_callback_.add(std::move(callback));
+      }
 
       uint8_t get_state();
       char get_arm_key();
       void set_arm_key(char key);
-      void set_display(ht16k33_alpha::HT16K33AlphaDisplay * it);
 
+      void set_display(ht16k33_alpha::HT16K33AlphaDisplay * it);
       void set_alarmstatusentity(homeassistant::HomeassistantTextSensor *hatext);
       void set_keypadtext(text_sensor::TextSensor *kptext);
-      void set_leds_keypad(light::AddressableLight *it);
 
       //ht16k33 display
       void display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text);
@@ -58,12 +66,36 @@ namespace esphome {
       void on_shutdown();
     protected:
       CallbackManager<void()> on_ready_callback_;
+      CallbackManager<void()> on_code_check_callback_;
+      CallbackManager<void()> on_code_ok_callback_;
+      CallbackManager<void()> on_code_ko_callback_;
     };
 
     class ReadyTrigger : public Trigger<> {
     public:
       explicit ReadyTrigger(AlarmKeypadComponent *parent) {
         parent->add_on_ready_callback([this]() { this->trigger(); });
+      }
+    };
+
+    class CodeCheckTrigger : public Trigger<> {
+    public:
+      explicit CodeCheckTrigger(AlarmKeypadComponent *parent) {
+        parent->add_on_code_check_callback([this]() { this->trigger(); });
+      }
+    };
+
+    class CodeOKTrigger : public Trigger<> {
+    public:
+      explicit CodeOKTrigger(AlarmKeypadComponent *parent) {
+        parent->add_on_code_ok_callback([this]() { this->trigger(); });
+      }
+    };
+
+    class CodeKOTrigger : public Trigger<> {
+    public:
+      explicit CodeKOTrigger(AlarmKeypadComponent *parent) {
+        parent->add_on_code_ko_callback([this]() { this->trigger(); });
       }
     };
 

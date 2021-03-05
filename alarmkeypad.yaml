@@ -7,14 +7,12 @@ esphome:
   build_path: build/$devicename
   platform: ESP32
   board: esp32doit-devkit-v1
+
   on_boot:
     - priority: 1000
       then:
         - lambda: |-
             fastled_base_fastledlightoutput->get_controller()->setDither(0);
-            id(mainobj).set_display(id(alpha));
-            id(mainobj).set_alarmstatusentity(id(alarmtext));
-            id(mainobj).set_keypadtext(id(reader));
     - priority: 600
       then:
         - lambda: |-
@@ -31,7 +29,7 @@ esphome:
         - light.turn_on:
             id: leds_rfid
             brightness: 0.2
-            effect: Raibow
+            effect: Rainbow
 
   on_shutdown:
     then:
@@ -43,7 +41,7 @@ wifi: !include "common/wifi.yaml"
 captive_portal:
 
 logger:
-  level: VERBOSE
+  level: DEBUG
 
 ota:
 
@@ -211,6 +209,7 @@ light:
     effects:
       - addressable_rainbow:
           name: Rainbow
+
 text_sensor:
 
     #Input text from keypad
@@ -314,15 +313,34 @@ sensor:
 
 alarm_keypad_component:
   id: mainobj
-  #case_leds_id: ''
-  #keys_leds_id: ''
-  #alarm_status_id: ''
+  keypad_text_id: reader
+  alarm_status_id: alarmtext
+  display_id: alpha
 
-  #on_boot:
-  #on_ota:
-  #on_shutdown:
-  #on_alarm_armed:
-  #on_alarm_disarmed:
+  on_code_check:
+    then:
+    - light.turn_on:
+        id: leds_case
+        brightness: 0.2
+        effect: case_boot_effect
+    - rtttl.play: "two short:d=4,o=5,b=100:16e6,16e6"
+
+  on_code_ok:
+    then:
+    - light.turn_on:
+        id: leds_case
+        brightness: 0.2
+        effect: render
+    - rtttl.play: "beep:d=16,o=5,b=100:b"
+
+  on_code_ko:
+    then:
+    - light.turn_on:
+        id: leds_case
+        brightness: 0.2
+        effect: render
+    - rtttl.play: "beep:d=8,o=5,b=100:b"
+
   on_ready:
     then:
       - light.turn_on:

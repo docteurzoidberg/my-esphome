@@ -21,8 +21,6 @@ static ht16k33_alpha::HT16K33AlphaDisplay *_display=NULL;
 static homeassistant::HomeassistantTextSensor *_alarmstatus=NULL;
 static text_sensor::TextSensor *_keypadtext=NULL;
 
-//void register_text_sensor(text_sensor::TextSensor *obj) { this->text_sensors_.push_back(obj); }
-
 // component
 void AlarmKeypadComponent::setup() {
   //fastled_base_fastledlightoutput->get_controller()->setDither(0);
@@ -57,6 +55,7 @@ void AlarmKeypadComponent::loop() {
         if(_alarmstatus->state!=_last_alarm_status) {
           //Response from service
           _state = STATE_ALARM_STATUS_DISPLAY;
+          this->on_code_ok_callback_.call();
           return;
         }
       }
@@ -88,6 +87,7 @@ void AlarmKeypadComponent::typing_timeout() {
 
 void AlarmKeypadComponent::start_service() {
   ESP_LOGD(TAG, "service");
+  this->on_code_check_callback_.call();
   _service_timer=millis();
   _state = STATE_SERVICE_WAIT;
   _wait_counter=0;
@@ -100,6 +100,7 @@ void AlarmKeypadComponent::start_service() {
 
 void AlarmKeypadComponent::service_timeout() {
   ESP_LOGD(TAG, "service timeout");
+  this->on_code_ko_callback_.call();
   _service_timer=millis();
   _state = STATE_ALARM_STATUS_DISPLAY;
 }

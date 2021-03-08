@@ -18,7 +18,6 @@ static bool _config_use_splash = false;
 
 //references
 static display::DisplayBuffer *_display=NULL;
-static display::Font *_font=NULL;
 static time::RealTimeClock *_time=NULL;
 
 //display frame counters
@@ -134,9 +133,6 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
       _frame_counter_shutdown=0;
     return;
   }
-  else {
-    it.print(0,0, _font, _color_blue, "?" );
-  }
 }
 
 //services
@@ -196,10 +192,6 @@ void ZilloScope::set_state(state state) {
 
 void ZilloScope::set_display(display::DisplayBuffer *it) {
   _display=it;
-}
-
-void ZilloScope::set_font(display::Font *font) {
-  _font=font;
 }
 
 void ZilloScope::set_time(time::RealTimeClock *time) {

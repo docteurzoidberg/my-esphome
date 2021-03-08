@@ -91,7 +91,6 @@ namespace esphome {
       std::string get_notification_text();
       uint32_t get_notification_type();
       void set_state(state state);
-      void set_font(display::Font * font);
       void set_time(time::RealTimeClock * time);
       void set_display(display::DisplayBuffer * it);
       void set_config_use_splash(bool value);

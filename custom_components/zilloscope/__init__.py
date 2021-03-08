@@ -66,12 +66,8 @@ CONFIG_SCHEMA = cv.Schema({
 def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     wrapped_display = yield cg.get_variable(config[CONF_DISPLAY_ID])
-    wrapped_font = yield cg.get_variable(config[CONF_FONT_ID])
     wrapped_time = yield cg.get_variable(config[CONF_TIME_ID])
-
-
     cg.add(var.set_display(wrapped_display))
-    cg.add(var.set_font(wrapped_font))
     cg.add(var.set_time(wrapped_time))
     yield cg.register_component(var, config)
 

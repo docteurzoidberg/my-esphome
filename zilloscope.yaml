@@ -25,8 +25,6 @@ esphome:
 
 wifi: !include "common/wifi.yaml"
 
-captive_portal:
-
 logger:
 
 api:
@@ -126,11 +124,10 @@ text_scroller:
 zilloscope:
   id: zilloscope_main
   display_id: zilloscope_display
-  font_id: tinyfont
   time_id: homeassistant_time
   use_splash: "true"
 
-
+#automations
   on_boot:
     then:
       lambda: |-
@@ -145,6 +142,7 @@ zilloscope:
         //if you want to do something when zilloscope is ready
 
 
+#render lambdas
 
   #boot animation forever
   render_boot: |-
@@ -169,13 +167,22 @@ zilloscope:
     id(zilloscope_display).image(0, 0, id(splash_animation));
     return true;  //splash continue
 
+  #render time
   render_time: |-
     //it=display
     //frame= frame counter
-
     it.strftime(2, 0, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
     return false;
 
+  #render meteo icon and temp
+  #render_meteo: |-
+  #  //it=display
+  #  //frame= frame counter
+  #  //TODO
+  #  it.print(0, 0, id(tinyfont), Color(0x0000FF), "METEO");
+  #  return false;
+
+  #notifications
   render_notification: |-
     //it=display
     //frame= frame counter
@@ -213,12 +220,14 @@ zilloscope:
     }
     return true;
 
+  #ota
   render_ota: |-
     //it=display
     //frame= frame counter
     it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
     return false;
 
+  #shutdown
   render_shutdown: |-
     //it=display
     //frame= frame counter

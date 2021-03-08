@@ -11,7 +11,6 @@ CONF_ON_SPLASH = 'on_splash'
 CONF_ON_READY = 'on_ready'
 
 CONF_DISPLAY_ID = 'display_id'
-CONF_FONT_ID = 'font_id'
 CONF_TIME_ID = 'time_id'
 
 CONF_USE_SPLASH = 'use_splash'
@@ -36,7 +35,6 @@ CONFIG_SCHEMA = cv.Schema({
 
     #references
     cv.Required(CONF_DISPLAY_ID): cv.use_id(display.DisplayBuffer),
-    cv.Required(CONF_FONT_ID): cv.use_id(font.Font),
     cv.Required(CONF_TIME_ID): cv.use_id(time_.RealTimeClock),
 
     #display render lambdas

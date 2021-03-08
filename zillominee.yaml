@@ -8,24 +8,22 @@ esphome:
   platform: ESP32
   board: esp32doit-devkit-v1
   on_boot:
-    - priority: 0
-      then: # stop the flickering
-        - lambda: |-
-            fastled_base_fastledlightoutput->get_controller()->setDither(0);
-            id(zilloscope_main).on_boot();
-        - light.turn_on:
-            id: "zillominee_matrix"
-            brightness: 50%
-            effect: "none"
-        - switch.turn_on: zillominee_control_display
+  - priority: 1000
+    then:
+      - lambda: |-
+          fastled_base_fastledlightoutput->get_controller()->setDither(0);
+          id(boot_colorline_scroller).setup(35,3,5);
+          id(notif_colorline_scroller).setup(35,2,5);
+      - switch.turn_on: zillominee_control_display
+      - lambda: |-
+          id(zilloscope_main).on_boot();
+
   on_shutdown:
     then:
       - lambda: |-
           id(zilloscope_main).on_shutdown();
 
 wifi: !include "common/wifi.yaml"
-
-captive_portal:
 
 logger:
 
@@ -37,7 +35,7 @@ api:
         text: string
       then:
         - lambda: |-
-            id(zilloscope_main).service_notify(type,text,10000);
+            id(zilloscope_main).service_notify(type,text,-1);
 
 ota:
 
@@ -95,50 +93,34 @@ sensor:
 #e131:
 #  method: multicast
 
-light:
-  - platform: fastled_clockless
-    chipset: WS2813
-    pin: GPIO25
-    num_leds: 600
-    rgb_order: GRB
-    id: "zillominee_matrix"
-    name: "$friendly_name Matrix"
-    default_transition_length : 0s
-    #gamma_correct: 0
-    restore_mode : ALWAYS_OFF
-
-
-    on_turn_on:
-    - switch.turn_on: relay
-    on_turn_off:
-    - switch.turn_off: relay
-
-animation:
-  - file: "img/zillo/zilloscope1.gif"
-    id: boot_animation
-    type: RGB24
-    resize: 35x25
-  - file: "img/zillo/drzoid.gif"
-    id: drzoid
-    type: RGB24
-    resize: 35x25
-
-font:
-  - id: tinyfont
-    file: "fonts/pixelmix.ttf"
-    size: 8
-    glyphs: '♡Ωäöüß!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
-
 time:
   - platform: homeassistant
     id: homeassistant_time
     timezone: Europe/Paris
 
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO25
+    num_leds: 875
+    rgb_order: GRB
+    max_refresh_rate: 16ms
+    id: "zillominee_matrix"
+    name: "$friendly_name Matrix"
+    color_correct: [70%, 70%, 70%]
+    default_transition_length : 0s
+    #gamma_correct: 0
+    restore_mode : ALWAYS_ON
+    on_turn_on:
+    - switch.turn_on: relay
+    on_turn_off:
+    - switch.turn_off: relay
+
 display:
   - platform: addressable_light_display
     id: zillominee_display
     addressable_light_id: zillominee_matrix
-    width: 24
+    width: 35
     height: 25
     update_interval: 16ms
     lambda: |-
@@ -149,41 +131,138 @@ display:
       }
       return (x * 25) + y;
 
+font:
+  - id: tinyfont
+    file: "fonts/pixelmix.ttf"
+    size: 8
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font6px
+    file: "fonts/6px-Normal.ttf"
+    size: 8
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_8bithud
+    file: "fonts/8-bit-hud.ttf"
+    size: 5
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+
+animation:
+  - file: "img/zillominee/splash1.gif"
+    id: splash_animation
+    type: RGB24
+
+color_line_scroller:
+  - id: notif_colorline_scroller
+  - id: boot_colorline_scroller
+
+text_scroller:
+  - id: notif_text_scroller
+
 zilloscope:
   id: zilloscope_main
   display_id: zillominee_display
-  font_id: tinyfont
   time_id: homeassistant_time
+  use_splash: "true"
 
+  on_boot:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is booting
+  on_splash:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is displaying splash screen
+  on_ready:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is ready
+
+
+
+  #boot animation forever
   render_boot: |-
-    id(drzoid).next_frame();
-    id(zillominee_display).image(0, 0, id(drzoid));
+    //it=display
+    //frame= frame counter
+
+    id(boot_colorline_scroller).draw(it, 0, 12);
+    id(boot_colorline_scroller).scroll();
+    return true; //continue
+
+  #splash screen after boot
+  render_splash: |-
+    //it=display
+    //frame= frame counter
+
+    //Une pause de 200 frames (3200ms) a la 50eme frame de l'animation
+    //frame pause   = 50  => +200 = 250
+    //frame fin     = 63  => +200 = 263
+
+    if(frame==263) {
+      return false; //if returning false, it goes to on_ready component side
+    }
+    if(frame<49 || frame>250) {
+      id(splash_animation).next_frame();
+    }
+    id(zillominee_display).image(0, 0, id(splash_animation));
+    return true;  //splash continue
 
   render_time: |-
-    //it.strftime(0, 0, id(tinyfont),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"a:":"a:.", id(homeassistant_time).now());
+    //it=display
+    //frame= frame counter
 
-    it.draw_pixel_at(1, 1,  ((millis()/1000)%2==0)? Color(0xFFFFFF): Color(0x000000));
-
-    //ESP_LOGD("toto", ((millis()/1000)%2==0)?"true":"false");
     //TODO: use text center
     //TODO: fancier clock display
-    //it.strftime(0, 0, id(tinyfont),  Color(0xFFFFFF), (millis()%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
-    //ESP_LOGD("toto", "refresh");
-    //it.printf(0, 0, id(tinyfont),  Color(0xFFFFFF), "%lu",millis());
+    it.strftime(5, 8, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
+    //it.strftime(0, 0, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?".%H%M":":%H%M", id(homeassistant_time).now());
+    return false;
 
   render_notification: |-
-    //TODO: display icon. scroll text. etc
-    it.print(0, 0, id(tinyfont), Color(0xFFFFFF), id(zilloscope_main).get_notification_text().c_str());
+    //it=display
+    //frame= frame counter
+    //text= notification text
+    //type= notification type
+
+    if(frame==0){
+      id(notif_text_scroller).setup(it,id(font_8bithud),text,1,1,11);
+    }
+
+    //Multicolor line scroller
+    id(notif_colorline_scroller).draw(it, 0, 23);
+    id(notif_colorline_scroller).scroll();
+
+    //Notification type
+    if(type==1) {
+      it.print(17, 3, id(font_8bithud), Color(0xebd320), TextAlign::CENTER, "!");
+    }
+    else if(type==2) {
+      it.print(17, 3, id(font_8bithud), Color(0xe35100), TextAlign::CENTER, "alert");
+    }
+    else {
+      it.print(17, 3, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");
+    }
+
+    //Text scroller
+    id(notif_text_scroller).draw(it, id(font_8bithud),Color(0xFFFFFF));
+    if(frame%5==0) {
+      //scroll every 5 frame
+      if(id(notif_text_scroller).scroll()) {
+        id(zilloscope_main).end_notification();
+        return false;
+      }
+    }
+    return true;
 
   render_ota: |-
+    //it=display
+    //frame= frame counter
+
     //TODO
     it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
+    return false;
 
   render_shutdown: |-
+    //it=display
+    //frame= frame counter
+
     //TODO
     it.print(0, 0, id(tinyfont), Color(0xFF0000), "STOP");
-
-
-#relai pin
-#temperature pin
-#current sensor pin
+    return false;

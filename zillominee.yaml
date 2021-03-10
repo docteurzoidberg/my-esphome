@@ -144,10 +144,17 @@ font:
     file: "fonts/8-bit-hud.ttf"
     size: 5
     glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_monogram
+    file: "fonts/monogram.ttf"
+    size: 5
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
 
 animation:
   - file: "img/zillominee/splash1.gif"
     id: splash_animation
+    type: RGB24
+  - file: "img/zillominee/boot-aliens/boot-aliens.gif"
+    id: boot_animation_aliens
     type: RGB24
 
 color_line_scroller:
@@ -183,7 +190,12 @@ zilloscope:
     //it=display
     //frame= frame counter
 
-    id(boot_colorline_scroller).draw(it, 0, 12);
+    if(frame%6==0) {
+      id(boot_animation_aliens).next_frame();
+    }
+    id(zillominee_display).image(0, 6, id(boot_animation_aliens));
+
+    id(boot_colorline_scroller).draw(it, 0, 18);
     id(boot_colorline_scroller).scroll();
     return true; //continue
 
@@ -208,11 +220,7 @@ zilloscope:
   render_time: |-
     //it=display
     //frame= frame counter
-
-    //TODO: use text center
-    //TODO: fancier clock display
     it.strftime(5, 8, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
-    //it.strftime(0, 0, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?".%H%M":":%H%M", id(homeassistant_time).now());
     return false;
 
   render_notification: |-
@@ -222,7 +230,7 @@ zilloscope:
     //type= notification type
 
     if(frame==0){
-      id(notif_text_scroller).setup(it,id(font_8bithud),text,1,1,11);
+      id(notif_text_scroller).setup(it,id(font_8bithud),text,1,1,8);
     }
 
     //Multicolor line scroller
@@ -231,19 +239,19 @@ zilloscope:
 
     //Notification type
     if(type==1) {
-      it.print(17, 3, id(font_8bithud), Color(0xebd320), TextAlign::CENTER, "!");
+      it.print(17, 4, id(font_8bithud), Color(0xebd320), TextAlign::CENTER, "!");
     }
     else if(type==2) {
-      it.print(17, 3, id(font_8bithud), Color(0xe35100), TextAlign::CENTER, "alert");
+      it.print(17, 4, id(font_8bithud), Color(0xe35100), TextAlign::CENTER, "alert");
     }
     else {
-      it.print(17, 3, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");
+      it.print(17, 4, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");
     }
 
     //Text scroller
     id(notif_text_scroller).draw(it, id(font_8bithud),Color(0xFFFFFF));
-    if(frame%5==0) {
-      //scroll every 5 frame
+    if(frame%4==0) {
+      //scroll every 4 frame
       if(id(notif_text_scroller).scroll()) {
         id(zilloscope_main).end_notification();
         return false;

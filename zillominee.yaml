@@ -29,6 +29,12 @@ logger:
 
 api:
   services:
+    - service: mode
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode(name);
     - service: notify
       variables:
         type: int
@@ -183,7 +189,18 @@ zilloscope:
       lambda: |-
         //if you want to do something when zilloscope is ready
 
-
+  effects:
+    - display_lambda:
+        name: "moneeffetcustom"
+        lambda: |-
+          //it=display
+          //frame= frame counter
+          id(boot_animation_aliens).next_frame();
+          it.image(0, 6, id(boot_animation_aliens));
+    - display_fire:
+        name: "lefeu"
+        width: 35
+        height: 25
 
   #boot animation forever
   render_boot: |-

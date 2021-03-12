@@ -35,6 +35,8 @@ static uint32_t _frame_counter_shutdown=0;
 static std::queue<Notification*> _queue;
 static Notification* _current_notification;
 
+
+
 //component
 
 void ZilloScope::setup() {
@@ -237,6 +239,68 @@ uint32_t ZilloScope::get_notification_type() {
 
 std::string ZilloScope::get_notification_text() {
   return _current_notification->get_text();
+}
+
+std::string ZilloScope::get_effect_name() {
+  if (this->active_effect_index_ > 0)
+    return this->effects_[this->active_effect_index_ - 1]->get_name();
+  else
+    return "None";
+}
+
+
+void ZilloScope::start_effect_(uint32_t effect_index) {
+  this->stop_effect_();
+  if (effect_index == 0)
+    return;
+
+  this->active_effect_index_ = effect_index;
+  auto *effect = this->get_active_effect_();
+  effect->start_internal();
+}
+
+void ZilloScope::stop_effect_() {
+  auto *effect = this->get_active_effect_();
+  if (effect != nullptr) {
+    effect->stop();
+  }
+  this->active_effect_index_ = 0;
+}
+
+void ZilloScope::add_effects(const std::vector<DisplayEffect *> effects) {
+  this->effects_.reserve(this->effects_.size() + effects.size());
+  for (auto *effect : effects) {
+    this->effects_.push_back(effect);
+  }
+}
+
+/*
+LightCall &LightCall::set_effect(const std::string &effect) {
+  if (strcasecmp(effect.c_str(), "none") == 0) {
+    this->set_effect(0);
+    return *this;
+  }
+  bool found = false;
+  for (uint32_t i = 0; i < this->parent_->effects_.size(); i++) {
+    LightEffect *e = this->parent_->effects_[i];
+    if (strcasecmp(effect.c_str(), e->get_name().c_str()) == 0) {
+      this->set_effect(i + 1);
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    ESP_LOGW(TAG, "'%s' - No such effect '%s'", this->parent_->get_name().c_str(), effect.c_str());
+  }
+  return *this;
+}
+*/
+
+DisplayEffect *ZilloScope::get_active_effect_() {
+  if (this->active_effect_index_ == 0)
+    return nullptr;
+  else
+    return this->effects_[this->active_effect_index_ - 1];
 }
 
 void ZilloScope::set_state(state state) {

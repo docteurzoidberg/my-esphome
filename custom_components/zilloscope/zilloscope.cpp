@@ -116,9 +116,14 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
       else
         _frame_counter_time=0;
       return;
-    } else if(_mode==mode::effects) {
-      //TODO
-      return;
+    }
+    else if(_mode==mode::effects) {
+      //call current effect's apply() method
+      DisplayEffect *effect = get_active_effect_();
+      if(effect!=nullptr){
+        effect->apply(*&*_display);
+        return;
+      }
     }
   }
   else if(_state==state::ota) {
@@ -156,11 +161,25 @@ void ZilloScope::service_mode(std::string name) {
     ESP_LOGE(TAG, "Unknown mode %s", name.c_str());
     return;
   }
-  else {
-    enter_mode(newmode);
-  }
+  ESP_LOGD(TAG, "Entering mode %s", name.c_str());
+  enter_mode(newmode);
 }
 
+void ZilloScope::service_effect_start(std::string name) {
+  uint32_t effect_index = get_effect_index(name);
+  if(effect_index==0)
+    return;
+  start_effect_(effect_index);
+}
+
+void ZilloScope::service_effect_stop() {
+  stop_effect_();
+}
+
+uint32_t ZilloScope::get_effect_index(std::string name) {
+  //todo
+  return 1;
+}
 
 //modes
 
@@ -237,6 +256,49 @@ uint32_t ZilloScope::get_notification_type() {
 
 std::string ZilloScope::get_notification_text() {
   return _current_notification->get_text();
+}
+
+std::string ZilloScope::get_effect_name() {
+  if (this->active_effect_index_ > 0)
+    return this->effects_[this->active_effect_index_ - 1]->get_name();
+  else
+    return "None";
+}
+
+void ZilloScope::start_effect_(uint32_t effect_index) {
+  this->stop_effect_();
+  if (effect_index == 0)
+    return;
+
+  this->active_effect_index_ = effect_index;
+  auto *effect = this->get_active_effect_();
+  effect->start_internal();
+}
+
+void ZilloScope::stop_effect_() {
+  auto *effect = this->get_active_effect_();
+  if (effect != nullptr) {
+    effect->stop();
+  }
+  this->active_effect_index_ = 0;
+}
+
+void ZilloScope::add_effects(const std::vector<DisplayEffect *> effects) {
+  this->effects_.reserve(this->effects_.size() + effects.size());
+  for (auto *effect : effects) {
+    this->effects_.push_back(effect);
+  }
+}
+
+DisplayEffect *ZilloScope::get_active_effect_() {
+  if (this->active_effect_index_ == 0)
+    return nullptr;
+  else
+    return this->effects_[this->active_effect_index_ - 1];
+}
+
+void ZilloScope::set_mode(mode mode) {
+  _mode=mode;
 }
 
 void ZilloScope::set_state(state state) {

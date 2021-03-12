@@ -29,6 +29,26 @@ logger:
 
 api:
   services:
+    #effect start
+    - service: start_effect
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_start(name);
+    #effect stop
+    - service: stop_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_stop();
+    #change mode
+    - service: mode
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode(name);
+    #queue notification
     - service: notify
       variables:
         type: int
@@ -183,7 +203,21 @@ zilloscope:
       lambda: |-
         //if you want to do something when zilloscope is ready
 
-
+  effects:
+    #effet custom (lambda)
+    - display_lambda:
+        name: "moneeffetcustom"
+        lambda: |-
+          //it=display
+          //frame= frame counter
+          id(boot_animation_aliens).next_frame();
+          it.image(0, 6, id(boot_animation_aliens));
+    #effet integré 'feu'
+    - display_fire:
+        name: "lefeu"
+        width: 35
+        height: 25
+    #etc
 
   #boot animation forever
   render_boot: |-

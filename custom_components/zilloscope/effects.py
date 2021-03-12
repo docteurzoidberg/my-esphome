@@ -1,11 +1,12 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome import automation
-from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL
+from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL, CONF_SPEED, CONF_WIDTH, CONF_HEIGHT
 from esphome.util import Registry
-from .types import AddressableLightDisplayRef, AddressableLambdaLightDisplayEffect, ESPColor
+from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect
 
-CONF_ADDRESSABLE_LAMBDA = 'addressable_lambda'
+CONF_DISPLAY_LAMBDA = 'display_lambda'
+CONF_DISPLAY_FIRE = 'fire'
+
 ADDRESSABLE_EFFECTS = []
 EFFECTS_REGISTRY = Registry()
 
@@ -17,25 +18,36 @@ def register_effect(name, effect_type, default_name, schema, *extra_validators):
     validator = cv.All(schema, *extra_validators)
     return EFFECTS_REGISTRY.register(name, effect_type, validator)
 
-def register_addressable_effect(name, effect_type, default_name, schema, *extra_validators):
+def register_display_effect(name, effect_type, default_name, schema, *extra_validators):
     # addressable effect can be used only in addressable
     ADDRESSABLE_EFFECTS.append(name)
     return register_effect(name, effect_type, default_name, schema, *extra_validators)
 
 
-@register_addressable_effect(
-    'addressable_lambda', AddressableLambdaLightDisplayEffect, "Addressable Lambda", {
+@register_display_effect(
+    'display_lambda', DisplayLambdaEffect, "Display Lambda", {
         cv.Required(CONF_LAMBDA): cv.lambda_,
         cv.Optional(CONF_UPDATE_INTERVAL, default='0ms'): cv.positive_time_period_milliseconds,
     }
 )
-def addressable_lambda_effect_to_code(config, effect_id):
-    args = [(AddressableLightDisplayRef, 'it'), (ESPColor, 'current_color'), (bool, 'initial_run')]
+def display_lambda_effect_to_code(config, effect_id):
+    args = [(DisplayBufferRef, 'it'), (bool, 'initial_run')]
     lambda_ = yield cg.process_lambda(config[CONF_LAMBDA], args, return_type=cg.void)
     var = cg.new_Pvariable(effect_id, config[CONF_NAME], lambda_,
                            config[CONF_UPDATE_INTERVAL])
     yield var
 
+@register_display_effect('display_fire', DisplayFireEffect, "Fire", {
+    cv.Optional(CONF_SPEED, default=10): cv.uint32_t,
+    cv.Optional(CONF_WIDTH, default=8): cv.uint32_t,
+    cv.Optional(CONF_HEIGHT, default=8): cv.uint32_t,
+})
+def addressable_fire_effect_to_code(config, effect_id):
+    var = cg.new_Pvariable(effect_id, config[CONF_NAME])
+    cg.add(var.set_speed(config[CONF_SPEED]))
+    cg.add(var.set_width(config[CONF_WIDTH]))
+    cg.add(var.set_height(config[CONF_HEIGHT]))
+    yield var
 
 def validate_effects(allowed_effects):
     def validator(value):

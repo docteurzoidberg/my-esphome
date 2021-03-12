@@ -4,6 +4,8 @@
 #include "esphome/core/automation.h"
 #include "esphome/components/display/display_buffer.h"
 
+#include "display_effect.h"
+
 #include <string>
 #include <queue>
 
@@ -98,12 +100,20 @@ namespace esphome {
       state get_state();
       std::string get_notification_text();
       uint32_t get_notification_type();
+      /// Return the name of the current effect, or if no effect is active "None".
+      std::string get_effect_name();
+      uint32_t get_effect_index(std::string name);
+      const std::vector<DisplayEffect *> &get_effects() const;
+      mode get_mode_by_name(std::string modename);
+
       void set_state(state state);
+      void set_mode(mode mode);
       void set_time(time::RealTimeClock * time);
       void set_display(display::DisplayBuffer * it);
       void set_config_use_splash(bool value);
       void set_config_default_mode(std::string value);
 
+      void add_effects(std::vector<DisplayEffect *> effects);
       void add_on_boot_callback(std::function<void()> callback) {this->on_boot_callback_.add(std::move(callback));}
       void add_on_splash_callback(std::function<void()> callback) {this->on_splash_callback_.add(std::move(callback));}
       void add_on_ready_callback(std::function<void()> callback) {this->on_ready_callback_.add(std::move(callback));}
@@ -111,9 +121,7 @@ namespace esphome {
       void next_notification();
       void end_notification();
 
-      mode get_mode_by_name(std::string modename);
       void enter_mode(mode newmode);
-
 
     //display
       void set_render_boot(display_writer_t  &&render_boot_f) { this->render_boot_f_ = render_boot_f; }
@@ -122,6 +130,7 @@ namespace esphome {
       void set_render_notification(notification_display_writer_t  &&render_notification_f) { this->render_notification_f_ = render_notification_f; }
       void set_render_ota(display_writer_t  &&render_ota_f) { this->render_ota_f_ = render_ota_f; }
       void set_render_shutdown(display_writer_t &&render_shutdown_f) { this->render_shutdown_f_ = render_shutdown_f; }
+
       void display_lambdacall(display::DisplayBuffer & it);
 
     //events
@@ -134,8 +143,20 @@ namespace esphome {
     //services
       void service_notify(int type, std::string text, unsigned long timeout);
       void service_mode(std::string name);
+      void service_effect_start(std::string name);
+      void service_effect_stop();
 
     protected:
+      optional<uint32_t> effect_;
+      std::vector<DisplayEffect *> effects_;
+      /// Value for storing the index of the currently active effect. 0 if no effect is active
+      uint32_t active_effect_index_{};
+      bool has_effect_() { return this->effect_.has_value(); }
+      /// Internal method to start an effect with the given index
+      void start_effect_(uint32_t effect_index);
+      /// Internal method to stop the current effect (if one is active).
+      void stop_effect_();
+      DisplayEffect *get_active_effect_();
 
       //triggers
       CallbackManager<void()> on_boot_callback_;    //not used

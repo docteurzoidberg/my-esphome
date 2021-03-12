@@ -17,10 +17,18 @@ namespace esphome {
     {
       booting,
       splash,
-      time,
+      main,
       notify,
       ota,
       shutdown
+    };
+
+    enum mode {
+      time,
+      meteo,
+      effects,
+      paint,
+      unknown
     };
 
     enum NotificationType
@@ -30,7 +38,6 @@ namespace esphome {
       ALERT,
       OTHER
     };
-
     class Notification {
     public:
       uint32_t _type;
@@ -87,6 +94,7 @@ namespace esphome {
       void loop() override;
       void dump_config() override;
     //getter/setters
+      mode get_mode();
       state get_state();
       std::string get_notification_text();
       uint32_t get_notification_type();
@@ -94,6 +102,7 @@ namespace esphome {
       void set_time(time::RealTimeClock * time);
       void set_display(display::DisplayBuffer * it);
       void set_config_use_splash(bool value);
+      void set_config_default_mode(std::string value);
 
       void add_on_boot_callback(std::function<void()> callback) {this->on_boot_callback_.add(std::move(callback));}
       void add_on_splash_callback(std::function<void()> callback) {this->on_splash_callback_.add(std::move(callback));}
@@ -101,6 +110,10 @@ namespace esphome {
 
       void next_notification();
       void end_notification();
+
+      mode get_mode_by_name(std::string modename);
+      void enter_mode(mode newmode);
+
 
     //display
       void set_render_boot(display_writer_t  &&render_boot_f) { this->render_boot_f_ = render_boot_f; }
@@ -120,6 +133,7 @@ namespace esphome {
 
     //services
       void service_notify(int type, std::string text, unsigned long timeout);
+      void service_mode(std::string name);
 
     protected:
 

@@ -10,6 +10,9 @@ static const Color _color_blue = Color(0x0000FF);
 static const Color _color_white = Color(0xFFFFFF);
 
 //state
+static mode _default_mode = mode::time;   //can be overidden in config
+static mode _lastmode=_default_mode;      //last mode history
+static mode _mode =_default_mode;
 static state _state = state::booting;
 static bool _has_time=false;
 
@@ -47,7 +50,7 @@ void ZilloScope::loop() {
   }
 
   //Start new notification if present in queue and in time mode
-  if(_state==state::time && !_queue.empty()) {
+  if(_state==state::main && !_queue.empty()) {
     next_notification();
     _state=state::notify;
     return;
@@ -57,7 +60,7 @@ void ZilloScope::loop() {
   if(_state==state::notify) {
     if(_current_notification->is_finished() || _current_notification->is_timed_out()) {
       if(_queue.empty()) {
-        _state=state::time;
+        _state=state::main;
         return;
       }
       next_notification();
@@ -105,12 +108,15 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
     }
     return;
   }
-  else if(_state==state::time) {
-    if(render_time_f_(it,_frame_counter_time))
-      _frame_counter_time++;
-    else
-      _frame_counter_time=0;
-    return;
+  else if(_state==state::main) {
+    //mode: time
+    if(_mode==mode::time) {
+      if(render_time_f_(it,_frame_counter_time))
+        _frame_counter_time++;
+      else
+        _frame_counter_time=0;
+      return;
+    }
   }
   else if(_state==state::ota) {
     if(render_ota_f_(it,_frame_counter_ota))
@@ -141,6 +147,45 @@ void ZilloScope::service_notify(int type, std::string text, unsigned long timeou
   _queue.push(new Notification((uint32_t) type,text,timeout));
 }
 
+void ZilloScope::service_mode(std::string name) {
+  mode newmode = get_mode_by_name(name);
+  if(newmode==mode::unknown) {
+    ESP_LOGE(TAG, "Unknown mode %s", name.c_str());
+    return;
+  }
+  else {
+    enter_mode(newmode);
+  }
+}
+
+
+//modes
+
+mode ZilloScope::get_mode_by_name(std::string name) {
+  if(name=="time") {
+    return mode::time;
+  }
+  else if(name=="meteo") {
+    return mode::meteo;
+  }
+  else if(name=="effects") {
+    return mode::effects;
+  }
+  else if(name=="paint") {
+    return mode::paint;
+  }
+  else {
+    //todo: log error
+    return mode::unknown;
+    ESP_LOGE(TAG, "Unknown mode %s", name.c_str());
+  }
+}
+
+void ZilloScope::enter_mode(mode newmode) {
+  _lastmode=_mode;
+  _mode=newmode;
+}
+
 //events
 
 void ZilloScope::on_boot() {
@@ -159,7 +204,8 @@ void ZilloScope::on_splash() {
 
 void ZilloScope::on_ready() {
   ESP_LOGD(TAG, "ready");
-  _state=state::time;
+  _state=state::main;
+  _mode=_default_mode;
 }
 
 void ZilloScope::on_ota() {
@@ -176,6 +222,10 @@ void ZilloScope::on_shutdown() {
 
 state ZilloScope::get_state() {
   return _state;
+}
+
+mode ZilloScope::get_mode() {
+  return _mode;
 }
 
 uint32_t ZilloScope::get_notification_type() {
@@ -196,6 +246,16 @@ void ZilloScope::set_display(display::DisplayBuffer *it) {
 
 void ZilloScope::set_time(time::RealTimeClock *time) {
   _time=time;
+}
+
+void ZilloScope::set_config_default_mode(std::string value) {
+  mode newmode = get_mode_by_name(value);
+  if(newmode==mode::unknown) {
+    ESP_LOGE(TAG, "Unknown mode %s in config, defaulting to time", value.c_str());
+    _default_mode = mode::time;
+  } else {
+    _default_mode = newmode;
+  }
 }
 
 void ZilloScope::set_config_use_splash(bool value) {

@@ -116,6 +116,9 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
       else
         _frame_counter_time=0;
       return;
+    } else if(_mode==mode::effects) {
+      //TODO
+      return;
     }
   }
   else if(_state==state::ota) {

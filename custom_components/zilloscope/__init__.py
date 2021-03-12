@@ -4,7 +4,8 @@ import esphome.config_validation as cv
 from esphome import automation
 from esphome.components import display, font
 from esphome.components import time as time_
-from esphome.const import CONF_ID, CONF_TRIGGER_ID
+from esphome.const import CONF_ID, CONF_TRIGGER_ID, CONF_EFFECTS
+from .effects import validate_effects, ADDRESSABLE_EFFECTS, EFFECTS_REGISTRY
 
 CONF_ON_BOOT = 'on_boot'
 CONF_ON_SPLASH = 'on_splash'
@@ -47,6 +48,8 @@ CONFIG_SCHEMA = cv.Schema({
     #optional splash screen
     cv.Optional(CONF_USE_SPLASH, default=False): cv.boolean,
     cv.Optional(CONF_RENDER_SPLASH): cv.lambda_,
+
+    cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_EFFECTS),
 
     #optional automation triggers
     cv.Optional(CONF_ON_BOOT): automation.validate_automation({

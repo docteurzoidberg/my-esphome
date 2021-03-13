@@ -183,6 +183,12 @@ uint32_t ZilloScope::get_effect_index(std::string name) {
   return 1;
 }
 
+DisplayEffect *ZilloScope::get_active_effect_() {
+ if (this->active_effect_index_ == 0)
+    return nullptr;
+  else
+    return this->effects_[this->active_effect_index_ - 1];
+}
 //modes
 
 mode ZilloScope::get_mode_by_name(std::string name) {

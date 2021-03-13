@@ -29,6 +29,26 @@ logger:
 
 api:
   services:
+    #effect start
+    - service: start_effect
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_start(name);
+    #effect stop
+    - service: stop_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_stop();
+    #change mode
+    - service: mode
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode(name);
+    #queue notification
     - service: notify
       variables:
         type: int
@@ -36,6 +56,7 @@ api:
       then:
         - lambda: |-
             id(zilloscope_main).service_notify(type,text,-1);
+
 
 ota:
 
@@ -140,7 +161,18 @@ zilloscope:
     then:
       lambda: |-
         //if you want to do something when zilloscope is ready
+#effects
+  effects:
+    #custom effect (lambda)
+    - display_lambda:
+        name: "mycustomeffect"
+        lambda: |-
+          //it=display
+          //frame= frame counter
 
+          //render same animation as the boot animation but you can code what you want instead
+          id(boot_animation).next_frame();
+          it.image(0, 6, id(boot_animation));
 
 #render lambdas
 

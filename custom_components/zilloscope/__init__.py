@@ -90,7 +90,7 @@ def to_code(config):
     if CONF_USE_SPLASH in config:
         wrapped_usesplash = yield cg.bool_(config[CONF_USE_SPLASH])
         cg.add(var.set_config_use_splash(wrapped_usesplash))
-        #todo: hoq to raise error if use splash is set to true but no lambda specified?
+        #todo: how to raise error if use splash is set to true but no lambda specified?
         render_splash_template_ = yield cg.process_lambda(config[CONF_RENDER_SPLASH],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
         cg.add(var.set_render_splash(render_splash_template_))
 

@@ -173,6 +173,11 @@ zilloscope:
           //render same animation as the boot animation but you can code what you want instead
           id(boot_animation).next_frame();
           it.image(0, 6, id(boot_animation));
+     #effet integré 'feu' (wip)
+    - display_fire:
+        name: "lefeu"
+        width: 35
+        height: 25
 
 #render lambdas
 

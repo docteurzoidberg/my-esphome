@@ -100,6 +100,7 @@ namespace esphome {
       state get_state();
       std::string get_notification_text();
       uint32_t get_notification_type();
+
       /// Return the name of the current effect, or if no effect is active "None".
       std::string get_effect_name();
       uint32_t get_effect_index(std::string name);

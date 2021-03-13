@@ -35,6 +35,8 @@ static uint32_t _frame_counter_shutdown=0;
 static std::queue<Notification*> _queue;
 static Notification* _current_notification;
 
+
+
 //component
 
 void ZilloScope::setup() {
@@ -288,13 +290,6 @@ void ZilloScope::add_effects(const std::vector<DisplayEffect *> effects) {
   for (auto *effect : effects) {
     this->effects_.push_back(effect);
   }
-}
-
-DisplayEffect *ZilloScope::get_active_effect_() {
-  if (this->active_effect_index_ == 0)
-    return nullptr;
-  else
-    return this->effects_[this->active_effect_index_ - 1];
 }
 
 void ZilloScope::set_mode(mode mode) {

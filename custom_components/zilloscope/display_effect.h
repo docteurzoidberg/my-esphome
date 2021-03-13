@@ -58,9 +58,19 @@ namespace zilloscope {
     public:
       explicit DisplayFireEffect(const std::string &name) : DisplayEffect(name) {}
 
+      uint8_t counter = 0;
+
       void apply(display::DisplayBuffer &it) override {
         //TODO
+        if(counter%2==0) {
+          it.draw_pixel_at(0,0,Color(0xffffff));
+        }
+        else {
+          it.draw_pixel_at(1,1,Color(0xffffff));
+        }
+        counter++;
       }
+
       void set_speed(uint32_t speed) { this->speed_ = speed; }
       void set_width(uint16_t width) { this->width_ = width; }
       void set_height(uint16_t height) { this->height_ = height; }

@@ -169,8 +169,11 @@ void ZilloScope::service_mode(std::string name) {
 
 void ZilloScope::service_effect_start(std::string name) {
   uint32_t effect_index = get_effect_index(name);
-  if(effect_index==0)
+  if(effect_index==0) {
+    ESP_LOGE(TAG, "Unknown effect %s", name.c_str());
     return;
+  }
+  ESP_LOGD(TAG, "Starting effect %s (#%d)", name.c_str(), effect_index);
   start_effect_(effect_index);
 }
 
@@ -179,8 +182,12 @@ void ZilloScope::service_effect_stop() {
 }
 
 uint32_t ZilloScope::get_effect_index(std::string name) {
-  //todo
-  return 1;
+  for (uint32_t i=0;i<effects_.size();i++) {
+    if(effects_[i]->get_name()==name) {
+      return i+1;
+    }
+  }
+  return 0;
 }
 
 DisplayEffect *ZilloScope::get_active_effect_() {

@@ -64,7 +64,7 @@ namespace zilloscope {
       float init_flame_height = 0;
       float init_heat_spots = 0;
       float init_x_attenuation = 2;
-      float speed = 10;
+      float speed = 100;
       float starting_speed = 1;
 
       explicit DisplayFireEffect(const std::string &name) : DisplayEffect(name) {
@@ -84,6 +84,13 @@ namespace zilloscope {
         int X = x ^ 6428;
         int Y = y ^ 6356;
         float f=1;
+
+        return ((
+            (X * 7151 + Y * 1357)
+            ^ 35135
+          ) % 256) / 256.0f;
+
+        /*
         return fmod(
           (
             (X * 7151 + Y * 1357)
@@ -91,18 +98,20 @@ namespace zilloscope {
           )
           / 137.0f
         ,f);
-
+        */
         //return esp_random()/UINT32_MAX;
       }
 
-      float noise(int w, int h, int X, int Y, int T, float flame_height, float heat_spots, float x_attenuation) {
+      float noise(int X, int Y, int T, float flame_height, float heat_spots, float x_attenuation) {
 
         int x = X;
-        float attenuation = (h - Y) / flame_height / h + pow(1 - (X + 1) * (w - X) * 4.0f / (w + 2) / (w + 2), 1 / x_attenuation);
+        float attenuation = (height_ - Y) / flame_height / height_ + pow(1 - (X + 1) * (width_ - X) * 4.0f / (width_ + 2) / (width_ + 2), 1 / x_attenuation);
         float n = 0;
         float sum_coeff = 0;
 
-        for(int i = 8 ; i > 0 ; i >>= 1) {
+        for(int i = 8 ; i > 4 ; i >>= 1) {
+          if(attenuation > 1)
+            continue;
           int y = Y + T * 8 / i;
 
           float rnd_00 = pow(rnd(x / i, y / i), 1 / heat_spots / (attenuation + 1));
@@ -136,12 +145,13 @@ namespace zilloscope {
       }
       // code exécuté a chaque frame
       void apply(display::DisplayBuffer &it) override {
-        float flame_height = min(init_flame_height + starting_speed * millis() / 1000.0f, max_flame_height);
-        float heat_spots = min(init_heat_spots + starting_speed * millis() / 1000.0f, max_flame_height);
-        float x_attenuation = max(init_x_attenuation - starting_speed * millis() / 1000.0f, min_x_attenuation);
-        for(int x = 0 ; x < it.get_width(); x ++) {
-          for(int y = 0 ; y < it.get_height(); y ++) {
-            uint32_t heat = heat_color(noise(it.get_width(), it.get_height(), x, y, (int) (millis() * speed / 1000), flame_height, heat_spots, x_attenuation));
+        unsigned long timer = millis();
+        float flame_height = min(init_flame_height + starting_speed * timer / 1000.0f, max_flame_height);
+        float heat_spots = min(init_heat_spots + starting_speed * timer / 1000.0f, max_heat_spot);
+        float x_attenuation = max(init_x_attenuation - starting_speed * timer / 1000.0f, min_x_attenuation);
+        for(int x = 0 ; x < width_; x ++) {
+          for(int y = 0 ; y < height_; y ++) {
+            uint32_t heat = heat_color(noise(x, y, (int) (timer * speed / 1000), flame_height, heat_spots, x_attenuation));
             //fill(red(heat), green(heat), blue(heat));
             //rect(x * 16, y * 16, 16, 16);
             it.draw_pixel_at(x,y,Color(heat));

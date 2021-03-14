@@ -81,7 +81,18 @@ namespace zilloscope {
       }
 */
       float rnd(int x, int y) {
-        return esp_random()/UINT32_MAX;
+        int X = x ^ 6428;
+        int Y = y ^ 6356;
+        float f=1;
+        return fmod(
+          (
+            (X * 7151 + Y * 1357)
+            ^ 35135
+          )
+          / 137.0f
+        ,f);
+
+        //return esp_random()/UINT32_MAX;
       }
 
       float noise(int w, int h, int X, int Y, int T, float flame_height, float heat_spots, float x_attenuation) {
@@ -137,8 +148,13 @@ namespace zilloscope {
           }
         }
       }
-
+      void set_speed(uint32_t speed) { this->speed_ = speed; }
+      void set_width(uint16_t width) { this->width_ = width; }
+      void set_height(uint16_t height) { this->height_ = height; }
     protected:
+      uint32_t speed_{10};
+      uint16_t width_{35};
+      uint16_t height_{25};
   };
 
   class DisplayRainbowEffect : public DisplayEffect {

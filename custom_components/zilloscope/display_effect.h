@@ -55,6 +55,7 @@ namespace zilloscope {
       bool initial_run_;
   };
 
+// Thanks to Liemmerle for the fire effect algorythm <3
   class DisplayFireEffect : public DisplayEffect {
     public:
       float max_flame_height = 1;

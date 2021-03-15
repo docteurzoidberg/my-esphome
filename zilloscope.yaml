@@ -173,11 +173,19 @@ zilloscope:
           //render same animation as the boot animation but you can code what you want instead
           id(boot_animation).next_frame();
           it.image(0, 6, id(boot_animation));
-     #effet integré 'feu' (wip)
+     #effet integré 'feu'
     - display_fire:
         name: "fire"
         width: 32
         height: 8
+     #effet integré 'bubulles'
+    - display_bubbles:
+        name: "bubulles"
+        speed: 15
+        width: 32
+        height: 8
+        min_bubble_size: 1
+        max_bubble_size: 16
 
 #render lambdas
 

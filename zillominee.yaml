@@ -84,7 +84,7 @@ switch:
           id(zillominee_display).set_enabled(false);
 
 sensor:
-  - <<: !include "common/common_sensors.yaml"
+#  - <<: !include "common/common_sensors.yaml"
 
 #  - platform: homeassistant
 #    id: zillominee_test_bandes
@@ -211,12 +211,12 @@ zilloscope:
           //it=display
           //frame= frame counter
           id(boot_animation_aliens).next_frame();
-          it.image(0, 6, id(boot_animation_aliens));
+          it.image(1, 6, id(boot_animation_aliens));
     #effet integré 'feu'
     - display_fire:
         name: "lefeu"
-        width: 35
-        height: 25
+        width: 16
+        height: 16
     #etc
 
   #boot animation forever
@@ -227,7 +227,7 @@ zilloscope:
     if(frame%6==0) {
       id(boot_animation_aliens).next_frame();
     }
-    id(zillominee_display).image(0, 6, id(boot_animation_aliens));
+    id(zillominee_display).image(1, 6, id(boot_animation_aliens));
 
     id(boot_colorline_scroller).draw(it, 0, 18);
     id(boot_colorline_scroller).scroll();

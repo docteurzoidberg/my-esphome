@@ -4,7 +4,7 @@
 namespace esphome {
 namespace zilloscope {
 
-static const char *TAG = "zilloscope.displayeffect";
+
 
 }
 }

@@ -217,6 +217,12 @@ zilloscope:
         name: "lefeu"
         width: 35
         height: 25
+    #effet integré 'bulles'
+    - display_bubbles:
+        name: "bubulles"
+        speed: 15
+        width: 35
+        height: 25
     #etc
 
   #boot animation forever

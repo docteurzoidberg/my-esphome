@@ -2,7 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL, CONF_SPEED, CONF_WIDTH, CONF_HEIGHT
 from esphome.util import Registry
-from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect
+from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect
 
 CONF_DISPLAY_LAMBDA = 'display_lambda'
 CONF_DISPLAY_FIRE = 'fire'
@@ -38,11 +38,23 @@ def display_lambda_effect_to_code(config, effect_id):
     yield var
 
 @register_display_effect('display_fire', DisplayFireEffect, "Fire", {
-    cv.Optional(CONF_SPEED, default=10): cv.uint32_t,
+    cv.Optional(CONF_SPEED, default=15): cv.uint32_t,
     cv.Optional(CONF_WIDTH, default=8): cv.uint32_t,
     cv.Optional(CONF_HEIGHT, default=8): cv.uint32_t,
 })
 def addressable_fire_effect_to_code(config, effect_id):
+    var = cg.new_Pvariable(effect_id, config[CONF_NAME])
+    cg.add(var.set_speed(config[CONF_SPEED]))
+    cg.add(var.set_width(config[CONF_WIDTH]))
+    cg.add(var.set_height(config[CONF_HEIGHT]))
+    yield var
+
+@register_display_effect('display_bubbles', DisplayBubblesEffect, "Bubbles", {
+    cv.Optional(CONF_SPEED, default=15): cv.uint32_t,
+    cv.Optional(CONF_WIDTH, default=8): cv.uint32_t,
+    cv.Optional(CONF_HEIGHT, default=8): cv.uint32_t,
+})
+def addressable_bubbles_effect_to_code(config, effect_id):
     var = cg.new_Pvariable(effect_id, config[CONF_NAME])
     cg.add(var.set_speed(config[CONF_SPEED]))
     cg.add(var.set_width(config[CONF_WIDTH]))

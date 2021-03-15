@@ -60,66 +60,70 @@ namespace zilloscope {
   class DisplayFireEffect : public DisplayEffect {
     public:
       const char *TAG = "zilloscope.displayeffect";
-      float max_flame_height = 1;
-      float max_heat_spot = 1;
-      float min_x_attenuation = 0.2;
-      float init_flame_height = 0;
-      float init_heat_spots = 0;
-      float init_x_attenuation = 2;
-      float speed = 30;
-      float starting_speed = 1;
+
+      long unsigned int max_flame_height = 1000;
+      long unsigned int max_heat_spots = 1000;
+      long unsigned int min_x_attenuation = 500;
+      long init_flame_height = 1;
+      long init_heat_spots = 1000;
+      long init_x_attenuation = 5000;
+      long speed = 15000;
+      long starting_speed = 1000000;
 
       explicit DisplayFireEffect(const std::string &name) : DisplayEffect(name) {
 
       }
 
-      float apow(float a, float b) {
-        a = a - 1;
-        return 1 + a * b;
+      int apow(int a, int b) {
+        return 1000 + (a - 1000) * b / 1000;
       }
 
-      float rnd(int x, int y) {
-        int X = x ^ 6428;
-        int Y = y ^ 6356;
+      int rnd(int x, int y) {
+        int X = x ^ 64228;
+        int Y = y ^ 61356;
         return ((
-            (X * 7151 + Y * 1357)
-            ^ 35135
-          ) % 256) / 256.0f;
+          X * 71521
+          + Y * 13547)
+          ^ 35135) % 1000;
       }
 
-      float noise(uint8_t X, uint8_t Y, int T, float flame_height, float heat_spots, float x_attenuation) {
-
+      int noise(int X, int Y, int T, int flame_height, int heat_spots, int x_attenuation) {
         int x = X;
-        float attenuation = (height_ - Y) / flame_height / height_ + pow(1 - (X + 1) * (width_ - X) * 4.0f / (width_ + 2) / (width_ + 2), 1 / x_attenuation);
-        float n = 0;
-        float sum_coeff = 0;
+        int n = 0;
+
+        int attenuation = (height_ - Y) * 1000 / height_ * 1000 / flame_height
+          + (x_attenuation == 0 ? 0
+          : max(0, apow(1000 - (X + 1) * (width_- X) * 4000 / ((width_ + 2) * (width_+ 2)), 1000000 / x_attenuation)));
+
+        int sum_coeff = 0;
 
         for(int i = 8 ; i > 0 ; i >>= 1) {
-
           int y = Y + T * 8 / i;
 
-          float rnd_00 = rnd(x / i, y / i);
-          float rnd_01 = rnd(x / i, y / i + 1);
-          float rnd_10 = rnd(x / i + 1, y / i);
-          float rnd_11 = rnd(x / i + 1, y / i + 1);
+          int rnd_00 = rnd(x / i, y / i);
+          int rnd_01 = rnd(x / i, y / i + 1);
+          int rnd_10 = rnd(x / i + 1, y / i);
+          int rnd_11 = rnd(x / i + 1, y / i + 1);
 
-          float dx = x * 1.0f / i - x / i;
-          float dy = y * 1.0f / i - y / i;
-          float coeff = i;
+          int coeff = i;
 
-          n += ((rnd_00 * (1 - dx) + rnd_10 * dx) * (1 - dy)
-            + (rnd_01 * (1 - dx) + rnd_11 * dx) * dy) * coeff;
+          int dx = x % i;
+          int dy = y % i;
+
+          n += ((rnd_00 * (i - dx) + rnd_10 * dx) * (i - dy)
+              + (rnd_01 * (i - dx) + rnd_11 * dx) * dy)
+            * coeff / (i * i);
           sum_coeff += coeff;
         }
-
-        return max((float)0.0f, apow(n / sum_coeff, 1 / heat_spots / (attenuation + 1)  ) - attenuation);
+        return max(0, apow(n / sum_coeff, 1000000 / heat_spots * 1000 / (attenuation + 1000)) - attenuation);
       }
 
-      uint32_t heat_color(float value) {
-        int r = (int) min(((int)(value * 255) * 3), 255);
-        int g = (int) max(0, min((int)((value - 0.33) * 255 * 3), 255));
-        int b = (int) max(0, min((int)((value - 0.66) * 255 * 3), 255));
-        return (r << 16) + (g << 8) + b; // là t'as p't'être une fonction toute faite qui te donne une couleur pour le triplet r, g, b correspondant a utiliser plutôt que ça
+
+      uint32_t heat_color(int heat) {
+        int r = min(255, (int) (heat * 255 / 333));
+        int g = min(255, max(0, (int) ((heat - 333) * 255 / 333)));
+        int b = min(255, max(0, (int) ((heat - 667) * 255 / 333)));
+        return (r << 16) | (g << 8) | b;
       }
 
       void start() override {
@@ -128,17 +132,23 @@ namespace zilloscope {
       // code exécuté a chaque frame
       void apply(display::DisplayBuffer &it) override {
         unsigned long timer = millis();
-        float flame_height = min(init_flame_height + starting_speed * timer / 1000.0f, max_flame_height);
-        float heat_spots = min(init_heat_spots + starting_speed * timer / 1000.0f, max_heat_spot);
-        float x_attenuation = max(init_x_attenuation - starting_speed * timer / 1000.0f, min_x_attenuation);
+        /*
+        int flame_height = (int) min(init_flame_height + starting_speed * timer / 1000L, max_flame_height);
+        int heat_spots = (int) min(init_heat_spots + starting_speed * timer / 1000L, max_heat_spots);
+        int x_attenuation = (int) max(init_x_attenuation - starting_speed * timer / 1000L, min_x_attenuation);
+        */
+        int flame_height = 1000;
+        int heat_spots = 1000;
+        int x_attenuation = 500;
+
         for(int x = 0 ; x < width_; x ++) {
           for(int y = 0 ; y < height_; y ++) {
-            uint32_t heat = heat_color(noise(x, y, (int) (timer * speed / 1000), flame_height, heat_spots, x_attenuation));
+            int heat = heat_color(noise(x, y, (int) (timer * speed / 1000000), flame_height, heat_spots, x_attenuation));
             it.draw_pixel_at(x,y,Color(heat));
           }
         }
-         unsigned long timer2 = millis();
-         ESP_LOGD(TAG, "draw time: %lu" , (timer2-timer));
+         //unsigned long timer2 = millis();
+         //ESP_LOGD(TAG, "draw time: %lu" , (timer2-timer));
       }
       void set_speed(uint32_t speed) { this->speed_ = speed; }
       void set_width(uint16_t width) { this->width_ = width; }

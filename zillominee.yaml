@@ -215,8 +215,8 @@ zilloscope:
     #effet integré 'feu'
     - display_fire:
         name: "lefeu"
-        width: 16
-        height: 16
+        width: 35
+        height: 25
     #etc
 
   #boot animation forever

@@ -9,6 +9,7 @@ DisplayBuffer = display_ns.class_('DisplayBuffer', cg.Component)
 DisplayBufferRef = DisplayBuffer.operator('ref')
 DisplayLambdaEffect = zilloscope_ns.class_('DisplayLambdaEffect')
 DisplayFireEffect =  zilloscope_ns.class_('DisplayFireEffect')
+DisplayBubbleEffect =  zilloscope_ns.class_('DisplayBubblesffect')
 
 ESPColor = light_ns.class_('ESPColor')
 

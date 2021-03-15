@@ -175,9 +175,9 @@ zilloscope:
           it.image(0, 6, id(boot_animation));
      #effet integré 'feu' (wip)
     - display_fire:
-        name: "lefeu"
-        width: 35
-        height: 25
+        name: "fire"
+        width: 32
+        height: 8
 
 #render lambdas
 

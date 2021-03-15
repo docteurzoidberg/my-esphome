@@ -194,19 +194,7 @@ namespace zilloscope {
           + Y * 1325782542
           + Z * 351213151)
           ^ 351356521);
-        return tmp ^ (tmp >> 8) ^ (tmp << 8);
-      }
-
-      int apow(int a, int b) {
-        return 1000 + (a - 1000) * b / 1000;
-      }
-
-      int repeat(int X, int r) {
-        int tmp = X % (2 * r);
         if(tmp > r) {
-          return 2 * r - tmp;
-        }
-        return tmp;
       }
 
       int sqr_dist(int x0, int y0, int x1, int y1) {
@@ -267,7 +255,6 @@ namespace zilloscope {
         return n | (n >> 8) | (n >> 16);
       }
 
-
       void apply(display::DisplayBuffer &it) override {
         unsigned long timer = millis();
         for(int x = 0 ; x < width_ ; x ++) {
@@ -285,9 +272,11 @@ namespace zilloscope {
       void set_height(uint16_t height) { this->height_ = height; }
 
     protected:
-      uint32_t speed_{10};
+      uint32_t speed_{15};
       uint16_t width_{32};
-      uint16_t height_{32};
+      uint16_t width_{32};
   };
-}
+
+
+
 }

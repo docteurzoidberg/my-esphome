@@ -186,74 +186,86 @@ namespace zilloscope {
       uint8_t biggest_bubble = 16;
 
       int rnd(int x, int y, int z) {
-        int X = x ^ 1273419445;
-        int Y = y ^ 897982756;
-        int Z = z ^ 453454122;
-        int tmp = ((
-          X * 315132157
-          + Y * 1325782542
-          + Z * 351213151)
-          ^ 351356521);
-        if(tmp > r) {
-      }
+          int X = x ^ 1273419445;
+          int Y = y ^ 897982756;
+          int Z = z ^ 453454122;
+          int tmp = ((
+            X * 315132157
+            + Y * 1325782542
+            + Z * 351213151)
+            ^ 351356521);
+          return tmp ^ (tmp >> 8) ^ (tmp << 8);
+        }
+
+      int apow(int a, int b) {
+          return 1000 + (a - 1000) * b / 1000;
+        }
+
+      int repeat(int X, int r) {
+          int tmp = X % (2 * r);
+          if(tmp > r) {
+            return 2 * r - tmp;
+          }
+          return tmp;
+        }
 
       int sqr_dist(int x0, int y0, int x1, int y1) {
-        return (x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1);
-      }
+          return (x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1);
+        }
 
       uint32_t color_bubble (int x, int y, int nx, int ny, int radius) {
-        int dist = 0;
-        for(int x0 = x-1 ; x0 <= x+1 ; x0++){
-          for(int y0 = y-1 ; y0 <= y+1 ; y0++){
-            dist += sqr_dist(x0, y0, nx, ny);
+          int dist = 0;
+          for(int x0 = x-1 ; x0 <= x+1 ; x0++){
+            for(int y0 = y-1 ; y0 <= y+1 ; y0++){
+              dist += sqr_dist(x0, y0, nx, ny);
+            }
           }
+          dist /= 9;
+          int coeff = dist * 1024 / (radius == 0 ? 1 : radius * radius);
+          return (uint32_t) (min(255, max(0, apow(coeff, 1200) / 3))) * 0x010101;
         }
-        dist /= 9;
-        int coeff = dist * 1024 / (radius == 0 ? 1 : radius * radius);
-        return (uint32_t) (min(255, max(0, apow(coeff, 1200) / 3))) * 0x010101;
-      }
 
       int noise(int X, int Y, int T) {
-        int n = background;
-        for(int i = biggest_bubble ; i >= smallest_bubble ; i -= 4) {
-          if(i == 0)
-            i = 1;
+          int n = background;
+          for(int i = biggest_bubble ; i >= smallest_bubble ; i -= 4) {
+            if(i == 0)
+              i = 1;
 
-          boolean bkg = false;
+            boolean bkg = false;
 
-          int nx = 0;
-          int ny = 0;
-          int bdist = 1 << 30;
-          int y = Y + T * i / 1000;
-          int x = X + repeat(T / 1000 + i, 3) - 1;
-          int xi = x - (x % i);
-          int yi = y - (y % i);
-          int crad = i / 2;
-          if(crad == 0)
-            crad = 1;
+            int nx = 0;
+            int ny = 0;
+            int bdist = 1 << 30;
+            int y = Y + T * i / 1000;
+            int x = X + repeat(T / 1000 + i, 3) - 1;
+            int xi = x - (x % i);
+            int yi = y - (y % i);
+            int crad = i / 2;
+            if(crad == 0)
+              crad = 1;
 
-          int rad = i / 2;
+            int rad = i / 2;
 
-          for(int x0 = xi - i ; x0 <= xi + i ; x0 += i)
-            for(int y0 = yi - i ; y0 <= yi + i ; y0 += i)
-              if(x0 / i % 2 == 0 && y0 / i % 2 == 0){
-              int xp = (rnd(x0, y0, 0) % crad) + x0;
-              int yp = (rnd(x0, y0, 1) % crad) + y0;
-              int b = rnd(x0, y0, 3512);
-              int trad = i / 2 + ((b & 4) >> 2);
-              int dist = sqr_dist(xp, yp, x, y);
-              if((b & (128 | 64 | 16 | 512 |2048)) == 0 && dist < bdist && dist <= trad * trad) {
-                bdist = dist;
-                nx = xp;
-                ny = yp;
-                rad = trad;
-                bkg = true;
+            for(int x0 = xi - i ; x0 <= xi + i ; x0 += i)
+              for(int y0 = yi - i ; y0 <= yi + i ; y0 += i)
+                if(x0 / i % 2 == 0 && y0 / i % 2 == 0){
+                int xp = (rnd(x0, y0, 0) % crad) + x0;
+                int yp = (rnd(x0, y0, 1) % crad) + y0;
+                int b = rnd(x0, y0, 3512);
+                int trad = i / 2 + ((b & 4) >> 2);
+                int dist = sqr_dist(xp, yp, x, y);
+                if((b & (128 | 64 | 16 | 512 |2048)) == 0 && dist < bdist && dist <= trad * trad) {
+                  bdist = dist;
+                  nx = xp;
+                  ny = yp;
+                  rad = trad;
+                  bkg = true;
+                }
               }
-            }
-          n |= !bkg ? 0 : color_bubble(x, y, nx, ny, rad);
+            n |= !bkg ? 0 : color_bubble(x, y, nx, ny, rad);
+          }
+          return n | (n >> 8) | (n >> 16);
         }
-        return n | (n >> 8) | (n >> 16);
-      }
 
       void apply(display::DisplayBuffer &it) override {
         unsigned long timer = millis();
@@ -263,8 +275,8 @@ namespace zilloscope {
             it.draw_pixel_at(x,y,Color(color));
           }
         }
-        //unsigned long timer2 = millis();
-        //ESP_LOGD(TAG, "draw time: %lu" , (timer2-timer));
+          //unsigned long timer2 = millis();
+          //ESP_LOGD(TAG, "draw time: %lu" , (timer2-timer));
       }
 
       void set_speed(uint32_t speed) { this->speed_ = speed; }
@@ -274,9 +286,8 @@ namespace zilloscope {
     protected:
       uint32_t speed_{15};
       uint16_t width_{32};
-      uint16_t width_{32};
+      uint16_t height_{32};
   };
 
-
-
+}
 }

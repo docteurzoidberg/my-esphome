@@ -180,11 +180,6 @@ namespace zilloscope {
       const char *TAG = "zilloscope.displayeffect";
       explicit DisplayBubblesEffect(const std::string &name) : DisplayEffect(name) {}
 
-      //TODO: put in config
-      uint32_t background = 0x193291;
-      uint8_t smallest_bubble = 0;
-      uint8_t biggest_bubble = 16;
-
       int rnd(int x, int y, int z) {
           int X = x ^ 1273419445;
           int Y = y ^ 897982756;
@@ -226,8 +221,8 @@ namespace zilloscope {
         }
 
       int noise(int X, int Y, int T) {
-          int n = background;
-          for(int i = biggest_bubble ; i >= smallest_bubble ; i -= 4) {
+          uint32_t n = background_;
+          for(int i = biggest_bubble_ ; i >= smallest_bubble_ ; i -= 4) {
             if(i == 0)
               i = 1;
 
@@ -282,11 +277,19 @@ namespace zilloscope {
       void set_speed(uint32_t speed) { this->speed_ = speed; }
       void set_width(uint16_t width) { this->width_ = width; }
       void set_height(uint16_t height) { this->height_ = height; }
+      void set_background(uint32_t background) { this->background_ = background; }
+      void set_smallest_bubble(uint8_t smallest_bubble) { this->smallest_bubble_ = smallest_bubble; }
+      void set_background(uint8_t biggest_bubble) { this->biggest_bubble_ = biggest_bubble; }
 
     protected:
+      uint32_t background_{0x193291};
       uint32_t speed_{15};
       uint16_t width_{32};
       uint16_t height_{32};
+      uint8_t smallest_bubble_{0};
+      uint8_t biggest_bubble_{16};
+
+
   };
 
 }

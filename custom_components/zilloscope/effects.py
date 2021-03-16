@@ -6,6 +6,9 @@ from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, Dis
 
 CONF_DISPLAY_LAMBDA = 'display_lambda'
 CONF_DISPLAY_FIRE = 'fire'
+CONF_BACKGROUND_COLOR = 'background_color'
+CONF_BUBBLES_MINSIZE = 'min_bubble_size'
+CONF_BUBBLES_MAXSIZE = 'max_bubble_size'
 
 ADDRESSABLE_EFFECTS = []
 EFFECTS_REGISTRY = Registry()
@@ -38,6 +41,7 @@ def display_lambda_effect_to_code(config, effect_id):
     yield var
 
 @register_display_effect('display_fire', DisplayFireEffect, "Fire", {
+    cv.GenerateID(): cv.declare_id(DisplayFireEffect),
     cv.Optional(CONF_SPEED, default=15): cv.uint32_t,
     cv.Optional(CONF_WIDTH, default=8): cv.uint32_t,
     cv.Optional(CONF_HEIGHT, default=8): cv.uint32_t,
@@ -50,6 +54,12 @@ def addressable_fire_effect_to_code(config, effect_id):
     yield var
 
 @register_display_effect('display_bubbles', DisplayBubblesEffect, "Bubbles", {
+    cv.GenerateID(): cv.declare_id(DisplayBubblesEffect),
+
+    cv.Optional(CONF_BACKGROUND_COLOR, default=1651345): cv.uint32_t,
+    cv.Optional(CONF_BUBBLES_MINSIZE, default=0): cv.uint8_t,
+    cv.Optional(CONF_BUBBLES_MAXSIZE, default=16): cv.uint8_t,
+
     cv.Optional(CONF_SPEED, default=15): cv.uint32_t,
     cv.Optional(CONF_WIDTH, default=8): cv.uint32_t,
     cv.Optional(CONF_HEIGHT, default=8): cv.uint32_t,

@@ -2,13 +2,14 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL, CONF_SPEED, CONF_WIDTH, CONF_HEIGHT
 from esphome.util import Registry
-from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect
+from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect, DisplayTiledPuzzleEffect
 
 CONF_DISPLAY_LAMBDA = 'display_lambda'
 CONF_DISPLAY_FIRE = 'fire'
 CONF_BACKGROUND_COLOR = 'background_color'
 CONF_BUBBLES_MINSIZE = 'min_bubble_size'
 CONF_BUBBLES_MAXSIZE = 'max_bubble_size'
+CONF_TILE_SIZE = 'tile_size'
 
 ADDRESSABLE_EFFECTS = []
 EFFECTS_REGISTRY = Registry()
@@ -56,7 +57,7 @@ def addressable_fire_effect_to_code(config, effect_id):
 @register_display_effect('display_bubbles', DisplayBubblesEffect, "Bubbles", {
     cv.GenerateID(): cv.declare_id(DisplayBubblesEffect),
 
-    cv.Optional(CONF_BACKGROUND_COLOR, default=1651345): cv.uint32_t,
+    cv.Optional(CONF_BACKGROUND_COLOR, default=1651345): cv.hex_uint32_t,
     cv.Optional(CONF_BUBBLES_MINSIZE, default=0): cv.uint8_t,
     cv.Optional(CONF_BUBBLES_MAXSIZE, default=16): cv.uint8_t,
 
@@ -69,6 +70,22 @@ def addressable_bubbles_effect_to_code(config, effect_id):
     cg.add(var.set_speed(config[CONF_SPEED]))
     cg.add(var.set_width(config[CONF_WIDTH]))
     cg.add(var.set_height(config[CONF_HEIGHT]))
+    cg.add(var.set_background_color(config[CONF_BACKGROUND_COLOR]))
+    cg.add(var.set_min_bubble_size(config[CONF_BUBBLES_MINSIZE]))
+    cg.add(var.set_max_bubble_size(config[CONF_BUBBLES_MAXSIZE]))
+    yield var
+
+@register_display_effect('display_tiled_puzzle', DisplayTiledPuzzleEffect, "TiledPuzzle", {
+    cv.GenerateID(): cv.declare_id(DisplayTiledPuzzleEffect),
+    cv.Optional(CONF_TILE_SIZE, default=5): cv.uint8_t,
+    cv.Optional(CONF_WIDTH, default=35): cv.uint32_t,
+    cv.Optional(CONF_HEIGHT, default=25): cv.uint32_t,
+})
+def addressable_tiled_puzzle_effect_to_code(config, effect_id):
+    var = cg.new_Pvariable(effect_id, config[CONF_NAME])
+    cg.add(var.set_width(config[CONF_WIDTH]))
+    cg.add(var.set_height(config[CONF_HEIGHT]))
+    cg.add(var.set_tile_size(config[CONF_TILE_SIZE]))
     yield var
 
 def validate_effects(allowed_effects):

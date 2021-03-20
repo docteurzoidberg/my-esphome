@@ -177,7 +177,7 @@ namespace zilloscope {
   // Thanks to Liemmerle for the bubble effect algorythm <3
   class DisplayBubblesEffect : public DisplayEffect {
     public:
-      const char *TAG = "zilloscope.displayeffect";
+      const char *TAG = "zilloscope.displaybubbleseffect";
       explicit DisplayBubblesEffect(const std::string &name) : DisplayEffect(name) {}
 
       int rnd(int x, int y, int z) {
@@ -277,9 +277,9 @@ namespace zilloscope {
       void set_speed(uint32_t speed) { this->speed_ = speed; }
       void set_width(uint16_t width) { this->width_ = width; }
       void set_height(uint16_t height) { this->height_ = height; }
-      void set_background(uint32_t background) { this->background_ = background; }
-      void set_smallest_bubble(uint8_t smallest_bubble) { this->smallest_bubble_ = smallest_bubble; }
-      void set_background(uint8_t biggest_bubble) { this->biggest_bubble_ = biggest_bubble; }
+      void set_background_color(uint32_t background) { this->background_ = background; }
+      void set_min_bubble_size(uint8_t smallest_bubble) { this->smallest_bubble_ = smallest_bubble; }
+      void set_max_bubble_size(uint8_t biggest_bubble) { this->biggest_bubble_ = biggest_bubble; }
 
     protected:
       uint32_t background_{0x193291};
@@ -292,5 +292,174 @@ namespace zilloscope {
 
   };
 
+  class DisplayTiledPuzzleEffect : public DisplayEffect {
+    public:
+      const char *TAG = "zilloscope.displaytilepuzzleseffect";
+      explicit DisplayTiledPuzzleEffect(const std::string &name) : DisplayEffect(name) {
+      }
+
+      //random uint8_t from 0 to 128
+      uint8_t rnd128() {
+        return random(128);
+        //return fast_random_8() >> 1;
+      }
+
+      void start() override {
+
+        //fast_random_set_seed(random_uint32());
+        for(x_pos = 0 ; x_pos < width_ ; x_pos+=tile_size_) {
+          for(y_pos = 0 ; y_pos < height_ ; y_pos+=tile_size_) {
+            uint8_t border_red=rnd128()+127;
+            uint8_t border_green=rnd128()+127;
+            uint8_t border_blue=rnd128()+127;
+            uint8_t fill_red=border_red-50;
+            uint8_t fill_green=border_green-50;
+            uint8_t fill_blue=border_blue-50;
+
+            fill_color= (fill_red << 16) | (fill_green << 8) | fill_blue;
+            border_color= (border_red << 16) | (border_green << 8) | border_blue;
+
+            display_->filled_rectangle(x_pos, y_pos, x_pos+tile_size_-1, y_pos+tile_size_-1, Color(fill_color));
+
+            //if the tile is sized 3 or more place a border around
+            if(tile_size_ > 2) {
+              display_->rectangle(x_pos, y_pos, x_pos+tile_size_-1, y_pos+tile_size_-1, Color(border_color));
+            }
+          }
+        }
+
+        //set the end and actual position to the same value to get into tile select at the first run
+        x_end = x_pos;
+        y_end = y_pos;
+        x_old = tile_size_ * random(width_/tile_size_-1);
+        y_old = tile_size_ * random(height_/tile_size_-1);
+
+        //draw black rectangle to erase one tile
+        display_->filled_rectangle(x_old, y_old, x_old+tile_size_-1, y_old+tile_size_-1, Color(0x000000));
+      }
+
+      void newtile() {
+        while(x_pos == x_end && y_pos == y_end) {
+          x_pos = x_old;
+          y_pos = y_old;
+          uint8_t rnd_3=random(3);
+          if(rnd_3 == 0) {
+            if(x_old > 0) {
+              x_pos=x_old-tile_size_;
+            }
+            else {
+              x_pos=x_old+tile_size_;
+            }
+          }
+          else if(rnd_3 == 1){
+            if(x_old < width_-tile_size_) {
+              x_pos=x_old+tile_size_;
+            }
+            else {
+              x_pos=x_old-tile_size_;
+            }
+          }
+          else if(rnd_3 == 2) {
+            if(y_old > 0) {
+              y_pos=y_old-tile_size_;
+            }
+            else {
+              y_pos=y_old+tile_size_;
+            }
+          }
+          else if(rnd_3 == 3) {
+            if(y_old < height_-tile_size_) {
+              y_pos=y_old+tile_size_;
+            }
+            else{
+              y_pos=y_old-tile_size_;
+            }
+          }
+        }
+
+        x_end = x_old;
+        y_end = y_old;
+        x_old = x_pos;
+        y_old = y_pos;
+
+        //#get color of the tile we want to move
+        uint8_t border_red=0;
+        uint8_t border_green=0;
+        uint8_t border_blue=0;
+
+        //pget(x_pos, y_pos, border_red, border_green, border_blue);
+        //TODO: how to read the displaybuffer ?
+
+        uint8_t fill_red=border_red-50;
+        uint8_t fill_green=border_green-50;
+        uint8_t fill_blue=border_blue-50;
+
+        fill_color= (fill_red << 16) | (fill_green << 8) | fill_blue;
+        border_color= (border_red << 16) | (border_green << 8) | border_blue;
+      }
+
+      void apply(display::DisplayBuffer &it) override {
+        unsigned long timer = millis();
+
+        //select new tile to move
+        if((x_pos == x_end) && (y_pos == y_end)) {
+          newtile();
+        }
+
+        //lets move the tile
+
+        //delete the moved part on the old position
+        if(x_pos < x_end) {
+          it.line(x_pos, y_pos, x_pos, y_pos+tile_size_-1, Color(0x000000));
+          x_pos=x_pos+1;
+        }
+        else if(x_pos > x_end) {
+          it.line(x_pos+tile_size_-1, y_pos, x_pos+tile_size_-1, y_pos+tile_size_-1, Color(0x000000));
+          x_pos=x_pos-1;
+        }
+
+        if(y_pos < y_end) {
+          it.line(x_pos, y_pos, x_pos+tile_size_-1, y_pos, Color(0x000000));
+          y_pos++;
+        }
+        else if(y_pos > y_end) {
+          it.line(x_pos, y_pos+tile_size_-1, x_pos+tile_size_-1, y_pos+tile_size_-1, Color(0x000000));
+          y_pos--;
+        }
+
+        //and draw the tile on the new position
+        it.filled_rectangle(x_pos, y_pos, x_pos+tile_size_-1, y_pos+tile_size_-1, Color(fill_color));
+
+        //if the tile is sized 3 or more place a corner around
+        if(tile_size_ > 2) {
+          it.rectangle(x_pos, y_pos, x_pos+tile_size_-1, y_pos+tile_size_-1, Color(border_color));
+        }
+
+        unsigned long timer2 = millis();
+        ESP_LOGD(TAG, "draw time: %lu" , (timer2-timer));
+      }
+
+      void set_tile_size(uint32_t tile_size) { this->tile_size_ = tile_size; }
+      void set_speed(uint32_t speed) { this->speed_ = speed; }
+      void set_width(uint16_t width) { this->width_ = width; }
+      void set_height(uint16_t height) { this->height_ = height; }
+
+    protected:
+      uint32_t x_pos=0;
+      uint32_t y_pos=0;
+      uint32_t x_old=0;
+      uint32_t y_old=0;
+      uint32_t x_end=0;
+      uint32_t y_end=0;
+      uint32_t fill_color=0;
+      uint32_t border_color=0;
+
+      uint32_t tile_size_{5};
+      uint32_t speed_{15};
+      uint16_t width_{32};
+      uint16_t height_{32};
+  };
+
 }
 }
+

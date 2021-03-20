@@ -184,6 +184,7 @@ zilloscope:
         speed: 15
         width: 32
         height: 8
+        background_color: 0x193291
         min_bubble_size: 1
         max_bubble_size: 16
 

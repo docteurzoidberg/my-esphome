@@ -26,6 +26,7 @@ esphome:
 wifi: !include "common/wifi.yaml"
 
 logger:
+  level: DEBUG
 
 api:
   services:
@@ -56,6 +57,22 @@ api:
       then:
         - lambda: |-
             id(zilloscope_main).service_notify(type,text,-1);
+
+    - service: start_stream
+      then:
+        - lambda: |-
+            id(zillominee_display).set_enabled(false);
+        - light.turn_on:
+            id: zillominee_matrix
+            effect: "e131"
+
+    - service: stop_stream
+      then:
+        - light.turn_on:
+            id: zillominee_matrix
+            effect: "none"
+        - lambda: |-
+            id(zillominee_display).set_enabled(true);
 
 ota:
 
@@ -110,8 +127,8 @@ sensor:
 #    pin: GPIO33
 #    id: adc_sensor
 
-#e131:
-#  method: multicast
+e131:
+  method: multicast
 
 time:
   - platform: homeassistant
@@ -135,9 +152,14 @@ light:
     - switch.turn_on: relay
     on_turn_off:
     - switch.turn_off: relay
+    effects:
+      - e131:
+          name: 'e131'
+          universe: 1
+          channels: RGB
 
 display:
-  - platform: addressable_light_display
+  - platform: addressable_light
     id: zillominee_display
     addressable_light_id: zillominee_matrix
     width: 35
@@ -168,6 +190,10 @@ font:
     file: "fonts/monogram.ttf"
     size: 5
     glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_clock
+    file: "fonts/PressStart2P-Regular.ttf"
+    size: 8
+    glyphs: '.:0123456789'
 
 animation:
   - file: "img/zillominee/splash1.gif"
@@ -203,6 +229,21 @@ zilloscope:
       lambda: |-
         //if you want to do something when zilloscope is ready
 
+  modes:
+    - mode_time:
+      name: "time"
+      render_lambda: |-
+        it.strftime(17, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::RIGHT, "%H", id(homeassistant_time).now());
+        it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ((millis()/1000)%2==0)?":":".");
+        it.strftime(20, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%M", id(homeassistant_time).now());
+        //Multicolor line scroller
+        id(notif_colorline_scroller).draw(it, 0, 23);
+        id(notif_colorline_scroller).scroll();
+    - mode_effects:
+      name: "effects"
+    - mode_paint:
+      name: "paint"
+
   effects:
     #effet custom (lambda)
     - display_lambda:
@@ -219,10 +260,20 @@ zilloscope:
         height: 25
     #effet integré 'bulles'
     - display_bubbles:
+        id: bidule
         name: "bubulles"
         speed: 15
         width: 35
         height: 25
+        background_color: 0x321911
+        min_bubble_size: 1
+        max_bubble_size: 16
+    #effet integré 'taquin'
+    - display_tiled_puzzle:
+        name: "puzzle"
+        width: 35
+        height: 25
+        tile_size: 5
     #etc
 
   #boot animation forever
@@ -260,7 +311,23 @@ zilloscope:
   render_time: |-
     //it=display
     //frame= frame counter
-    it.strftime(5, 8, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
+
+    //it.strftime(5, 8, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
+
+    //it.strftime(1, 8, id(font_clock),  Color(0xFFFFFF), TextAlign::LEFT, "%H", id(homeassistant_time).now());
+    //if((millis()/1000)%2==0) {
+    //  it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ":");
+    //}
+    //it.strftime(35, 8, id(font_clock),  Color(0xFFFFFF), TextAlign::RIGHT, "%M", id(homeassistant_time).now());
+
+    it.strftime(17, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::RIGHT, "%H", id(homeassistant_time).now());
+    it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ((millis()/1000)%2==0)?":":".");
+    it.strftime(20, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%M", id(homeassistant_time).now());
+
+    //Multicolor line scroller
+    id(notif_colorline_scroller).draw(it, 0, 23);
+    id(notif_colorline_scroller).scroll();
+
     return false;
 
   render_notification: |-
@@ -273,6 +340,21 @@ zilloscope:
       id(notif_text_scroller).setup(it,id(font_8bithud),text,1,1,8);
     }
 
+    if(type==4) {
+      //id(bidule).stop();
+      //Text scroller
+      id(notif_text_scroller).draw(it, id(font_8bithud),Color(0xFFFFFF));
+      if(frame%4==0) {
+        //scroll every 4 frame
+        if(id(notif_text_scroller).scroll()) {
+          id(zilloscope_main).end_notification();
+          return false;
+        }
+      }
+      return true;
+    }
+
+
     //Multicolor line scroller
     id(notif_colorline_scroller).draw(it, 0, 23);
     id(notif_colorline_scroller).scroll();
@@ -283,6 +365,9 @@ zilloscope:
     }
     else if(type==2) {
       it.print(17, 4, id(font_8bithud), Color(0xe35100), TextAlign::CENTER, "alert");
+    }
+    else if(type==4) {
+
     }
     else {
       it.print(17, 4, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");

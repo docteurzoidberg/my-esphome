@@ -111,6 +111,23 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
     return;
   }
   else if(_state==state::main) {
+
+    ZilloMode *mode = get_active_mode_();
+
+    if(mode==nullptr)
+      return;
+
+    if(mode->get_name()=="effects") {
+      DisplayEffect *effect = get_active_effect_();
+      if(effect==nullptr)
+        return;
+      effect->apply(*&*_display);
+    }
+
+    mode->draw(*&*_display);
+    return;
+
+    /*
     //mode: time
     if(_mode==mode::time) {
       if(render_time_f_(it,_frame_counter_time))
@@ -127,6 +144,8 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
         return;
       }
     }
+    */
+
   }
   else if(_state==state::ota) {
     if(render_ota_f_(it,_frame_counter_ota))

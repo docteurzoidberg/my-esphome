@@ -6,6 +6,7 @@ from esphome.components import display, font
 from esphome.components import time as time_
 from esphome.const import CONF_ID, CONF_TRIGGER_ID, CONF_EFFECTS
 from .effects import validate_effects, ADDRESSABLE_EFFECTS, EFFECTS_REGISTRY
+from .modes import MODES_REGISTRY
 
 CONF_ON_BOOT = 'on_boot'
 CONF_ON_SPLASH = 'on_splash'
@@ -15,6 +16,7 @@ CONF_DISPLAY_ID = 'display_id'
 CONF_TIME_ID = 'time_id'
 
 CONF_USE_SPLASH = 'use_splash'
+CONF_MODES = 'modes'
 
 CONF_RENDER_BOOT = 'render_boot'
 CONF_RENDER_SPLASH = 'render_splash'
@@ -71,6 +73,9 @@ def to_code(config):
     cg.add(var.set_display(wrapped_display))
     cg.add(var.set_time(wrapped_time))
     yield cg.register_component(var, config)
+
+    modes = yield cg.build_registry_list(MODES_REGISTRY, config.get(CONF_MODES, []))
+    cg.add(var.add_modes(modes))
 
     effects = yield cg.build_registry_list(EFFECTS_REGISTRY, config.get(CONF_EFFECTS, []))
     cg.add(var.add_effects(effects))

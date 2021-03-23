@@ -5,7 +5,8 @@ from esphome import automation
 from esphome.components import display, font
 from esphome.components import time as time_
 from esphome.const import CONF_ID, CONF_TRIGGER_ID, CONF_EFFECTS
-from .effects import validate_effects, ADDRESSABLE_EFFECTS, EFFECTS_REGISTRY
+from .effects import validate_effects, ADDRESSABLE_DISPLAY_EFFECTS, ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY
+from .modes import validate_modes, ZILLO_MODES, ZILLO_MODES_REGISTRY
 
 CONF_ON_BOOT = 'on_boot'
 CONF_ON_SPLASH = 'on_splash'
@@ -15,6 +16,8 @@ CONF_DISPLAY_ID = 'display_id'
 CONF_TIME_ID = 'time_id'
 
 CONF_USE_SPLASH = 'use_splash'
+CONF_DEFAULT_MODE = 'default_mode'
+CONF_MODES = 'modes'
 
 CONF_RENDER_BOOT = 'render_boot'
 CONF_RENDER_SPLASH = 'render_splash'
@@ -38,18 +41,24 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_DISPLAY_ID): cv.use_id(display.DisplayBuffer),
     cv.Required(CONF_TIME_ID): cv.use_id(time_.RealTimeClock),
 
+    #config options
+    cv.Required(CONF_DEFAULT_MODE): cv.string_strict,
+    cv.Optional(CONF_USE_SPLASH, default=False): cv.boolean,
+
     #display render lambdas
     cv.Required(CONF_RENDER_BOOT): cv.lambda_,
     cv.Required(CONF_RENDER_TIME): cv.lambda_,
     cv.Required(CONF_RENDER_OTA): cv.lambda_,
     cv.Required(CONF_RENDER_SHUTDOWN): cv.lambda_,
     cv.Required(CONF_RENDER_NOTIFICATION): cv.lambda_,
-
-    #optional splash screen
-    cv.Optional(CONF_USE_SPLASH, default=False): cv.boolean,
     cv.Optional(CONF_RENDER_SPLASH): cv.lambda_,
 
-    cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_EFFECTS),
+    #Todo: validate at least one mode in [...]
+    cv.Required(CONF_MODES): validate_modes(ZILLO_MODES),
+
+    #Todo: validate at least one effect
+    #Todo: validate mode effect present in modes?
+    cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_DISPLAY_EFFECTS),
 
     #optional automation triggers
     cv.Optional(CONF_ON_BOOT): automation.validate_automation({
@@ -68,21 +77,26 @@ def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     wrapped_display = yield cg.get_variable(config[CONF_DISPLAY_ID])
     wrapped_time = yield cg.get_variable(config[CONF_TIME_ID])
+    default_mode = yield cg.std_string(config[CONF_DEFAULT_MODE])
     cg.add(var.set_display(wrapped_display))
     cg.add(var.set_time(wrapped_time))
+    cg.add(var.set_config_default_mode(default_mode))
     yield cg.register_component(var, config)
 
-    effects = yield cg.build_registry_list(EFFECTS_REGISTRY, config.get(CONF_EFFECTS, []))
+    modes = yield cg.build_registry_list(ZILLO_MODES_REGISTRY, config.get(CONF_MODES, []))
+    cg.add(var.add_modes(modes))
+
+    effects = yield cg.build_registry_list(ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY, config.get(CONF_EFFECTS, []))
     cg.add(var.add_effects(effects))
 
     render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
-    render_time_template_ = yield cg.process_lambda(config[CONF_RENDER_TIME],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+    #render_time_template_ = yield cg.process_lambda(config[CONF_RENDER_TIME],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
     render_notification_template_ = yield cg.process_lambda(config[CONF_RENDER_NOTIFICATION],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame'),(cg.std_string,'text'),(cg.uint32, 'type')],return_type=cg.bool_)
     render_ota_template_ = yield cg.process_lambda(config[CONF_RENDER_OTA],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
     render_shutdown_template_ = yield cg.process_lambda(config[CONF_RENDER_SHUTDOWN],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
 
     cg.add(var.set_render_boot(render_boot_template_))
-    cg.add(var.set_render_time(render_time_template_))
+    #cg.add(var.set_render_time(render_time_template_))
     cg.add(var.set_render_notification(render_notification_template_))
     cg.add(var.set_render_ota(render_ota_template_))
     cg.add(var.set_render_shutdown(render_shutdown_template_))

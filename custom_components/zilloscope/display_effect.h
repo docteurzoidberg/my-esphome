@@ -56,7 +56,7 @@ namespace zilloscope {
       bool initial_run_;
   };
 
-// Thanks to Liemmerle for the fire effect algorythm <3
+  // Thanks to Liemmerle for the fire effect algorythm <3
   class DisplayFireEffect : public DisplayEffect {
     public:
       const char *TAG = "zilloscope.displayeffect";
@@ -290,6 +290,113 @@ namespace zilloscope {
       uint8_t biggest_bubble_{16};
 
 
+  };
+
+  // Thanks to Liemmerle for the matrix animation code
+  class DisplayMatrixEffect : public DisplayEffect
+  {
+  public:
+    const char *TAG = "zilloscope.displayeffect";
+    explicit DisplayMatrixEffect(const std::string &name) : DisplayEffect(name) {}
+
+    int rnd(int x, int y, int z)
+    {
+      int X = x ^ 1273419445;
+      int Y = y ^ 897982756;
+      int Z = z ^ 165135135;
+      int tmp = ((
+                     X * 315132157 + Y * 1325782542 + Z * 315132189) ^
+                 351356521);
+      if (tmp < 0)
+        tmp = -tmp;
+      return tmp ^ (tmp >> 8) ^ (tmp << 8);
+    }
+
+    int apow(int a, int b)
+    {
+      return 1000 + (a - 1000) * b / 1000;
+    }
+
+    int noise(int X, int Y, int T)
+    {
+
+      int n = background_;
+
+      Y *= -1;
+
+      for (int i = smallest_line_; i <= biggest_line_; i += line_iterator_)
+      {
+        if (i == 0)
+          i = 1;
+
+        int ny = 0;
+        boolean bkg = true;
+
+        int y = Y + T * i / 1000;
+        int x = X;
+
+        int yi = y - (y % i);
+
+        for (int y0 = yi; y0 <= yi + i * 2; y0 += i)
+        {
+          int yp = (rnd(x, y0, 0) % i) + y0;
+
+          int random = rnd(x, y0, 1) & (64 | 2048 | 4096);
+
+          if (random == 0 && yp >= y && yp - y < i)
+          {
+            ny = yp;
+            bkg = false;
+            break;
+          }
+        }
+
+        if (!bkg)
+          n = color_line(y, ny, i);
+      }
+
+      return n;
+    }
+
+  void apply(display::DisplayBuffer &it) override {
+    unsigned long timer = millis();
+    for(int x = 0 ; x < width_ ; x ++) {
+      for(int y = 0 ; y < height_ ; y ++) {
+
+        uint32_t color = (noise(x, y, (int) (timer * speed_ / 10)));
+        it.draw_pixel_at(x,y,Color(color));
+      }
+    }
+    //unsigned long timer2 = millis();
+    //ESP_LOGD(TAG, "draw time: %lu" , (timer2-timer));
+  }
+
+  uint32_t color_line(int y, int ny, int size)
+  {
+    int dist = ny - y;
+
+    int r = max(0, min(255, 200 * apow(2716, (dist - size) * 1000 / size) / 1000));
+    int g = max(0, min(255, 255 * apow(2716, (dist - size) * 500 / size) / 1000));
+    int b = max(0, min(255, 200 * apow(2716, (dist - size) * 1000 / size) / 1000));
+
+    return (r << 16) + (g << 8) + b;
+    }
+
+    void set_speed(uint32_t speed) { this->speed_ = speed; }
+    void set_width(uint16_t width) { this->width_ = width; }
+    void set_height(uint16_t height) { this->height_ = height; }
+    void set_background(uint32_t background) { this->background_ = background; }
+    void set_smallest_line(uint8_t smallest_line) { this->smallest_line_ = smallest_line; }
+    void set_biggest_line(uint8_t biggest_line) { this->biggest_line_ = biggest_line; }
+
+  protected:
+    uint32_t background_{0x011902};
+    uint32_t speed_{15};
+    uint16_t width_{32};
+    uint16_t height_{32};
+    uint8_t smallest_line_{8};
+    uint8_t biggest_line_{32};
+    uint8_t line_iterator_{8};
   };
 
   class DisplayTiledPuzzleEffect : public DisplayEffect {

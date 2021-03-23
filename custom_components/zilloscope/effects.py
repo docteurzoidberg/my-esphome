@@ -2,17 +2,20 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL, CONF_SPEED, CONF_WIDTH, CONF_HEIGHT
 from esphome.util import Registry
-from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect, DisplayTiledPuzzleEffect
+from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect, DisplayMatrixEffect, DisplayTiledPuzzleEffect
 
 CONF_DISPLAY_LAMBDA = 'display_lambda'
 CONF_DISPLAY_FIRE = 'fire'
 CONF_BACKGROUND_COLOR = 'background_color'
 CONF_BUBBLES_MINSIZE = 'min_bubble_size'
 CONF_BUBBLES_MAXSIZE = 'max_bubble_size'
+CONF_LINE_MINSIZE = 'min_line_size'
+CONF_LINE_MAXSIZE = 'max_line_size'
 CONF_TILE_SIZE = 'tile_size'
 
-ADDRESSABLE_EFFECTS = []
-EFFECTS_REGISTRY = Registry()
+
+ADDRESSABLE_DISPLAY_EFFECTS = []
+ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY = Registry()
 
 
 def register_effect(name, effect_type, default_name, schema, *extra_validators):
@@ -20,11 +23,11 @@ def register_effect(name, effect_type, default_name, schema, *extra_validators):
         cv.Optional(CONF_NAME, default=default_name): cv.string_strict,
     })
     validator = cv.All(schema, *extra_validators)
-    return EFFECTS_REGISTRY.register(name, effect_type, validator)
+    return ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY.register(name, effect_type, validator)
 
 def register_display_effect(name, effect_type, default_name, schema, *extra_validators):
     # addressable effect can be used only in addressable
-    ADDRESSABLE_EFFECTS.append(name)
+    ADDRESSABLE_DISPLAY_EFFECTS.append(name)
     return register_effect(name, effect_type, default_name, schema, *extra_validators)
 
 
@@ -88,9 +91,26 @@ def addressable_tiled_puzzle_effect_to_code(config, effect_id):
     cg.add(var.set_tile_size(config[CONF_TILE_SIZE]))
     yield var
 
+@register_display_effect('display_matrix', DisplayMatrixEffect, "Matrix", {
+    cv.GenerateID(): cv.declare_id(DisplayMatrixEffect),
+    cv.Optional(CONF_BACKGROUND_COLOR, default=000000): cv.uint32_t,
+    cv.Optional(CONF_LINE_MINSIZE, default=0): cv.uint8_t,
+    cv.Optional(CONF_LINE_MAXSIZE, default=16): cv.uint8_t,
+    cv.Optional(CONF_SPEED, default=15): cv.uint32_t,
+    cv.Optional(CONF_WIDTH, default=8): cv.uint32_t,
+    cv.Optional(CONF_HEIGHT, default=8): cv.uint32_t,
+})
+def addressable_matrix_effect_to_code(config, effect_id):
+    var = cg.new_Pvariable(effect_id, config[CONF_NAME])
+    cg.add(var.set_speed(config[CONF_SPEED]))
+    cg.add(var.set_width(config[CONF_WIDTH]))
+    cg.add(var.set_height(config[CONF_HEIGHT]))
+    yield var
+
+
 def validate_effects(allowed_effects):
     def validator(value):
-        value = cv.validate_registry('effect', EFFECTS_REGISTRY)(value)
+        value = cv.validate_registry('effect', ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY)(value)
         errors = []
         names = set()
         for i, x in enumerate(value):

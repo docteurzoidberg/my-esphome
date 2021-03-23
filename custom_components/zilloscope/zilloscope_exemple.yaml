@@ -1,0 +1,306 @@
+substitutions:
+  devicename: "zillosample"
+  friendly_name: "ZilloSample"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32doit-devkit-v1
+  on_boot:
+  - priority: 1000
+    then:
+      - lambda: |-
+          fastled_base_fastledlightoutput->get_controller()->setDither(0);
+          id(boot_colorline_scroller).setup(35,3,5);
+          id(notif_colorline_scroller).setup(35,2,5);
+      - switch.turn_on: zillominee_control_display
+      - lambda: |-
+          id(zilloscope_main).on_boot();
+
+wifi:
+logger:
+
+api:
+  services:
+    - service: start_effect
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_start(name);
+    - service: stop_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_stop();
+    - service: mode
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode(name);
+    - service: notify
+      variables:
+        type: int
+        text: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_notify(type,text,-1);
+    - service: start_stream
+      then:
+        - lambda: |-
+            id(zillominee_display).set_enabled(false);
+        - light.turn_on:
+            id: zillominee_matrix
+            effect: "e131"
+
+    - service: stop_stream
+      then:
+        - light.turn_on:
+            id: zillominee_matrix
+            effect: "none"
+        - lambda: |-
+            id(zillominee_display).set_enabled(true);
+
+ota:
+
+switch:
+  - platform: template
+    id: zillominee_control_display
+    name: "${friendly_name} Control Display"
+    lambda: |-
+      return id(zillominee_display).get_enabled();
+    turn_on_action:
+      - lambda: |-
+          id(zillominee_display).set_enabled(true);
+    turn_off_action:
+      - lambda: |-
+          id(zillominee_display).set_enabled(false);
+
+e131:
+  method: multicast
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Paris
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO25
+    num_leds: 875
+    rgb_order: GRB
+    max_refresh_rate: 16ms
+    id: "zillominee_matrix"
+    name: "$friendly_name Matrix"
+    color_correct: [50%, 50%, 50%]
+    default_transition_length : 0s
+    gamma_correct: 0
+    restore_mode : ALWAYS_ON
+    effects:
+      - e131:
+          name: 'e131'
+          universe: 1
+          channels: RGB
+
+display:
+  - platform: addressable_light
+    id: zillominee_display
+    addressable_light_id: zillominee_matrix
+    width: 35
+    height: 25
+    update_interval: 16ms
+    lambda: |-
+      id(zilloscope_main).display_lambdacall(it);
+    pixel_mapper: |-
+      if (x % 2 == 0) {
+        return (x * 25) + (24 - y);
+      }
+      return (x * 25) + y;
+
+font:
+  - id: tinyfont
+    file: "fonts/pixelmix.ttf"
+    size: 8
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font6px
+    file: "fonts/6px-Normal.ttf"
+    size: 8
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_8bithud
+    file: "fonts/8-bit-hud.ttf"
+    size: 5
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_monogram
+    file: "fonts/monogram.ttf"
+    size: 5
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_clock
+    file: "fonts/PressStart2P-Regular.ttf"
+    size: 8
+    glyphs: '.:0123456789'
+
+animation:
+  - file: "img/zillominee/splash1.gif"
+    id: splash_animation
+    type: RGB24
+  - file: "img/zillominee/boot-aliens/boot-aliens.gif"
+    id: boot_animation_aliens
+    type: RGB24
+
+color_line_scroller:
+  - id: notif_colorline_scroller
+  - id: boot_colorline_scroller
+
+text_scroller:
+  - id: notif_text_scroller
+
+zilloscope:
+  id: zilloscope_main
+  display_id: zillominee_display
+  time_id: homeassistant_time
+  use_splash: "true"
+
+  on_boot:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is booting
+  on_splash:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is displaying splash screen
+  on_ready:
+    then:
+      lambda: |-
+        //if you want to do something when zilloscope is ready
+
+  # modes:
+  #   - mode_time:
+  #       render_lambda: |-
+  #         it.strftime(17, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::RIGHT, "%H", id(homeassistant_time).now());
+  #         it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ((millis()/1000)%2==0)?":":".");
+  #         it.strftime(20, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%M", id(homeassistant_time).now());
+  #         //Multicolor line scroller
+  #         id(notif_colorline_scroller).draw(it, 0, 23);
+  #         id(notif_colorline_scroller).scroll();
+  #   - mode_effects:
+  #   - mode_paint:
+
+  effects:
+    - display_lambda:
+        name: "custom"
+        lambda: |-
+          //it=display
+          //frame= frame counter
+          id(boot_animation_aliens).next_frame();
+          it.image(1, 6, id(boot_animation_aliens));
+    - display_fire:
+        name: "fire"
+        width: 35
+        height: 25
+    - display_bubbles:
+        id: bidule
+        name: "bubulles"
+        speed: 15
+        width: 35
+        height: 25
+        background_color: 0x321911
+        min_bubble_size: 1
+        max_bubble_size: 16
+    - display_tiled_puzzle:
+        name: "puzzle"
+        width: 35
+        height: 25
+        tile_size: 5
+    #etc
+
+  #boot animation forever
+  render_boot: |-
+    //it=display
+    //frame= frame counter
+
+    if(frame%6==0) {
+      id(boot_animation_aliens).next_frame();
+    }
+    id(zillominee_display).image(1, 6, id(boot_animation_aliens));
+
+    id(boot_colorline_scroller).draw(it, 0, 18);
+    id(boot_colorline_scroller).scroll();
+    return true; //continue
+
+  #splash screen after boot
+  render_splash: |-
+    //it=display
+    //frame= frame counter
+
+    //Une pause de 200 frames (3200ms) a la 50eme frame de l'animation
+    //frame pause   = 50  => +200 = 250
+    //frame fin     = 63  => +200 = 263
+
+    if(frame==263) {
+      return false; //if returning false, it goes to on_ready component side
+    }
+    if(frame<49 || frame>250) {
+      id(splash_animation).next_frame();
+    }
+    id(zillominee_display).image(0, 0, id(splash_animation));
+    return true;  //splash continue
+
+  render_time: |-
+    //it=display
+    //frame= frame counter
+    it.strftime(17, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::RIGHT, "%H", id(homeassistant_time).now());
+    it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ((millis()/1000)%2==0)?":":".");
+    it.strftime(20, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%M", id(homeassistant_time).now());
+    return false;
+
+  render_notification: |-
+    //it=display
+    //frame= frame counter
+    //text= notification text
+    //type= notification type
+
+    if(frame==0){
+      id(notif_text_scroller).setup(it,id(font_8bithud),text,1,1,8);
+    }
+
+    //Multicolor line scroller
+    id(notif_colorline_scroller).draw(it, 0, 23);
+    id(notif_colorline_scroller).scroll();
+
+    //Notification type
+    if(type==1) {
+      it.print(17, 4, id(font_8bithud), Color(0xebd320), TextAlign::CENTER, "!");
+    }
+    else if(type==2) {
+      it.print(17, 4, id(font_8bithud), Color(0xe35100), TextAlign::CENTER, "alert");
+    }
+    else {
+      it.print(17, 4, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");
+    }
+
+    //Text scroller
+    id(notif_text_scroller).draw(it, id(font_8bithud),Color(0xFFFFFF));
+    if(frame%4==0) {
+      //scroll every 4 frame
+      if(id(notif_text_scroller).scroll()) {
+        id(zilloscope_main).end_notification();
+        return false;
+      }
+    }
+    return true;
+
+  render_ota: |-
+    //it=display
+    //frame= frame counter
+    //TODO
+    it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
+    return false;
+
+  render_shutdown: |-
+    //it=display
+    //frame= frame counter
+    //TODO
+    it.print(0, 0, id(tinyfont), Color(0xFF0000), "STOP");
+    return false;

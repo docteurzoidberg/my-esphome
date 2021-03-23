@@ -29,8 +29,8 @@ def register_mode(name, mode_type, default_name, schema, *extra_validators):
     }
 )
 def mode_time_to_code(config, mode_id):
-    args = [(DisplayBufferRef, 'it'), (bool, 'initial_run')]
-    render_lambda_ = yield cg.process_lambda(config[CONF_RENDER_LAMBDA], args, return_type=cg.void)
+    args = [(DisplayBufferRef, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
+    render_lambda_ = yield cg.process_lambda(config[CONF_RENDER_LAMBDA], args, return_type=cg.bool_)
     update_interval_ = yield cg.uint32(config[CONF_UPDATE_INTERVAL])
     var = cg.new_Pvariable(mode_id, 'time', render_lambda_, update_interval_)
     yield var

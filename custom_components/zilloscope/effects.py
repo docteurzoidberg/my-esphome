@@ -63,7 +63,6 @@ def addressable_fire_effect_to_code(config, effect_id):
     cv.Optional(CONF_BACKGROUND_COLOR, default=1651345): cv.hex_uint32_t,
     cv.Optional(CONF_BUBBLES_MINSIZE, default=0): cv.uint8_t,
     cv.Optional(CONF_BUBBLES_MAXSIZE, default=16): cv.uint8_t,
-
     cv.Optional(CONF_SPEED, default=15): cv.uint32_t,
     cv.Optional(CONF_WIDTH, default=8): cv.uint32_t,
     cv.Optional(CONF_HEIGHT, default=8): cv.uint32_t,

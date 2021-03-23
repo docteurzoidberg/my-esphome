@@ -110,7 +110,7 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
   else if(_state==state::main) {
 
     Mode *mode = get_active_mode_();
-
+    //no active mode?
     if(mode==nullptr)
       return;
 
@@ -124,28 +124,6 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
 
     mode->draw(*&*_display);
     return;
-
-
-
-    /*
-    //mode: time
-    if(_mode==mode::time) {
-      if(render_time_f_(it,_frame_counter_time))
-        _frame_counter_time++;
-      else
-        _frame_counter_time=0;
-      return;
-    }
-    else if(_mode==mode::effects) {
-      //call current effect's apply() method
-      DisplayEffect *effect = get_active_effect_();
-      if(effect!=nullptr){
-        effect->apply(*&*_display);
-        return;
-      }
-    }
-    */
-
   }
   else if(_state==state::ota) {
     if(render_ota_f_(it,_frame_counter_ota))
@@ -215,8 +193,8 @@ DisplayEffect *ZilloScope::get_active_effect_() {
   else
     return this->effects_[this->active_effect_index_ - 1];
 }
-//modes
 
+//modes
 
 uint32_t ZilloScope::get_mode_index(std::string name) {
   for (uint32_t i=0;i<modes_.size();i++) {
@@ -226,16 +204,6 @@ uint32_t ZilloScope::get_mode_index(std::string name) {
   }
   return 0;
 }
-
-/*
-Mode *ZilloScope::get_mode_by_name(std::string name) {
-  uint32_t modeindex = get_mode_index(name);
-  if(modeindex==0) {
-    return nullptr;
-  }
-  return modes_[get_mode];
-}
-*/
 
 Mode *ZilloScope::get_active_mode_() {
  if (this->active_mode_index_ == 0)
@@ -251,6 +219,7 @@ void ZilloScope::start_mode_(uint32_t mode_index) {
     curmode->stop();
   if (mode_index == 0)
     return;
+  this->last_mode_index_=this->active_mode_index_;
   this->active_mode_index_ = mode_index;
   auto *mode = this->get_active_mode_();
   mode->start_internal();
@@ -294,10 +263,6 @@ state ZilloScope::get_state() {
   return _state;
 }
 
-//mode ZilloScope::get_mode() {
-//  return _mode;
-//}
-
 uint32_t ZilloScope::get_notification_type() {
   return _current_notification->get_type();
 }
@@ -317,7 +282,6 @@ void ZilloScope::start_effect_(uint32_t effect_index) {
   this->stop_effect_();
   if (effect_index == 0)
     return;
-
   this->active_effect_index_ = effect_index;
   auto *effect = this->get_active_effect_();
   effect->start_internal();
@@ -325,9 +289,8 @@ void ZilloScope::start_effect_(uint32_t effect_index) {
 
 void ZilloScope::stop_effect_() {
   auto *effect = this->get_active_effect_();
-  if (effect != nullptr) {
+  if (effect != nullptr)
     effect->stop();
-  }
   this->active_effect_index_ = 0;
 }
 

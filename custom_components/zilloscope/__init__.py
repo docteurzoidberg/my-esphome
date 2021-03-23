@@ -47,7 +47,6 @@ CONFIG_SCHEMA = cv.Schema({
 
     #display render lambdas
     cv.Required(CONF_RENDER_BOOT): cv.lambda_,
-    cv.Required(CONF_RENDER_TIME): cv.lambda_,
     cv.Required(CONF_RENDER_OTA): cv.lambda_,
     cv.Required(CONF_RENDER_SHUTDOWN): cv.lambda_,
     cv.Required(CONF_RENDER_NOTIFICATION): cv.lambda_,

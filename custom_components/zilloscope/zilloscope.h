@@ -25,15 +25,7 @@ namespace esphome {
       ota,
       shutdown
     };
-/*
-    enum mode {
-      time,
-      meteo,
-      effects,
-      paint,
-      unknown
-    };
-*/
+
     enum NotificationType
     {
       INFO,
@@ -96,9 +88,8 @@ namespace esphome {
       void setup() override;
       void loop() override;
       void dump_config() override;
-    //getter/setters
-      //mode get_mode();
 
+    //getter/setters
       state get_state();
       std::string get_notification_text();
       uint32_t get_notification_type();
@@ -108,14 +99,11 @@ namespace esphome {
       uint32_t get_effect_index(std::string name);
       const std::vector<DisplayEffect *> &get_effects() const;
 
-      //ZilloMode *get_mode();
       std::string get_mode_name();
       uint32_t get_mode_index(std::string name);
-      //ZilloMode *get_mode_by_name(std::string modename);
       const std::vector<Mode *> &get_modes() const;
 
       void set_state(state state);
-      //void set_mode(ZilloMode *mode);
       void set_time(time::RealTimeClock * time);
       void set_display(display::DisplayBuffer * it);
       void set_config_use_splash(bool value);
@@ -133,7 +121,6 @@ namespace esphome {
     //display
       void set_render_boot(display_writer_t  &&render_boot_f) { this->render_boot_f_ = render_boot_f; }
       void set_render_splash(display_writer_t  &&render_splash_f) { this->render_splash_f_ = render_splash_f; }
-      //void set_render_time(display_writer_t  &&render_time_f) { this->render_time_f_ = render_time_f; }
       void set_render_notification(notification_display_writer_t  &&render_notification_f) { this->render_notification_f_ = render_notification_f; }
       void set_render_ota(display_writer_t  &&render_ota_f) { this->render_ota_f_ = render_ota_f; }
       void set_render_shutdown(display_writer_t &&render_shutdown_f) { this->render_shutdown_f_ = render_shutdown_f; }
@@ -161,9 +148,9 @@ namespace esphome {
       std::vector<Mode *> modes_;
 
       /// Value for storing the index of the currently active effect. 0 if no effect is active
-      uint32_t active_effect_index_{};
-      uint32_t active_mode_index_{};
-
+      uint32_t active_effect_index_{0};
+      uint32_t active_mode_index_{0};
+      uint32_t last_mode_index_{0};
 
       bool has_effect_() { return this->effect_.has_value(); }
 
@@ -187,7 +174,6 @@ namespace esphome {
       //display lambdas
       display_writer_t render_boot_f_;
       display_writer_t render_splash_f_;
-      //display_writer_t render_time_f_;
       notification_display_writer_t render_notification_f_;
       display_writer_t render_ota_f_;
       display_writer_t render_shutdown_f_;

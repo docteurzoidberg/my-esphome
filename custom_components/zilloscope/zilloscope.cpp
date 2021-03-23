@@ -120,6 +120,7 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
       if(effect==nullptr)
         return;
       effect->apply(*&*_display);
+      return;
     }
 
     mode->draw(*&*_display);

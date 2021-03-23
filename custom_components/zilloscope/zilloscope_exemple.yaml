@@ -175,17 +175,16 @@ zilloscope:
       lambda: |-
         //if you want to do something when zilloscope is ready
 
-  # modes:
-  #   - mode_time:
-  #       render_lambda: |-
-  #         it.strftime(17, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::RIGHT, "%H", id(homeassistant_time).now());
-  #         it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ((millis()/1000)%2==0)?":":".");
-  #         it.strftime(20, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%M", id(homeassistant_time).now());
-  #         //Multicolor line scroller
-  #         id(notif_colorline_scroller).draw(it, 0, 23);
-  #         id(notif_colorline_scroller).scroll();
-  #   - mode_effects:
-  #   - mode_paint:
+  modes:
+    - mode_time:
+        render_lambda: |-
+          //it=display
+          //frame= frame counter
+          it.strftime(17, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::RIGHT, "%H", id(homeassistant_time).now());
+          it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ((millis()/1000)%2==0)?":":".");
+          it.strftime(20, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%M", id(homeassistant_time).now());
+          return false;
+    - mode_effects:
 
   effects:
     - display_lambda:
@@ -246,14 +245,6 @@ zilloscope:
     }
     id(zillominee_display).image(0, 0, id(splash_animation));
     return true;  //splash continue
-
-  render_time: |-
-    //it=display
-    //frame= frame counter
-    it.strftime(17, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::RIGHT, "%H", id(homeassistant_time).now());
-    it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ((millis()/1000)%2==0)?":":".");
-    it.strftime(20, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%M", id(homeassistant_time).now());
-    return false;
 
   render_notification: |-
     //it=display

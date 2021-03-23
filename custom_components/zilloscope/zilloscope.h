@@ -5,6 +5,7 @@
 #include "esphome/components/display/display_buffer.h"
 
 #include "display_effect.h"
+#include "zilloscope_mode.h"
 
 #include <string>
 #include <queue>
@@ -107,34 +108,27 @@ namespace esphome {
       uint32_t get_effect_index(std::string name);
       const std::vector<DisplayEffect *> &get_effects() const;
 
-
-      //mode get_mode_by_name(std::string modename);
-
-      ZilloMode *get_mode();
+      //ZilloMode *get_mode();
       std::string get_mode_name();
       uint32_t get_mode_index(std::string name);
-      ZilloMode *get_mode_by_name(std::string modename);
-      const std::vector<ZilloMode *> &get_modes() const;
+      //ZilloMode *get_mode_by_name(std::string modename);
+      const std::vector<Mode *> &get_modes() const;
 
       void set_state(state state);
-      //void set_mode(mode mode);
-      void set_mode(ZilloMode *mode);
+      //void set_mode(ZilloMode *mode);
       void set_time(time::RealTimeClock * time);
       void set_display(display::DisplayBuffer * it);
       void set_config_use_splash(bool value);
       void set_config_default_mode(std::string value);
 
-      void add_modes(std::vector<DisplayEffect *> effects);
-      void add_effects(std::vector<ZilloMode *> modes);
+      void add_modes(std::vector<Mode *> modes);
+      void add_effects(std::vector<DisplayEffect *> effects);
       void add_on_boot_callback(std::function<void()> callback) {this->on_boot_callback_.add(std::move(callback));}
       void add_on_splash_callback(std::function<void()> callback) {this->on_splash_callback_.add(std::move(callback));}
       void add_on_ready_callback(std::function<void()> callback) {this->on_ready_callback_.add(std::move(callback));}
 
       void next_notification();
       void end_notification();
-
-      //void enter_mode(mode newmode);
-      void enter_mode(ZilloMode *newmode);
 
     //display
       void set_render_boot(display_writer_t  &&render_boot_f) { this->render_boot_f_ = render_boot_f; }
@@ -164,7 +158,7 @@ namespace esphome {
       optional<uint32_t> mode_;
 
       std::vector<DisplayEffect *> effects_;
-      std::vector<ZilloMode *> modes_;
+      std::vector<Mode *> modes_;
 
       /// Value for storing the index of the currently active effect. 0 if no effect is active
       uint32_t active_effect_index_{};
@@ -172,14 +166,18 @@ namespace esphome {
 
 
       bool has_effect_() { return this->effect_.has_value(); }
+
       /// Internal method to start an effect with the given index
       void start_effect_(uint32_t effect_index);
+
+      /// Internal method to enter mode with the given index
       void start_mode_(uint32_t mode_index);
+
       /// Internal method to stop the current effect (if one is active).
       void stop_effect_();
 
       DisplayEffect *get_active_effect_();
-      ZilloMode *get_active_mode_();
+      Mode *get_active_mode_();
 
       //triggers
       CallbackManager<void()> on_boot_callback_;    //not used

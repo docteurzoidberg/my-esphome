@@ -11,10 +11,11 @@ DisplayBufferRef = DisplayBuffer.operator('ref')
 DisplayLambdaEffect = zilloscope_ns.class_('DisplayLambdaEffect')
 DisplayFireEffect =  zilloscope_ns.class_('DisplayFireEffect')
 DisplayBubblesEffect =  zilloscope_ns.class_('DisplayBubblesEffect')
+DisplayMatrixEffect =  zilloscope_ns.class_('DisplayMatrixEffect')
 DisplayTiledPuzzleEffect =  zilloscope_ns.class_('DisplayTiledPuzzleEffect')
 
-ZilloModeTime = zilloscope_ns.class_('ZilloModeTime')
-ZilloModeEffects = zilloscope_ns.class_('ZilloModeEffects')
+ModeTime = zilloscope_ns.class_('ModeTime')
+ModeEffects = zilloscope_ns.class_('ModeEffects')
 
 ESPColor = light_ns.class_('ESPColor')
 

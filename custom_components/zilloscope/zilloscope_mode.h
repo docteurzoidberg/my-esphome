@@ -5,12 +5,16 @@
 
 namespace esphome {
 namespace zilloscope {
-  class ZilloMode {
+  class Mode {
     public:
-      ZilloMode(const std::string &name) : name_(name) {
+      Mode(const std::string &name, std::function<void(display::DisplayBuffer &, bool initial_run)> f, uint32_t update_interval)
+        : name_(name), f_(f), update_interval_(update_interval) {}
 
-      }
-      virtual void start() override { this->initial_run_ = true; }
+      Mode(const std::string &name) : name_(name) {}
+
+      virtual void start() { this->initial_run_ = true; }
+      virtual void start_internal() {  }
+      virtual void stop() {  }
       void draw(display::DisplayBuffer &it) {
         const uint32_t now = millis();
         if (now - this->last_run_ >= this->update_interval_) {
@@ -19,6 +23,7 @@ namespace zilloscope {
           this->initial_run_ = false;
         }
       }
+      std::string get_name() { return name_; }
     protected:
       std::string name_;
       std::function<void(display::DisplayBuffer &, bool initial_run)> f_;
@@ -27,16 +32,21 @@ namespace zilloscope {
       bool initial_run_;
   };
 
-  class ZilloModeTime: public ZilloMode {
-      ZilloModeTime(const std::string &name,
+  class ModeTime: public zilloscope::Mode {
+    public:
+      ModeTime(const std::string &name,
                           const std::function<void(display::DisplayBuffer &, bool initial_run)> &f,
                           uint32_t update_interval)
-          : ZilloMode(name), f_(f), update_interval_(update_interval) {}
+          : Mode(name,f,update_interval) {}
   };
 
-  class ZilloModeEffects: public ZilloMode {
-      ZilloModeEffects(const std::string &name)
-          : ZilloMode(name) {}
+  class ModeEffects: public zilloscope::Mode {
+    public:
+      ModeEffects(const std::string &name)
+          : Mode(name) {}
+    /*
+    TODO: handle effect's interval instal of global 'effects' one
+    */
   };
 }
 }

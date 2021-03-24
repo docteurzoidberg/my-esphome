@@ -14,8 +14,11 @@ DisplayBubblesEffect =  zilloscope_ns.class_('DisplayBubblesEffect')
 DisplayMatrixEffect =  zilloscope_ns.class_('DisplayMatrixEffect')
 DisplayTiledPuzzleEffect =  zilloscope_ns.class_('DisplayTiledPuzzleEffect')
 
+Mode = zilloscope_ns.class_('Mode')
 ModeTime = zilloscope_ns.class_('ModeTime')
 ModeEffects = zilloscope_ns.class_('ModeEffects')
+ModePaint = zilloscope_ns.class_('ModePaint')
+
 
 ESPColor = light_ns.class_('ESPColor')
 

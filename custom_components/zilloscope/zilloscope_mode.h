@@ -37,22 +37,5 @@ namespace zilloscope {
       uint32_t last_run_{0};
       uint32_t frame_counter_{0};
   };
-
-  class ModeTime: public zilloscope::Mode {
-    public:
-      ModeTime(const std::string &name,
-                          const std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> &f,
-                          uint32_t update_interval)
-          : Mode(name,f,update_interval) {}
-  };
-
-  class ModeEffects: public zilloscope::Mode {
-    public:
-      ModeEffects(const std::string &name)
-          : Mode(name) {}
-    /*
-    TODO: handle effect's interval instal of global 'effects' one
-    */
-  };
 }
 }

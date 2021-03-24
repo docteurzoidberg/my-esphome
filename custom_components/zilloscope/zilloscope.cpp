@@ -213,7 +213,6 @@ Mode *ZilloScope::get_active_mode_() {
     return this->modes_[this->active_mode_index_ - 1];
 }
 
-
 void ZilloScope::start_mode_(uint32_t mode_index) {
   auto *curmode = this->get_active_mode_();
   if(curmode!=nullptr)

@@ -2,7 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_NAME
 from esphome.util import Registry
-from .types import DisplayBufferRef, ModeTime, ModeEffects
+from .types import DisplayBufferRef, ModeTime, ModeEffects, ModePaint
 
 CONF_RENDER_LAMBDA = 'render_lambda'
 CONF_UPDATE_INTERVAL = 'update_interval'
@@ -45,6 +45,14 @@ def mode_effects_to_code(config, mode_id):
     yield var
 
 
+@register_mode(
+    'mode_paint', ModeEffects, "paint", {
+        cv.GenerateID(): cv.declare_id(ModePaint),
+    }
+)
+def mode_effects_to_code(config, mode_id):
+    var = cg.new_Pvariable(mode_id, 'paint')
+    yield var
 
 def validate_modes(allowed_modes):
     def validator(value):

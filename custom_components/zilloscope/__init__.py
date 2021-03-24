@@ -8,6 +8,9 @@ from esphome.const import CONF_ID, CONF_TRIGGER_ID, CONF_EFFECTS
 from .effects import validate_effects, ADDRESSABLE_DISPLAY_EFFECTS, ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY
 from .modes import validate_modes, ZILLO_MODES, ZILLO_MODES_REGISTRY
 
+DEPENDENCIES = ["network"]
+AUTO_LOAD = ["web_server_base"]
+
 CONF_ON_BOOT = 'on_boot'
 CONF_ON_SPLASH = 'on_splash'
 CONF_ON_READY = 'on_ready'

@@ -1,0 +1,81 @@
+substitutions:
+  devicename: "timemasheen"
+  friendly_name: "TimeMasheen"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32doit-devkit-v1
+  on_boot:
+    - priority: 1000
+      then:
+        - lambda: |-
+            fastled_base_fastledlightoutput->get_controller()->setDither(0);
+        - delay: 1s
+        - light.turn_on:
+            id: clockleds
+            brightness: 0.2
+            effect: render
+
+wifi: !include "common/wifi.yaml"
+logger:
+api:
+ota:
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Paris
+
+e131:
+  method: multicast
+
+light:
+  #leds horloge
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO25
+    num_leds: 252
+    rgb_order: GRB
+    max_refresh_rate: 16ms
+    id: clockleds
+    name: "$friendly_name Clock Leds"
+    color_correct: [70%, 70%, 70%]
+    default_transition_length : 0s
+    #gamma_correct: 0
+    restore_mode : ALWAYS_OFF
+    effects:
+      - e131:
+          name: 'e131'
+          universe: 1
+          channels: RGB
+      - addressable_lambda:
+          name: time
+          lambda: |-
+            id(main).addressable_lights_lambdacall(it);
+
+
+  #leds cases
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO33
+    num_leds: 14
+    rgb_order: GRB
+    max_refresh_rate: 16ms
+    id: "shelfleds"
+    name: "$friendly_name Shelf Leds"
+    color_correct: [90%, 90%, 90%]
+    default_transition_length : 1s
+    #gamma_correct: 0
+    restore_mode : ALWAYS_OFF
+    effects:
+      - e131:
+          name: 'e131'
+          universe: 1
+          channels: RGB
+
+timemasheen:
+  id: main
+  clock_addressable_light_id: clockleds
+  time_id: homeassistant_time

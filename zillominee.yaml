@@ -23,7 +23,13 @@ esphome:
       - lambda: |-
           id(zilloscope_main).on_shutdown();
 
-wifi: !include "common/wifi.yaml"
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [ zilloscope, color_line_scroller, text_scroller ]
+
+wifi: !include "common/wifimulti.yaml"
 
 logger:
   level: DEBUG
@@ -158,6 +164,9 @@ light:
           universe: 1
           channels: RGB
 
+
+
+
 display:
   - platform: addressable_light
     id: zillominee_display
@@ -226,9 +235,10 @@ zilloscope:
           //Multicolor line scroller
           id(notif_colorline_scroller).draw(it, 0, 23);
           id(notif_colorline_scroller).scroll();
+          return false;
     - mode_effects:
     #-mode_stream:
-    #-mode paint:
+    #- mode_paint:       <-- want this one to be registered as an asyncwebhandler
 
 
   effects:

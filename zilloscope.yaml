@@ -17,13 +17,24 @@ esphome:
         - switch.turn_on: zilloscope_control_display
         - lambda: |-
             id(zilloscope_main).on_boot();
+    - priority: 0
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode("effects");
+            id(zilloscope_main).service_effect_start("fire");
 
   on_shutdown:
     then:
       - lambda: |-
           id(zilloscope_main).on_shutdown();
 
-wifi: !include "common/wifi.yaml"
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [ zilloscope, color_line_scroller, text_scroller ]
+
+wifi: !include "common/wifimulti.yaml"
 
 logger:
 
@@ -97,9 +108,22 @@ light:
     default_transition_length : 0s
     #gamma_correct: 0
     restore_mode : ALWAYS_ON
+    effects:
+      - strobe:
+          name: presence
+          colors:
+            - state: True
+              brightness: 100%
+              red: 100%
+              green: 0%
+              blue: 100%
+              duration: 1000ms
+            - state: False
+              duration: 750ms
+
 
 display:
-  - platform: addressable_light_display
+  - platform: addressable_light
     id: zilloscope_display
     addressable_light_id: zilloscope_matrix
     width: 32
@@ -146,21 +170,27 @@ zilloscope:
   id: zilloscope_main
   display_id: zilloscope_display
   time_id: homeassistant_time
-  use_splash: "true"
-
-#automations
-  on_boot:
-    then:
-      lambda: |-
-        //if you want to do something when zilloscope is booting
-  on_splash:
-    then:
-      lambda: |-
-        //if you want to do something when zilloscope is displaying splash screen
-  on_ready:
-    then:
-      lambda: |-
-        //if you want to do something when zilloscope is ready
+  use_splash: true
+  default_mode: effects
+#modes
+  modes:
+    - mode_time:
+        name: time1
+        render_lambda: |-
+          //it=display
+          //frame= frame counter
+          it.strftime(2, 0, id(font_8bithud),  Color(0xFF0000), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
+          return false;
+    - mode_time:
+        name: time2
+        render_lambda: |-
+          //it=display
+          //frame= frame counter
+          it.strftime(2, 0, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
+          return false;
+    - mode_effects:
+        name: effects
+        #TODO: default: "mycustomeffect"
 #effects
   effects:
     #custom effect (lambda)
@@ -169,7 +199,6 @@ zilloscope:
         lambda: |-
           //it=display
           //frame= frame counter
-
           //render same animation as the boot animation but you can code what you want instead
           id(boot_animation).next_frame();
           it.image(0, 6, id(boot_animation));
@@ -213,12 +242,6 @@ zilloscope:
     id(zilloscope_display).image(0, 0, id(splash_animation));
     return true;  //splash continue
 
-  #render time
-  render_time: |-
-    //it=display
-    //frame= frame counter
-    it.strftime(2, 0, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
-    return false;
 
   #render meteo icon and temp
   #render_meteo: |-

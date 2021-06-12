@@ -16,7 +16,7 @@ def register_mode(name, mode_type, default_name, schema, *extra_validators):
     ZILLO_MODES.append(name)
     #schema = cv.Schema(schema)
     schema = cv.Schema(schema).extend({
-        #cv.Optional(CONF_NAME, default=default_name): cv.string_strict,
+        cv.Optional(CONF_NAME, default=default_name): cv.string_strict,
         cv.Optional(CONF_UPDATE_INTERVAL, default='0ms'): cv.positive_time_period_milliseconds,
     })
     validator = cv.All(schema, *extra_validators)
@@ -34,7 +34,8 @@ def mode_time_to_code(config, mode_id):
     args = [(DisplayBufferRef, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
     render_lambda_ = yield cg.process_lambda(config[CONF_RENDER_LAMBDA], args, return_type=cg.bool_)
     update_interval_ = yield cg.uint32(config[CONF_UPDATE_INTERVAL])
-    var = cg.new_Pvariable(mode_id, 'time', render_lambda_, update_interval_)
+    name = yield cg.std_string(config[CONF_NAME])
+    var = cg.new_Pvariable(mode_id, name, render_lambda_, update_interval_)
     yield var
 
 @register_mode(
@@ -43,7 +44,8 @@ def mode_time_to_code(config, mode_id):
     }
 )
 def mode_effects_to_code(config, mode_id):
-    var = cg.new_Pvariable(mode_id, 'effects')
+    name = yield cg.std_string(config[CONF_NAME])
+    var = cg.new_Pvariable(mode_id, name)
     yield var
 
 
@@ -57,9 +59,11 @@ def mode_effects_to_code(config, mode_id):
 )
 def mode_paint_to_code(config, mode_id):
     paren = yield cg.get_variable(config[CONF_WEB_SERVER_BASE_ID])
-    var = cg.new_Pvariable(mode_id, 'paint', paren)
-    yield cg.register_component(var, config)
-    #yield var
+    name = yield cg.std_string(config[CONF_NAME])
+    var = cg.new_Pvariable(mode_id, name, paren)
+    print('this is it')
+    #yield cg.register_component(var, config)
+    yield var
 
 def validate_modes(allowed_modes):
     def validator(value):
@@ -74,11 +78,12 @@ def validate_modes(allowed_modes):
                                "zilloscope type".format(key), [i])
                 )
                 continue
-            #name = x[key][CONF_NAME]
-            name = key
+            #new
+            name = x[key][CONF_NAME]
+            #OLD: name = key
             if name in names:
                 errors.append(
-                    cv.Invalid("Found the mode key '{}' twice. All effects must have "
+                    cv.Invalid("Found the mode key '{}' twice. All modes must have "
                                "unique names".format(name), [i])
                 )
                 continue

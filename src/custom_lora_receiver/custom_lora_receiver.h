@@ -51,6 +51,13 @@ static DevicePTDataStruct pt_state = {
   .deviceLowBatt=false
 };
 
+static DeviceSoilSensorDataStruct sl_state = {
+  .deviceBattVoltage=0.0f,
+  .deviceBattPercent=0,
+  .deviceSoilMoistureLevel=0,
+  .deviceLowBatt=false
+};
+
 class LoraPacketSensor : public Component {
   public:
     TextSensor *last_packet_received = new TextSensor();
@@ -130,6 +137,37 @@ class LoraReceiver : public Component {
         }
 
         ESP_LOGD(TAG, "[PACKET][FROM:%s][DATA] Alarm=%d|LowBatt=%d|BattVoltage=%0.2f|BattPercent=%d|Presence=%d\n", devicestring, state.deviceAlarmActive, state.deviceLowBatt, state.deviceBattVoltage, state.deviceBattPercent, state.devicePirState);
+      }
+      else if(packet.is_from_device("SL")) {
+
+        ESP_LOGD(TAG, "[PACKET][FROM:%s][DATA] data...\n", devicestring);
+
+        if(reader.get_value(dzb::PacketType::BATT_LOW, 0, sl_state.deviceLowBatt)) {
+          device_PT_batt_islow->publish_state(sl_state.deviceLowBatt);
+        }
+        else {
+          ESP_LOGD(TAG, "[PACKET][FROM:%s][ERROR] Could not get BATT_LOW\n" , devicestring);
+        }
+
+        if(reader.get_value(dzb::PacketType::BATT_PERCENT, 0, sl_state.deviceBattPercent)) {
+          device_PT_batt_percent->publish_state(sl_state.deviceBattPercent);
+        }
+        else {
+          ESP_LOGD(TAG, "[PACKET][FROM:%s][ERROR] Could not get BATT_PERCENT\n", devicestring);
+        }
+
+        if(reader.get_value(dzb::PacketType::BATT_VOLTAGE, 0, sl_state.deviceBattVoltage)) {
+          device_PT_batt_voltage->publish_state(sl_state.deviceBattVoltage);
+        }
+        else {
+          ESP_LOGD(TAG, "[PACKET][FROM:%s][ERROR] Could not get BATT_VOLTAGE\n", devicestring);
+        }
+        if(reader.get_value(dzb::PacketType::HUMIDITY, 0, sl_state.deviceSoilMoistureLevel)) {
+          device_SL_soil_moisture->publish_state(sl_state.deviceSoilMoistureLevel);
+        }
+        else {
+          ESP_LOGD(TAG, "[PACKET][FROM:%s][ERROR] Could not get SOIL MOISTURE LEVEL\n", devicestring);
+        }
       }
       //ANOTHER DEVICE
       else if(packet.is_from_device("PT")) {
@@ -213,6 +251,11 @@ class LoraReceiver : public Component {
     Sensor *device_PT_batt_percent = new Sensor();
     Sensor *device_PT_batt_islow = new Sensor();
     Sensor *device_PT_water_level = new Sensor();
+
+    Sensor *device_SL_batt_voltage = new Sensor();
+    Sensor *device_SL_batt_percent = new Sensor();
+    Sensor *device_SL_batt_islow = new Sensor();
+    Sensor *device_SL_soil_moisture = new Sensor();
 
     LoraReceiver() : Component() {
     }

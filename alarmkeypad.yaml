@@ -36,9 +36,7 @@ esphome:
       - lambda: |-
           id(mainobj).on_shutdown();
 
-wifi: !include "common/wifi.yaml"
-
-captive_portal:
+wifi: !include "common/wifimulti.yaml"
 
 logger:
   level: DEBUG
@@ -301,15 +299,7 @@ switch:
 sensor:
   - <<: !include "common/common_sensors.yaml"
 
-    #Brightness set from home assistant
-  - platform: homeassistant
-    name: "$friendly_name brightness"
-    entity_id: input_number.alarm_keypad_brightness
-    id: brightness
-    on_value:
-      then:
-        lambda: !lambda |-
-          id(alpha).set_brightness(x);
+
 
 alarm_keypad_component:
   id: mainobj

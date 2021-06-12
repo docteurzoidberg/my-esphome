@@ -9,9 +9,19 @@ esphome:
   board: esp32doit-devkit-v1
   includes:
     - "src/custom_zillodevkit/effect_zillofeu.h"
+  on_boot:
+    - priority: 1000
+      then:
+        - lambda: |-
+            fastled_base_fastledlightoutput->get_controller()->setDither(0);
+    - priority: 0
+      then:
+        - light.turn_on:
+            id: ledmatrix
+            brightness: 1
+            effect: Rainbow
 
-wifi: !include "common/wifi.yaml"
-captive_portal:
+wifi: !include "common/wifimulti.yaml"
 logger:
 api:
 ota:
@@ -25,16 +35,24 @@ switch:
 sensor:
   - <<: !include "common/common_sensors.yaml"
 
+e131:
+  method: multicast
+
 light:
   - platform: fastled_clockless
     chipset: WS2812B
     pin: GPIO27
     num_leds: 64
     rgb_order: GRB
+    id: ledmatrix
     name: "$friendly_name Matrix"
     gamma_correct: 0
-    color_correct: [50%, 50%, 50%]
+    color_correct: [60%, 60%, 60%]
     effects:
+      - e131:
+          name: Stream
+          universe: 1
+          channels: RGB
       - addressable_lambda:
           name: "Fire2012"
           update_interval: 16ms
@@ -66,7 +84,7 @@ light:
               it[pixelnumber] = ESPColor(color.red, color.green, color.blue);
             }
       - addressable_color_wipe:
-          name: test color wipe adressable
+          name: Wipe
           colors:
             - red: 100%
               green: 100%

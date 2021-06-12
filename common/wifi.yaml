@@ -1,5 +1,2 @@
 ssid: !secret home_wifi_ap
 password: !secret home_wifi_pass
-ap:
-  ssid: "$devicename Fallback Hotspot"
-  password: !secret fallback_wifi_pass

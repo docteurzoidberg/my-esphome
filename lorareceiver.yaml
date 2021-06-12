@@ -14,7 +14,7 @@ esphome:
     - "LoRa"
     - "https://github.com/docteurzoidberg/esplib-lorasensorpackets/archive/master.zip"
 
-wifi: !include "common/wifi.yaml"
+wifi: !include "common/wifimulti.yaml"
 #mqtt: !include "common/mqtt.yaml"
 captive_portal:
 logger:
@@ -60,7 +60,9 @@ sensor:
         lora_receiver->device_J7_pir_state,
         lora_receiver->device_J7_alarm_isactive,
         lora_receiver->device_PT_batt_voltage,
-        lora_receiver->device_PT_water_level
+        lora_receiver->device_PT_water_level,
+        lora_receiver->device_SL_batt_voltage,
+        lora_receiver->device_SL_soil_moisture
       };
     sensors:
     - name: "LoRa Station last received packet rssi"
@@ -92,6 +94,10 @@ sensor:
         - multiply: 0.001
     - name: "Well water level"
       unit_of_measurement : cm
+      accuracy_decimals: 0
+      icon: mdi:water
+    - name: "Soil moisure percent"
+      unit_of_measurement : '%'
       accuracy_decimals: 0
       icon: mdi:water
 

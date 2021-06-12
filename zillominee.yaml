@@ -238,7 +238,8 @@ zilloscope:
           return false;
     - mode_effects:
     #-mode_stream:
-    #- mode_paint:       <-- want this one to be registered as an asyncwebhandler
+    - mode_paint:
+    #<-- want this one to be registered as an asyncwebhandler
 
 
   effects:

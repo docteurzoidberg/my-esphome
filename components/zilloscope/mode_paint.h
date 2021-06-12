@@ -18,9 +18,9 @@ struct UrlMatch {
 class ModePaint: public Mode, public Component, public AsyncWebHandler  {
   public:
     ModePaint(const std::string &name,
-              const std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> &f,
-              uint32_t update_interval)
-    : Mode(name,f,update_interval) {}
+              web_server_base::WebServerBase *base
+              )
+    : Mode(name,nullptr,16) , base_(base) {}
 
     void setup() {
       this->base_->init();

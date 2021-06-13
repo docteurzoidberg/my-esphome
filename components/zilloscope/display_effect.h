@@ -61,14 +61,24 @@ namespace zilloscope {
     public:
       const char *TAG = "zilloscope.displayeffect";
 
-      long unsigned int max_flame_height = 1000;
-      long unsigned int max_heat_spots = 1000;
-      long unsigned int min_x_attenuation = 500;
-      long init_flame_height = 1;
-      long init_heat_spots = 1000;
-      long init_x_attenuation = 5000;
-      //long speed = 15000;
-      long starting_speed = 1000000;
+      int max_flame_height = 1000;
+      int max_heat_spots = 1000;
+      int min_x_attenuation = 500;
+
+      int min_flame_height = 300;
+      int min_heat_spots = 300;
+      int max_x_attenuation = 500;
+
+      int init_flame_height = 1;
+      int init_heat_spots = 1000;
+      int init_x_attenuation = 5000;
+
+      int speed = 15000;
+
+      int starting_speed = 1000;
+
+      int periodicity = 7200000;
+      // pour constater la présence d'oscillations dans le feu, tu pourra diviser cette valeur par 1000 ou 1000000, ici 7200000 ça correspond a une période de 2h
 
       explicit DisplayFireEffect(const std::string &name) : DisplayEffect(name) {
 
@@ -78,13 +88,21 @@ namespace zilloscope {
         return 1000 + (a - 1000) * b / 1000;
       }
 
-      int rnd(int x, int y) {
+      int int_lerp(int a, int b, int c) {
+        if(c <= 0)
+          return a;
+        if(c >= 1000)
+          return b;
+        return (a * (1000 - c) + b * c) / 1000;
+      }
+
+      unsigned int rnd(int x, int y) {
         int X = x ^ 64228;
         int Y = y ^ 61356;
         return ((
           X * 71521
-          + Y * 13547)
-          ^ 35135) % 1000;
+          + Y * 13547
+          ^ 35135) % 1000 + 1000) % 1000;
       }
 
       int noise(int X, int Y, int T, int flame_height, int heat_spots, int x_attenuation) {
@@ -118,7 +136,6 @@ namespace zilloscope {
         return max(0, apow(n / sum_coeff, 1000000 / heat_spots * 1000 / (attenuation + 1000)) - attenuation);
       }
 
-
       uint32_t heat_color(int heat) {
         int r = min(255, (int) (heat * 255 / 333));
         int g = min(255, max(0, (int) ((heat - 333) * 255 / 333)));
@@ -129,17 +146,21 @@ namespace zilloscope {
       void start() override {
 
       }
-      // code exécuté a chaque frame
+
+      //each frame
       void apply(display::DisplayBuffer &it) override {
         unsigned long timer = millis();
-        /*
-        int flame_height = (int) min(init_flame_height + starting_speed * timer / 1000L, max_flame_height);
-        int heat_spots = (int) min(init_heat_spots + starting_speed * timer / 1000L, max_heat_spots);
-        int x_attenuation = (int) max(init_x_attenuation - starting_speed * timer / 1000L, min_x_attenuation);
-        */
-        int flame_height = 1000;
-        int heat_spots = 1000;
-        int x_attenuation = 500;
+        int begin_time = timer > starting_speed ? 1000 : (int) (timer * 1000 / starting_speed);
+
+        // must be signed int
+        int periodic_time = (int) (timer % periodicity);
+        periodic_time = periodic_time * 1000 / periodicity;
+        if(periodic_time > 500)
+          periodic_time = 1000 - periodic_time;
+
+        int flame_height = int_lerp(int_lerp(init_flame_height, max_flame_height, begin_time), min_flame_height, periodic_time);
+        int heat_spots = int_lerp(int_lerp(init_heat_spots, max_heat_spots, begin_time), min_heat_spots, periodic_time);
+        int x_attenuation = int_lerp(int_lerp(init_x_attenuation, min_x_attenuation, begin_time), max_x_attenuation, periodic_time);
 
         for(int x = 0 ; x < width_; x ++) {
           for(int y = 0 ; y < height_; y ++) {

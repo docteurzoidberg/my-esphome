@@ -45,7 +45,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_TIME_ID): cv.use_id(time_.RealTimeClock),
 
     #config options
-    cv.Required(CONF_DEFAULT_MODE, default=""): cv.string_strict,
+    cv.Optional(CONF_DEFAULT_MODE, default=""): cv.string_strict,
     cv.Optional(CONF_USE_SPLASH, default=False): cv.boolean,
 
     #display render lambdas
@@ -80,31 +80,21 @@ def to_code(config):
     wrapped_display = yield cg.get_variable(config[CONF_DISPLAY_ID])
     wrapped_time = yield cg.get_variable(config[CONF_TIME_ID])
     default_mode = yield cg.std_string(config[CONF_DEFAULT_MODE])
-    #print("pouet")
-    #print(config[CONF_EFFECTS])
-    #TODO: recuperer le default effect dans les mode effects
-    #default_effect = yield cg.std_string(config[CONF_MODES][CONF_DEFAULT_EFFECT])
-    #print(default_effect)
+
     cg.add(var.set_display(wrapped_display))
     cg.add(var.set_time(wrapped_time))
-
     yield cg.register_component(var, config)
 
     modes = yield cg.build_registry_list(ZILLO_MODES_REGISTRY, config.get(CONF_MODES, []))
     cg.add(var.add_modes(modes))
     cg.add(var.set_config_default_mode(default_mode))
 
-    #effects = yield cg.build_registry_list(ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY, config.get(CONF_EFFECTS, []))
-    #cg.add(var.add_effects(effects))
-
     render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
-    #render_time_template_ = yield cg.process_lambda(config[CONF_RENDER_TIME],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
     render_notification_template_ = yield cg.process_lambda(config[CONF_RENDER_NOTIFICATION],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame'),(cg.std_string,'text'),(cg.uint32, 'type')],return_type=cg.bool_)
     render_ota_template_ = yield cg.process_lambda(config[CONF_RENDER_OTA],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
     render_shutdown_template_ = yield cg.process_lambda(config[CONF_RENDER_SHUTDOWN],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
 
     cg.add(var.set_render_boot(render_boot_template_))
-    #cg.add(var.set_render_time(render_time_template_))
     cg.add(var.set_render_notification(render_notification_template_))
     cg.add(var.set_render_ota(render_ota_template_))
     cg.add(var.set_render_shutdown(render_shutdown_template_))
@@ -112,7 +102,7 @@ def to_code(config):
     if CONF_USE_SPLASH in config:
         wrapped_usesplash = yield cg.bool_(config[CONF_USE_SPLASH])
         cg.add(var.set_config_use_splash(wrapped_usesplash))
-        #todo: how to raise error if use splash is set to true but no lambda specified?
+        #TODO: how to raise error if use splash is set to true but no lambda specified?
         render_splash_template_ = yield cg.process_lambda(config[CONF_RENDER_SPLASH],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
         cg.add(var.set_render_splash(render_splash_template_))
 

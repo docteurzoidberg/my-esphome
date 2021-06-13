@@ -36,26 +36,38 @@ logger:
 
 api:
   services:
-    #effect start
     - service: start_effect
       variables:
         name: string
       then:
         - lambda: |-
             id(zilloscope_main).service_effect_start(name);
-    #effect stop
     - service: stop_effect
       then:
         - lambda: |-
             id(zilloscope_main).service_effect_stop();
-    #change mode
+    - service: next_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_next();
+    - service: previous_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_prev();
     - service: mode
       variables:
         name: string
       then:
         - lambda: |-
             id(zilloscope_main).service_mode(name);
-    #queue notification
+    - service: mode_next
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_next();
+    - service: mode_prev
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_prev();
     - service: notify
       variables:
         type: int
@@ -63,7 +75,6 @@ api:
       then:
         - lambda: |-
             id(zilloscope_main).service_notify(type,text,-1);
-
     - service: start_stream
       then:
         - lambda: |-
@@ -71,7 +82,6 @@ api:
         - light.turn_on:
             id: zillominee_matrix
             effect: "e131"
-
     - service: stop_stream
       then:
         - light.turn_on:

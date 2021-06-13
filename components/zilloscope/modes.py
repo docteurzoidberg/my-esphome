@@ -44,7 +44,7 @@ def mode_time_to_code(config, mode_id):
 @register_mode(
     'mode_effects', ModeEffects, "effects", {
         cv.GenerateID(): cv.declare_id(ModeEffects),
-        cv.Optional(CONF_DEFAULT_EFFECT): cv.string_strict,
+        cv.Optional(CONF_DEFAULT_EFFECT, default=""): cv.string_strict,
         cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_DISPLAY_EFFECTS)
     }
 )

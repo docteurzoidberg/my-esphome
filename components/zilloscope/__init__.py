@@ -45,7 +45,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_TIME_ID): cv.use_id(time_.RealTimeClock),
 
     #config options
-    cv.Required(CONF_DEFAULT_MODE): cv.string_strict,
+    cv.Required(CONF_DEFAULT_MODE, default=""): cv.string_strict,
     cv.Optional(CONF_USE_SPLASH, default=False): cv.boolean,
 
     #display render lambdas

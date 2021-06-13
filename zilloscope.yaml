@@ -48,6 +48,16 @@ api:
       then:
         - lambda: |-
             id(zilloscope_main).service_effect_stop();
+    #effect next
+    - service: next_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_next();
+    #effect previous
+    - service: previous_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_prev();
     #change mode
     - service: mode
       variables:
@@ -55,6 +65,14 @@ api:
       then:
         - lambda: |-
             id(zilloscope_main).service_mode(name);
+    - service: mode_next
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_next();
+    - service: mode_prev
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_prev();
     #queue notification
     - service: notify
       variables:
@@ -167,7 +185,7 @@ zilloscope:
   display_id: zilloscope_display
   time_id: homeassistant_time
   use_splash: true
-  default_mode: time2
+  default_mode: effects
 #modes
   modes:
     - mode_time:
@@ -196,7 +214,7 @@ zilloscope:
                 //frame= frame counter
                 //render same animation as the boot animation but you can code what you want instead
                 id(boot_animation).next_frame();
-                it.image(0, 6, id(boot_animation));
+                it.image(0, 0, id(boot_animation));
           #effet integré 'feu'
           - display_fire:
               name: fire

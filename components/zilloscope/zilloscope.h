@@ -94,11 +94,6 @@ namespace esphome {
       std::string get_notification_text();
       uint32_t get_notification_type();
 
-      /// Return the name of the current effect, or if no effect is active "None".
-      //std::string get_effect_name();
-      //int32_t get_effect_index(std::string name);
-      //const std::vector<DisplayEffect *> &get_effects() const;
-
       std::string get_mode_name();
       uint32_t get_mode_index(std::string name);
       const std::vector<Mode *> &get_modes() const;
@@ -110,7 +105,6 @@ namespace esphome {
       void set_config_default_mode(std::string value);
 
       void add_modes(std::vector<Mode *> modes);
-      //void add_effects(std::vector<DisplayEffect *> effects);
       void add_on_boot_callback(std::function<void()> callback) {this->on_boot_callback_.add(std::move(callback));}
       void add_on_splash_callback(std::function<void()> callback) {this->on_splash_callback_.add(std::move(callback));}
       void add_on_ready_callback(std::function<void()> callback) {this->on_ready_callback_.add(std::move(callback));}
@@ -136,9 +130,15 @@ namespace esphome {
 
     //services
       void service_notify(int type, std::string text, unsigned long timeout);
+
       void service_mode(std::string name);
+      void service_mode_next();
+      void service_mode_prev();
+
       void service_effect_start(std::string name);
       void service_effect_stop();
+      void service_effect_next();
+      void service_effect_prev();
 
     protected:
 

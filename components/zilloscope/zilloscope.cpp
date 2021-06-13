@@ -116,22 +116,7 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
     if(mode==nullptr)
       return;
 
-    //ESP_LOGD(TAG,"Testing if %s is ModeEffect", mode->get_name().c_str());
-
-    //special cases for modes who has special render methods
-    //ModeEffects *modeeffects = static_cast<ModeEffects*>(mode);
-    ///if(modeeffects!=nullptr) {
-      //DisplayEffect *effect = modeeffects->get_active_effect_();
-      //if(effect==nullptr)
-        //return;
-      //use effect's apply method
-      //effect->apply(*&*_display);
-      //return;
-    //}
-
     //ESP_LOGD(TAG,"Before draw for %s", mode->get_name().c_str());
-
-    //else use mode's draw method
     mode->draw(*&*_display);
     return;
   }
@@ -172,6 +157,26 @@ void ZilloScope::service_mode(std::string name) {
   }
   ESP_LOGD(TAG, "Entering mode %s", name.c_str());
   start_mode_(mode_index);
+}
+
+void ZilloScope::service_mode_next() {
+  active_mode_index_++;
+  if(active_mode_index_>modes_.size()) {
+    active_mode_index_=1;
+  }
+  auto mode = modes_[active_mode_index_-1];
+  ESP_LOGD(TAG, "Entering mode %s (#%d)", mode->get_name().c_str(), active_mode_index_);
+  start_mode_(active_mode_index_);
+}
+
+void ZilloScope::service_mode_prev() {
+  active_mode_index_--;
+  if(active_mode_index_<=0) {
+    active_mode_index_=modes_.size();
+  }
+  auto mode = modes_[active_mode_index_-1];
+  ESP_LOGD(TAG, "Entering mode %s (#%d)", mode->get_name().c_str(), active_mode_index_);
+  start_mode_(active_mode_index_);
 }
 
 void ZilloScope::service_effect_start(std::string name) {
@@ -224,6 +229,21 @@ void ZilloScope::service_effect_stop() {
   }
 }
 
+void ZilloScope::service_effect_next() {
+  auto mode = get_active_mode_();
+  if(mode->get_type()=="ModeEffects") {
+    ModeEffects *modeeffect = static_cast <ModeEffects*>(mode);
+    modeeffect->next_effect();
+  }
+}
+
+void ZilloScope::service_effect_prev() {
+  auto mode = get_active_mode_();
+  if(mode->get_type()=="ModeEffects") {
+    ModeEffects *modeeffect = static_cast <ModeEffects*>(mode);
+    modeeffect->prev_effect();
+  }
+}
 
 //modes
 

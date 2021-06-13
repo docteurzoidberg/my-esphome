@@ -95,17 +95,24 @@ namespace zilloscope {
         this->active_effect_index_ = 0;
       }
 
-      //Entering mode
-      void enter_mode() {
-        //TODO: start effect if none started
-      }
-
       void next_effect() {
-        //TODO
+        active_effect_index_++;
+        if(active_effect_index_>effects_.size()) {
+          active_effect_index_=1;
+        }
+        auto effect = effects_[active_effect_index_-1];
+        ESP_LOGD("ModeEffects", "Starting effect %s (#%d)", effect->get_name().c_str(), active_effect_index_);
+        start_effect_(active_effect_index_);
       }
 
       void prev_effect() {
-        //TODO
+        active_effect_index_--;
+        if(active_effect_index_<=0) {
+          active_effect_index_=effects_.size();
+        }
+        auto effect = effects_[active_effect_index_-1];
+        ESP_LOGD("ModeEffects", "Starting effect %s (#%d)", effect->get_name().c_str(), active_effect_index_);
+        start_effect_(active_effect_index_);
       }
 
 

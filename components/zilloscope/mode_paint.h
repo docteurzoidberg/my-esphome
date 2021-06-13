@@ -8,6 +8,8 @@
 namespace esphome {
 namespace zilloscope {
 
+
+
 struct UrlMatch {
   std::string domain;  ///< The domain of the component, for example "sensor"
   std::string id;      ///< The id of the device that's being accessed, for example "living_room_fan"
@@ -17,10 +19,11 @@ struct UrlMatch {
 
 class ModePaint: public Mode, public Component, public AsyncWebHandler  {
   public:
+    static constexpr char *TAG = "zilloscope.modepaint";
     ModePaint(const std::string &name,
               web_server_base::WebServerBase *base
               )
-    : Mode(name,nullptr,16) , base_(base) {}
+    : Mode(name,"ModePaint",nullptr,16) , base_(base) {}
 
     void setup() {
       this->base_->init();

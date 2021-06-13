@@ -95,9 +95,9 @@ namespace esphome {
       uint32_t get_notification_type();
 
       /// Return the name of the current effect, or if no effect is active "None".
-      std::string get_effect_name();
-      uint32_t get_effect_index(std::string name);
-      const std::vector<DisplayEffect *> &get_effects() const;
+      //std::string get_effect_name();
+      //int32_t get_effect_index(std::string name);
+      //const std::vector<DisplayEffect *> &get_effects() const;
 
       std::string get_mode_name();
       uint32_t get_mode_index(std::string name);
@@ -110,7 +110,7 @@ namespace esphome {
       void set_config_default_mode(std::string value);
 
       void add_modes(std::vector<Mode *> modes);
-      void add_effects(std::vector<DisplayEffect *> effects);
+      //void add_effects(std::vector<DisplayEffect *> effects);
       void add_on_boot_callback(std::function<void()> callback) {this->on_boot_callback_.add(std::move(callback));}
       void add_on_splash_callback(std::function<void()> callback) {this->on_splash_callback_.add(std::move(callback));}
       void add_on_ready_callback(std::function<void()> callback) {this->on_ready_callback_.add(std::move(callback));}
@@ -141,29 +141,26 @@ namespace esphome {
       void service_effect_stop();
 
     protected:
-      optional<uint32_t> effect_;
+
       optional<uint32_t> mode_;
 
-      std::vector<DisplayEffect *> effects_;
       std::vector<Mode *> modes_;
 
       /// Value for storing the index of the currently active effect. 0 if no effect is active
-      uint32_t active_effect_index_{0};
+
       uint32_t active_mode_index_{0};
       uint32_t last_mode_index_{0};
 
-      bool has_effect_() { return this->effect_.has_value(); }
-
       /// Internal method to start an effect with the given index
-      void start_effect_(uint32_t effect_index);
+      //void start_effect_(uint32_t effect_index);
 
       /// Internal method to enter mode with the given index
       void start_mode_(uint32_t mode_index);
 
       /// Internal method to stop the current effect (if one is active).
-      void stop_effect_();
+      //void stop_effect_();
 
-      DisplayEffect *get_active_effect_();
+      //DisplayEffect *get_active_effect_();
       Mode *get_active_mode_();
 
       //triggers

@@ -13,14 +13,12 @@ CONF_LINE_MINSIZE = 'min_line_size'
 CONF_LINE_MAXSIZE = 'max_line_size'
 CONF_TILE_SIZE = 'tile_size'
 
-
 ADDRESSABLE_DISPLAY_EFFECTS = []
 ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY = Registry()
 
-
 def register_effect(name, effect_type, default_name, schema, *extra_validators):
     schema = cv.Schema(schema).extend({
-        cv.Optional(CONF_NAME, default=default_name): cv.string_strict,
+        cv.Optional(CONF_NAME, default=default_name): cv.string_strict
     })
     validator = cv.All(schema, *extra_validators)
     return ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY.register(name, effect_type, validator)

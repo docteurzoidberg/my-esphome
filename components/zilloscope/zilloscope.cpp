@@ -1,6 +1,7 @@
 #include "esphome/core/log.h"
 #include "zilloscope.h"
-
+#include "mode_paint.h"
+#include "mode_effects.h"
 namespace esphome {
 namespace zilloscope {
 
@@ -11,6 +12,7 @@ static const Color _color_white = Color(0xFFFFFF);
 
 //state
 static uint32_t _default_mode_index = 0;     //can be overidden in config
+static uint32_t _default_effect_index = 0;     //can be overidden in config
 
 static state _state = state::booting;
 static bool _has_time=false;
@@ -114,15 +116,22 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
     if(mode==nullptr)
       return;
 
-    //special cases for modes who has special render methods
-    if(mode->get_name()=="effects") {
-      DisplayEffect *effect = get_active_effect_();
-      if(effect==nullptr)
-        return;
-      effect->apply(*&*_display);
-      return;
-    }
+    //ESP_LOGD(TAG,"Testing if %s is ModeEffect", mode->get_name().c_str());
 
+    //special cases for modes who has special render methods
+    //ModeEffects *modeeffects = static_cast<ModeEffects*>(mode);
+    ///if(modeeffects!=nullptr) {
+      //DisplayEffect *effect = modeeffects->get_active_effect_();
+      //if(effect==nullptr)
+        //return;
+      //use effect's apply method
+      //effect->apply(*&*_display);
+      //return;
+    //}
+
+    //ESP_LOGD(TAG,"Before draw for %s", mode->get_name().c_str());
+
+    //else use mode's draw method
     mode->draw(*&*_display);
     return;
   }
@@ -166,34 +175,55 @@ void ZilloScope::service_mode(std::string name) {
 }
 
 void ZilloScope::service_effect_start(std::string name) {
-  uint32_t effect_index = get_effect_index(name);
-  if(effect_index==0) {
+
+  ModeEffects *modeeffectfound = nullptr;
+  uint32_t effectindexfound = 0;
+
+  //get ModeEffects containing the named effect
+  for (uint32_t i=0;i<modes_.size();i++) {
+    //test if mode is ModeEffect
+    auto mode = modes_[i];
+    auto modetype = modes_[i]->get_type();
+    if(modetype!="ModeEffects")
+      continue;
+    ModeEffects *modeeffect = static_cast <ModeEffects*>(modes_[i]);
+    if(modeeffect!=nullptr){
+      uint32_t effectindex = modeeffect->get_effect_index(name);
+      if(effectindex>0) {
+        modeeffectfound=modeeffect;
+        effectindexfound = effectindex;
+        break;
+      }
+    }
+  }
+  if(modeeffectfound==nullptr) {
+    ESP_LOGE(TAG, "Cannot get ModeEffects with this effect name %s", name.c_str());
+    return;
+  }
+  if(effectindexfound==0) {
     ESP_LOGE(TAG, "Unknown effect %s", name.c_str());
     return;
   }
-  ESP_LOGD(TAG, "Starting effect %s (#%d)", name.c_str(), effect_index);
-  start_effect_(effect_index);
+  ESP_LOGD(TAG, "Starting effect %s (#%d)", name.c_str(), effectindexfound);
+  modeeffectfound->start_effect_(effectindexfound);
 }
 
 void ZilloScope::service_effect_stop() {
-  stop_effect_();
-}
-
-uint32_t ZilloScope::get_effect_index(std::string name) {
-  for (uint32_t i=0;i<effects_.size();i++) {
-    if(effects_[i]->get_name()==name) {
-      return i+1;
+  for (uint32_t i=0;i<modes_.size();i++) {
+    //test if mode is ModeEffect
+    auto mode = modes_[i];
+    auto modetype = modes_[i]->get_type();
+    if(modetype!="ModeEffects")
+      continue;
+    ModeEffects *modeeffects= static_cast <ModeEffects*>(modes_[i]);
+    if(modeeffects==nullptr) {
+      ESP_LOGE(TAG, "Cannot get ModeEffects");
+      return;
     }
+    modeeffects->stop_effect_();
   }
-  return 0;
 }
 
-DisplayEffect *ZilloScope::get_active_effect_() {
- if (this->active_effect_index_ == 0)
-    return nullptr;
-  else
-    return this->effects_[this->active_effect_index_ - 1];
-}
 
 //modes
 
@@ -221,7 +251,13 @@ void ZilloScope::start_mode_(uint32_t mode_index) {
     return;
   this->last_mode_index_=this->active_mode_index_;
   this->active_mode_index_ = mode_index;
-  auto *mode = this->get_active_mode_();
+  Mode *mode = modes_[active_mode_index_-1];
+  if(mode==nullptr){
+    ESP_LOGE(TAG, "Error retrieving mode index %d",active_mode_index_-1);
+    return;
+  }
+  ESP_LOGD(TAG, "starting mode %s", mode->get_name().c_str());
+  ESP_LOGD(TAG, "before start internal");
   mode->start_internal();
 }
 
@@ -244,6 +280,7 @@ void ZilloScope::on_splash() {
 void ZilloScope::on_ready() {
   ESP_LOGD(TAG, "ready");
   _state=state::main;
+  ESP_LOGD(TAG, "starting mode index %d", _default_mode_index);
   start_mode_(_default_mode_index);
 }
 
@@ -269,36 +306,6 @@ uint32_t ZilloScope::get_notification_type() {
 
 std::string ZilloScope::get_notification_text() {
   return _current_notification->get_text();
-}
-
-std::string ZilloScope::get_effect_name() {
-  if (this->active_effect_index_ > 0)
-    return this->effects_[this->active_effect_index_ - 1]->get_name();
-  else
-    return "None";
-}
-
-void ZilloScope::start_effect_(uint32_t effect_index) {
-  this->stop_effect_();
-  if (effect_index == 0)
-    return;
-  this->active_effect_index_ = effect_index;
-  auto *effect = this->get_active_effect_();
-  effect->start_internal();
-}
-
-void ZilloScope::stop_effect_() {
-  auto *effect = this->get_active_effect_();
-  if (effect != nullptr)
-    effect->stop();
-  this->active_effect_index_ = 0;
-}
-
-void ZilloScope::add_effects(const std::vector<DisplayEffect *> effects) {
-  this->effects_.reserve(this->effects_.size() + effects.size());
-  for (auto *effect : effects) {
-    this->effects_.push_back(effect);
-  }
 }
 
 void ZilloScope::add_modes(const std::vector<Mode *> modes) {

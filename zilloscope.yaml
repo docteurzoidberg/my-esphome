@@ -17,11 +17,7 @@ esphome:
         - switch.turn_on: zilloscope_control_display
         - lambda: |-
             id(zilloscope_main).on_boot();
-    - priority: 0
-      then:
-        - lambda: |-
-            id(zilloscope_main).service_mode("effects");
-            id(zilloscope_main).service_effect_start("fire");
+
 
   on_shutdown:
     then:
@@ -171,7 +167,7 @@ zilloscope:
   display_id: zilloscope_display
   time_id: homeassistant_time
   use_splash: true
-  default_mode: effects
+  default_mode: time2
 #modes
   modes:
     - mode_time:
@@ -190,32 +186,31 @@ zilloscope:
           return false;
     - mode_effects:
         name: effects
-        #TODO: default: "mycustomeffect"
-#effects
-  effects:
-    #custom effect (lambda)
-    - display_lambda:
-        name: "mycustomeffect"
-        lambda: |-
-          //it=display
-          //frame= frame counter
-          //render same animation as the boot animation but you can code what you want instead
-          id(boot_animation).next_frame();
-          it.image(0, 6, id(boot_animation));
-     #effet integré 'feu'
-    - display_fire:
-        name: "fire"
-        width: 32
-        height: 8
-     #effet integré 'bubulles'
-    - display_bubbles:
-        name: "bubulles"
-        speed: 15
-        width: 32
-        height: 8
-        background_color: 0x193291
-        min_bubble_size: 1
-        max_bubble_size: 16
+        default_effect: fire
+        effects:
+          #custom effect (lambda)
+          - display_lambda:
+              name: mycustomeffect
+              lambda: |-
+                //it=display
+                //frame= frame counter
+                //render same animation as the boot animation but you can code what you want instead
+                id(boot_animation).next_frame();
+                it.image(0, 6, id(boot_animation));
+          #effet integré 'feu'
+          - display_fire:
+              name: fire
+              width: 32
+              height: 8
+          #effet integré 'bubulles'
+          - display_bubbles:
+              name: bubulles
+              speed: 15
+              width: 32
+              height: 8
+              #background_color: 0x193291
+              min_bubble_size: 1
+              max_bubble_size: 16
 
 #render lambdas
 
@@ -241,15 +236,6 @@ zilloscope:
     }
     id(zilloscope_display).image(0, 0, id(splash_animation));
     return true;  //splash continue
-
-
-  #render meteo icon and temp
-  #render_meteo: |-
-  #  //it=display
-  #  //frame= frame counter
-  #  //TODO
-  #  it.print(0, 0, id(tinyfont), Color(0x0000FF), "METEO");
-  #  return false;
 
   #notifications
   render_notification: |-

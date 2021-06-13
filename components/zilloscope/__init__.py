@@ -2,10 +2,10 @@ from typing import Optional
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
-from esphome.components import display, font
+from esphome.components import display
 from esphome.components import time as time_
-from esphome.const import CONF_ID, CONF_TRIGGER_ID, CONF_EFFECTS
-from .effects import validate_effects, ADDRESSABLE_DISPLAY_EFFECTS, ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY
+from esphome.const import CONF_ID, CONF_TRIGGER_ID
+
 from .modes import validate_modes, ZILLO_MODES, ZILLO_MODES_REGISTRY
 
 DEPENDENCIES = ["network"]
@@ -60,7 +60,7 @@ CONFIG_SCHEMA = cv.Schema({
 
     #Todo: validate at least one effect
     #Todo: validate mode effect present in modes?
-    cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_DISPLAY_EFFECTS),
+    #cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_DISPLAY_EFFECTS),
 
     #optional automation triggers
     cv.Optional(CONF_ON_BOOT): automation.validate_automation({
@@ -80,16 +80,22 @@ def to_code(config):
     wrapped_display = yield cg.get_variable(config[CONF_DISPLAY_ID])
     wrapped_time = yield cg.get_variable(config[CONF_TIME_ID])
     default_mode = yield cg.std_string(config[CONF_DEFAULT_MODE])
+    #print("pouet")
+    #print(config[CONF_EFFECTS])
+    #TODO: recuperer le default effect dans les mode effects
+    #default_effect = yield cg.std_string(config[CONF_MODES][CONF_DEFAULT_EFFECT])
+    #print(default_effect)
     cg.add(var.set_display(wrapped_display))
     cg.add(var.set_time(wrapped_time))
-    cg.add(var.set_config_default_mode(default_mode))
+
     yield cg.register_component(var, config)
 
     modes = yield cg.build_registry_list(ZILLO_MODES_REGISTRY, config.get(CONF_MODES, []))
     cg.add(var.add_modes(modes))
+    cg.add(var.set_config_default_mode(default_mode))
 
-    effects = yield cg.build_registry_list(ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY, config.get(CONF_EFFECTS, []))
-    cg.add(var.add_effects(effects))
+    #effects = yield cg.build_registry_list(ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY, config.get(CONF_EFFECTS, []))
+    #cg.add(var.add_effects(effects))
 
     render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
     #render_time_template_ = yield cg.process_lambda(config[CONF_RENDER_TIME],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)

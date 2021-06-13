@@ -7,15 +7,16 @@ namespace esphome {
 namespace zilloscope {
   class Mode {
     public:
-      Mode(const std::string &name, std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> f, uint32_t update_interval)
-        : name_(name), f_(f), update_interval_(update_interval) {}
+      Mode(const std::string &name, const std::string &type, std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> f, uint32_t update_interval)
+        : name_(name), type_(type), f_(f), update_interval_(update_interval) {}
 
       Mode(const std::string &name) : name_(name) {}
+      Mode(const std::string &name, const std::string &type) : name_(name), type_(type) {}
 
       virtual void start() { this->initial_run_ = true; }
       virtual void start_internal() {  }
       virtual void stop() {  }
-      void draw(display::DisplayBuffer &it) {
+      virtual void draw(display::DisplayBuffer &it) {
         const uint32_t now = millis();
         if (now - this->last_run_ >= this->update_interval_) {
           this->last_run_ = now;
@@ -28,8 +29,10 @@ namespace zilloscope {
         }
       }
       std::string get_name() { return name_; }
+      std::string get_type() { return type_; }
     protected:
       std::string name_;
+      std::string type_;
       std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> f_;
 
       bool initial_run_{false};

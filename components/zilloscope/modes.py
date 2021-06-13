@@ -1,13 +1,16 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.const import CONF_NAME
+from esphome.const import CONF_NAME, CONF_EFFECTS
 from esphome.util import Registry
-from .types import DisplayBufferRef, ModeTime, ModeEffects, ModePaint
 from esphome.components import web_server_base
 from esphome.components.web_server_base import CONF_WEB_SERVER_BASE_ID
+from .types import DisplayBufferRef, ModeTime, ModeEffects, ModePaint
+from .effects import validate_effects, ADDRESSABLE_DISPLAY_EFFECTS, ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY
+
 
 CONF_RENDER_LAMBDA = 'render_lambda'
 CONF_UPDATE_INTERVAL = 'update_interval'
+CONF_DEFAULT_EFFECT = 'default_effect'
 
 ZILLO_MODES = []
 ZILLO_MODES_REGISTRY = Registry()
@@ -41,11 +44,17 @@ def mode_time_to_code(config, mode_id):
 @register_mode(
     'mode_effects', ModeEffects, "effects", {
         cv.GenerateID(): cv.declare_id(ModeEffects),
+        cv.Optional(CONF_DEFAULT_EFFECT): cv.string_strict,
+        cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_DISPLAY_EFFECTS)
     }
 )
 def mode_effects_to_code(config, mode_id):
     name = yield cg.std_string(config[CONF_NAME])
+    default_effect = yield cg.std_string(config[CONF_DEFAULT_EFFECT])
     var = cg.new_Pvariable(mode_id, name)
+    effects = yield cg.build_registry_list(ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY, config.get(CONF_EFFECTS, []))
+    cg.add(var.add_effects(effects))
+    cg.add(var.set_default_effect(default_effect))
     yield var
 
 

@@ -88,6 +88,35 @@ ota:
 binary_sensor:
   - <<: !include "common/common_binary_sensors.yaml"
 
+  - platform: gpio
+    pin:
+      number: 33
+      mode: INPUT_PULLUP
+    name: bouton1
+    id: zilloscope_bouton_prev
+    on_press:
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_prev();
+
+  - platform: gpio
+    pin:
+      number: 34
+      mode: INPUT_PULLUP
+    name: bouton2
+    id: zilloscope_bouton_enter
+
+  - platform: gpio
+    pin:
+      number: 35
+      mode: INPUT_PULLUP
+    name: bouton3
+    id: zilloscope_bouton_next
+    on_press:
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_next();
+
 switch:
   - <<: !include "common/common_switchs.yaml"
   - platform: template
@@ -220,6 +249,11 @@ zilloscope:
               name: fire
               width: 32
               height: 8
+          #effet integré 'matrix'
+          - display_matrix:
+              name: matrix
+              width: 32
+              height: 8
           #effet integré 'bubulles'
           - display_bubbles:
               name: bubulles
@@ -229,6 +263,11 @@ zilloscope:
               #background_color: 0x193291
               min_bubble_size: 1
               max_bubble_size: 16
+          - display_tiled_puzzle:
+              name: "puzzle"
+              width: 32
+              height: 8
+              tile_size: 5
 
 #render lambdas
 

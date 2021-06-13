@@ -237,47 +237,44 @@ zilloscope:
           id(notif_colorline_scroller).scroll();
           return false;
     - mode_effects:
-    #-mode_stream:
-    - mode_paint:
-    #<-- want this one to be registered as an asyncwebhandler
-
-
-  effects:
-    #effet custom (lambda)
-    - display_lambda:
-        name: "moneeffetcustom"
-        lambda: |-
-          //it=display
-          //frame= frame counter
-          id(boot_animation_aliens).next_frame();
-          it.image(1, 6, id(boot_animation_aliens));
-    #effet integré 'feu'
-    - display_fire:
-        name: "lefeu"
-        width: 35
-        height: 25
-    #effet integré 'bulles'
-    - display_bubbles:
-        id: bidule
-        name: "bubulles"
-        speed: 15
-        width: 35
-        height: 25
-        background_color: 0x321911
-        min_bubble_size: 1
-        max_bubble_size: 16
-    #effet integré matrix
-    - display_matrix:
-        name: "matrix"
-        width: 35
-        height: 25
-    #effet integré 'taquin'
-    - display_tiled_puzzle:
-        name: "puzzle"
-        width: 35
-        height: 25
-        tile_size: 5
+        effects:
+          #effet custom (lambda)
+          - display_lambda:
+              name: "moneeffetcustom"
+              lambda: |-
+                //it=display
+                //frame= frame counter
+                id(boot_animation_aliens).next_frame();
+                it.image(1, 6, id(boot_animation_aliens));
+          #effet integré 'feu'
+          - display_fire:
+              name: "lefeu"
+              width: 35
+              height: 25
+          #effet integré 'bulles'
+          - display_bubbles:
+              id: bidule
+              name: "bubulles"
+              speed: 15
+              width: 35
+              height: 25
+              background_color: 0x321911
+              min_bubble_size: 1
+              max_bubble_size: 16
+          #effet integré matrix
+          - display_matrix:
+              name: "matrix"
+              width: 35
+              height: 25
+          #effet integré 'taquin'
+          - display_tiled_puzzle:
+              name: "puzzle"
+              width: 35
+              height: 25
+              tile_size: 5
     #etc
+    - mode_paint:
+      #<-- want this one to be registered as an asyncwebhandler
 
   #boot animation forever
   render_boot: |-

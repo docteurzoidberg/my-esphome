@@ -4,7 +4,6 @@
 #include "esphome/components/display/display_buffer.h"
 #include <math.h>
 
-
 namespace esphome {
 namespace zilloscope {
 

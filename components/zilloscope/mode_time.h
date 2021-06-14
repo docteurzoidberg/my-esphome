@@ -8,7 +8,7 @@ namespace esphome {
 namespace zilloscope {
   class ModeTime: public Mode  {
     public:
-      static constexpr char *TAG = "zilloscope.modetime";
+      const char *TAG = "zilloscope.modetime";
       ModeTime(const std::string &name,
                           const std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> &f,
                           uint32_t update_interval)

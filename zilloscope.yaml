@@ -217,6 +217,7 @@ zilloscope:
   default_mode: effects
 #modes
   modes:
+    #Renders time in red
     - mode_time:
         name: time1
         render_lambda: |-
@@ -224,6 +225,7 @@ zilloscope:
           //frame= frame counter
           it.strftime(2, 0, id(font_8bithud),  Color(0xFF0000), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
           return false;
+    #Renders time in white
     - mode_time:
         name: time2
         render_lambda: |-
@@ -231,6 +233,15 @@ zilloscope:
           //frame= frame counter
           it.strftime(2, 0, id(font_8bithud),  Color(0xFFFFFF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
           return false;
+    #Generic mode where you can render what you want
+    - mode_lambda:
+        name: time3
+        render_lambda: |-
+          //it=display
+          //frame= frame counter
+          it.strftime(2, 0, id(font_8bithud),  Color(0x0000FF), ((millis()/1000)%2==0)?"%H:%M":"%H.%M", id(homeassistant_time).now());
+          return false;
+    #Effects mode
     - mode_effects:
         name: effects
         default_effect: fire
@@ -268,7 +279,9 @@ zilloscope:
               width: 32
               height: 8
               tile_size: 5
-
+    #Paint mode (wip)
+    - mode_paint:
+        name: paint
 #render lambdas
 
   #boot animation forever

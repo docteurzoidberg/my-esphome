@@ -19,17 +19,21 @@ struct UrlMatch {
 
 class ModePaint: public Mode, public Component, public AsyncWebHandler  {
   public:
-    static constexpr char *TAG = "zilloscope.modepaint";
+    const char *TAG = "zilloscope.modepaint";
     ModePaint(const std::string &name,
               web_server_base::WebServerBase *base
               )
-    : Mode(name,"ModePaint",nullptr,16) , base_(base) {}
+    : Mode(name,"ModePaint") , webserverbase_(base) {}
 
     void setup() {
-      this->base_->init();
+      this->webserverbase_->init();
     }
 
     void loop() {
+    }
+
+    virtual void draw(display::DisplayBuffer &it) override {
+      //TODO
     }
 
     UrlMatch match_url(const std::string &url, bool only_domain = false) {
@@ -90,7 +94,7 @@ class ModePaint: public Mode, public Component, public AsyncWebHandler  {
     }
 
   protected:
-    web_server_base::WebServerBase *base_;
+    web_server_base::WebServerBase *webserverbase_;
   };
 
 }

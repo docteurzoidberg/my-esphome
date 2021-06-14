@@ -4,7 +4,7 @@ from esphome.const import CONF_NAME, CONF_EFFECTS
 from esphome.util import Registry
 from esphome.components import web_server_base
 from esphome.components.web_server_base import CONF_WEB_SERVER_BASE_ID
-from .types import DisplayBufferRef, ModeTime, ModeEffects, ModePaint
+from .types import DisplayBufferRef, ModeTime, ModeEffects, ModePaint, ModeLambda
 from .effects import validate_effects, ADDRESSABLE_DISPLAY_EFFECTS, ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY
 
 
@@ -34,6 +34,20 @@ def register_mode(name, mode_type, default_name, schema, *extra_validators):
     }
 )
 def mode_time_to_code(config, mode_id):
+    args = [(DisplayBufferRef, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
+    render_lambda_ = yield cg.process_lambda(config[CONF_RENDER_LAMBDA], args, return_type=cg.bool_)
+    update_interval_ = yield cg.uint32(config[CONF_UPDATE_INTERVAL])
+    name = yield cg.std_string(config[CONF_NAME])
+    var = cg.new_Pvariable(mode_id, name, render_lambda_, update_interval_)
+    yield var
+
+@register_mode(
+    'mode_lambda', ModeLambda, "lambda", {
+        cv.GenerateID(): cv.declare_id(ModeLambda),
+        cv.Required(CONF_RENDER_LAMBDA): cv.lambda_
+    }
+)
+def mode_lambda_to_code(config, mode_id):
     args = [(DisplayBufferRef, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
     render_lambda_ = yield cg.process_lambda(config[CONF_RENDER_LAMBDA], args, return_type=cg.bool_)
     update_interval_ = yield cg.uint32(config[CONF_UPDATE_INTERVAL])

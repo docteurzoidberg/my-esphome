@@ -1,8 +1,11 @@
 #pragma once
-
+#include "esphome/core/hal.h"
+#include "esphome/core/log.h"
 #include "esphome/core/component.h"
 #include "esphome/components/display/display_buffer.h"
 #include <math.h>
+
+#define LOGPERFS 0
 
 namespace esphome {
 namespace zilloscope {
@@ -34,23 +37,25 @@ namespace zilloscope {
   class DisplayLambdaEffect : public DisplayEffect {
     public:
       DisplayLambdaEffect(const std::string &name,
-                          const std::function<void(display::DisplayBuffer &, bool initial_run)> &f,
+                          const std::function<void(display::DisplayBuffer &, uint32_t frame, bool initial_run)> &f,
                           uint32_t update_interval)
           : DisplayEffect(name), f_(f), update_interval_(update_interval) {}
 
       void start() override { this->initial_run_ = true; }
       void stop() override {}
       void apply(display::DisplayBuffer &it) override {
-        const uint32_t now = millis();
+        const uint32_t now = esphome::millis();
         if (now - this->last_run_ >= this->update_interval_) {
           this->last_run_ = now;
-          this->f_(it, this->initial_run_);
+          this->f_(it, this->frame_counter_,this->initial_run_);
+          this->frame_counter_++;
           this->initial_run_ = false;
         }
       }
     protected:
-      std::function<void(display::DisplayBuffer &, bool initial_run)> f_;
+      std::function<void(display::DisplayBuffer &, uint32_t frame, bool initial_run)> f_;
       uint32_t update_interval_;
+      uint32_t frame_counter_{0};
       uint32_t last_run_{0};
       bool initial_run_;
   };
@@ -110,7 +115,7 @@ namespace zilloscope {
 
         int attenuation = (height_ - Y) * 1000 / height_ * 1000 / flame_height
           + (x_attenuation == 0 ? 0
-          : max(0, apow(1000 - (X + 1) * (width_- X) * 4000 / ((width_ + 2) * (width_+ 2)), 1000000 / x_attenuation)));
+          : std::max(0, apow(1000 - (X + 1) * (width_- X) * 4000 / ((width_ + 2) * (width_+ 2)), 1000000 / x_attenuation)));
 
         int sum_coeff = 0;
 
@@ -132,13 +137,13 @@ namespace zilloscope {
             * coeff / (i * i);
           sum_coeff += coeff;
         }
-        return max(0, apow(n / sum_coeff, 1000000 / heat_spots * 1000 / (attenuation + 1000)) - attenuation);
+        return std::max(0, apow(n / sum_coeff, 1000000 / heat_spots * 1000 / (attenuation + 1000)) - attenuation);
       }
 
       uint32_t heat_color(int heat) {
-        int r = min(255, (int) (heat * 255 / 333));
-        int g = min(255, max(0, (int) ((heat - 333) * 255 / 333)));
-        int b = min(255, max(0, (int) ((heat - 667) * 255 / 333)));
+        int r = std::min(255, (int) (heat * 255 / 333));
+        int g = std::min(255, std::max(0, (int) ((heat - 333) * 255 / 333)));
+        int b = std::min(255, std::max(0, (int) ((heat - 667) * 255 / 333)));
         return (r << 16) | (g << 8) | b;
       }
 
@@ -237,7 +242,7 @@ namespace zilloscope {
           }
           dist /= 9;
           int coeff = dist * 1024 / (radius == 0 ? 1 : radius * radius);
-          return (uint32_t) (min(255, max(0, apow(coeff, 1200) / 3))) * 0x010101;
+          return (uint32_t) (std::min(255, std::max(0, apow(coeff, 1200) / 3))) * 0x010101;
         }
 
       int noise(int X, int Y, int T) {
@@ -246,7 +251,7 @@ namespace zilloscope {
             if(i == 0)
               i = 1;
 
-            boolean bkg = false;
+            bool bkg = false;
 
             int nx = 0;
             int ny = 0;
@@ -283,15 +288,15 @@ namespace zilloscope {
         }
 
       void apply(display::DisplayBuffer &it) override {
-        unsigned long timer = millis();
+        unsigned long timer = esphome::millis();
         for(int x = 0 ; x < width_ ; x ++) {
           for(int y = 0 ; y < height_ ; y ++) {
             uint32_t color = (noise(x, y, (int) (timer * speed_ / 10)));
             it.draw_pixel_at(x,y,Color(color));
           }
         }
-          //unsigned long timer2 = millis();
-          //ESP_LOGD(TAG, "draw time: %lu" , (timer2-timer));
+        //unsigned long timer2 = millis();
+        //ESP_LOGD(TAG, "draw time: %lu" , (timer2-timer));
       }
 
       void set_speed(uint32_t speed) { this->speed_ = speed; }
@@ -308,8 +313,203 @@ namespace zilloscope {
       uint16_t height_{32};
       uint8_t smallest_bubble_{0};
       uint8_t biggest_bubble_{16};
+  };
 
+  class DisplaySnowEffect : public DisplayEffect {
+    public:
+      const char *TAG = "zilloscope.displaysnoweffect";
+      explicit DisplaySnowEffect(const std::string &name) : DisplayEffect(name) {}
 
+      uint32_t santa_claus_colors[8] = {0xffffff, 0xc92464, 0x393457, 0xf7e476, 0xf7b69e, 0xf99252, 0x9b9c82};
+      int santa_x = 100000;
+      int santa_y = 100000;
+      int santa[9][11]= {
+        {-1,-1,-1, 0, 1,-1,-1,-1,-1,-1},
+        {-1,-1,-1,-1, 1, 1,-1,-1,-1,-1},
+        {-1, 3, 3,-1, 4, 4,-1,-1,-1,-1},
+        { 3, 1, 1, 5, 1, 2, 4, 3, 3,-1},
+        { 5, 2, 1, 5, 1, 2, 3, 1, 2, 5},
+        {-1, 5, 2, 1, 5, 5, 1, 2, 5,-1},
+        {-1,-1, 2, 2, 1, 1, 2, 5,-1,-1},
+        {-1,-1,-1, 2, 2, 2, 2,-1,-1,-1}
+      };
+      int reindeer[9][9]  = {
+        {-1,-1,-1, 1,-1, 1, 1,-1},
+        {-1,-1,-1,-1, 1,-1, 1,-1},
+        {-1,-1,-1,-1,-1, 5, 5,-1},
+        {-1,-1,-1,-1, 4, 4, 6, 1},
+        { 5, 5, 5, 5, 4, 6,-1,-1},
+        { 6, 6, 6, 6, 6,-1,-1,-1},
+        { 6,-1,-1,-1, 6,-1,-1,-1},
+        {-1, 6,-1, 6,-1,-1,-1,-1}
+      };
+
+      int rnd(int x, int y, int z) {
+          int X = x ^ 1273419445;
+          int Y = y ^ 897982756;
+          int Z = z ^ 453454122;
+          int tmp = ((
+            X * 315132157
+            + Y * 1325782542
+            + Z * 351213151)
+            ^ 351356521);
+          return tmp ^ (tmp >> 8) ^ (tmp << 8);
+        }
+
+      int apow(int a, int b) {
+          return 1000 + (a - 1000) * b / 1000;
+        }
+
+      int repeat(int X, int r) {
+          int tmp = X % (2 * r);
+          if(tmp > r) {
+            return 2 * r - tmp;
+          }
+          return tmp;
+        }
+
+      int sqr_dist(int x0, int y0, int x1, int y1) {
+          return (x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1);
+        }
+
+      uint32_t color_snowflake (int x, int y, int nx, int ny, int radius, int variant) {
+        int coeff = 0;
+
+        int dx = abs(x - nx);
+        int dy = abs(y - ny);
+
+        if((variant & 1) != 0) {
+          dx ^= dy;
+          dy ^= dx;
+          dx ^= dy;
+        }
+
+        if((radius <= 1 || dy < radius)
+          && ( dx == 0 || dx - 1 == dy))
+          coeff = 255;
+
+        return (uint32_t) coeff * 0x010101;
+      }
+
+      int noise(int X, int Y, int T) {
+        uint32_t n = background_;
+        for(int i = biggest_snowflake_ ; i >= smallest_snowflake_ ; i -= 2) {
+          if(i == 0)
+            i = 1;
+
+          bool bkg = false;
+          int variant = 0;
+          int nx = 0;
+          int ny = 0;
+          int bdist = 1 << 30;
+          int y = Y - T * i / 1000;  //modif snow
+          int x = X + repeat(T / 1000 + i, 3) - 1;
+          int xi = x - (x % i);
+          int yi = y - (y % i);
+          int crad = i / 2;
+          if(crad == 0)
+            crad = 1;
+          int rad = i / 2;
+
+          for(int x0 = xi - i ; x0 <= xi + i ; x0 += i)
+            for(int y0 = yi - i ; y0 <= yi + i ; y0 += i)
+              if(x0 / i % 2 == 0 && y0 / i % 2 == 0){
+              int xp = (rnd(x0, y0, 0) % crad) + x0;
+              int yp = (rnd(x0, y0, 1) % crad) + y0;
+              int b = rnd(x0, y0, 3512);
+              int trad = i / 2 + ((b & 4) >> 2);
+              int dist = sqr_dist(xp, yp, x, y);
+              if((b & (128 | 64 | 16 | 512 |2048)) == 0 && dist < bdist && dist <= trad * trad) {
+                variant = (b & 1024) >> 10;
+                bdist = dist;
+                nx = xp;
+                ny = yp;
+                rad = trad;
+                bkg = true;
+              }
+            }
+          n |= !bkg ? 0 : color_snowflake(x, y, nx, ny, rad, variant);
+        }
+        return n | (n >> 8) | (n >> 16);
+      }
+
+      void apply(display::DisplayBuffer &it) override {
+
+        unsigned long timer = esphome::millis();
+
+        //Draw the snowflakes
+        for(int x = 0 ; x < width_ ; x ++) {
+          for(int y = 0 ; y < height_ ; y ++) {
+            uint32_t color = (noise(x, y, (int) (timer * speed_ / 10)));
+            it.draw_pixel_at(x,y,Color(color));
+          }
+        }
+
+        #ifdef LOGPERF
+          unsigned long timer2 = millis();
+          ESP_LOGD(TAG, "draw time flakes: %lu" , (timer2-timer));
+        #endif
+
+        //Calculate santa pos
+        santa_x += santa_speed_ * 1000 / 60;
+        if (santa_x > width_ * 1000) {
+          santa_x = -1000 * (reindeer_number_ * 6 + 10) - 50 - (int) (random_uint32() % (10000 - 0) + 0);
+          santa_y = (int) (random_uint32() % height_);
+        }
+
+        //Draw reindeers
+        for(int n = 0 ; n < reindeer_number_ ; n ++) {
+          //for(int y = 0 ; y < reindeer.length ; y ++)
+          for(int y = 0 ; y < 8 ; y ++) {
+            //for(int x = 0 ; x < reindeer[y].length ; x ++) {
+            for(int x = 0 ; x < 8; x ++) {
+              int X = x + santa_x / 1000 + 4 + reindeer_number_ * 6 - n * 6;
+              int Y = y + santa_y + n % 2;
+              if(X >= 0 && X < width_ && Y >= 0 && Y < height_ && reindeer[y][x] != -1) {
+                uint32_t col = santa_claus_colors[reindeer[y][x]];
+                it.draw_pixel_at(X,Y, Color(col));
+              }
+            }
+          }
+        }
+
+        //Draw Santa
+        //for(int y = 0 ; y < santa.length ; y ++)
+        for(int y = 0 ; y < 8 ; y ++) {
+          //for(int x = 0 ; x < santa[y].length ; x ++) {
+          for(int x = 0 ; x < 10 ; x ++) {
+            int X = x + santa_x / 1000;
+            int Y = y + santa_y;
+            if(X >= 0 && X < width_ && Y >= 0 && Y < height_ && santa[y][x] != -1) {
+              uint32_t col = santa_claus_colors[santa[y][x]];
+              it.draw_pixel_at(X,Y, Color(col));
+            }
+          }
+        }
+        #ifdef LOGPERF
+          unsigned long timer3 = millis();
+          ESP_LOGD(TAG, "draw time santa+deers: %lu" , (timer3-timer2));
+        #endif
+      }
+
+      void set_snow_speed(uint16_t speed) { this->speed_ = speed; }
+      void set_santa_speed(uint16_t speed) { this->santa_speed_ = speed; }
+      void set_reindeer_number(uint16_t number) { this->reindeer_number_ = number; }
+      void set_width(uint16_t width) { this->width_ = width; }
+      void set_height(uint16_t height) { this->height_ = height; }
+      void set_background_color(uint32_t background) { this->background_ = background; }
+      void set_min_snowflake_size(uint16_t smallest_snowflake) { this->smallest_snowflake_ = smallest_snowflake; }
+      void set_max_snowflake_size(uint16_t biggest_snowflake) { this->biggest_snowflake_ = biggest_snowflake; }
+
+    protected:
+      uint32_t background_{0x090f2f};
+      uint16_t reindeer_number_{3};
+      uint16_t santa_speed_{15};
+      uint16_t speed_{15};
+      uint16_t width_{32};
+      uint16_t height_{32};
+      uint16_t smallest_snowflake_{1};
+      uint16_t biggest_snowflake_{6};
   };
 
   // Thanks to Liemmerle for the matrix animation code
@@ -350,7 +550,7 @@ namespace zilloscope {
           i = 1;
 
         int ny = 0;
-        boolean bkg = true;
+        bool bkg = true;
 
         int y = Y + T * i / 1000;
         int x = X;
@@ -395,9 +595,9 @@ namespace zilloscope {
   {
     int dist = ny - y;
 
-    int r = max(0, min(255, 200 * apow(2716, (dist - size) * 1000 / size) / 1000));
-    int g = max(0, min(255, 255 * apow(2716, (dist - size) * 500 / size) / 1000));
-    int b = max(0, min(255, 200 * apow(2716, (dist - size) * 1000 / size) / 1000));
+    int r = std::max(0, std::min(255, 200 * apow(2716, (dist - size) * 1000 / size) / 1000));
+    int g = std::max(0, std::min(255, 255 * apow(2716, (dist - size) * 500 / size) / 1000));
+    int b = std::max(0, std::min(255, 200 * apow(2716, (dist - size) * 1000 / size) / 1000));
 
     return (r << 16) + (g << 8) + b;
     }
@@ -424,7 +624,13 @@ namespace zilloscope {
       const char *TAG = "zilloscope.displaytilepuzzleseffect";
       explicit DisplayTiledPuzzleEffect(const std::string &name) : DisplayEffect(name) {
       }
-
+      long random(long howbig)
+      {
+          if(howbig == 0) {
+              return 0;
+          }
+          return esphome::random_uint32() % howbig;
+      }
       //random uint8_t from 0 to 128
       uint8_t rnd128() {
         return random(128);

@@ -1,10 +1,10 @@
 substitutions:
-  devicename: "zilloscope"
-  friendly_name: "Zilloscope"
+  device: "zilloscope"
+  name: "Zilloscope"
 
 esphome:
-  name: $devicename
-  build_path: build/$devicename
+  name: ${device}
+  build_path: build/${device}
   platform: ESP32
   board: esp32doit-devkit-v1
 
@@ -17,7 +17,6 @@ esphome:
         - switch.turn_on: zilloscope_control_display
         - lambda: |-
             id(zilloscope_main).on_boot();
-
 
   on_shutdown:
     then:
@@ -82,7 +81,6 @@ api:
         - lambda: |-
             id(zilloscope_main).service_notify(type,text,-1);
 
-
 ota:
 
 binary_sensor:
@@ -101,14 +99,14 @@ binary_sensor:
 
   - platform: gpio
     pin:
-      number: 34
+      number: 32
       mode: INPUT_PULLUP
     name: bouton2
     id: zilloscope_bouton_enter
 
   - platform: gpio
     pin:
-      number: 35
+      number: 25
       mode: INPUT_PULLUP
     name: bouton3
     id: zilloscope_bouton_next
@@ -118,10 +116,9 @@ binary_sensor:
             id(zilloscope_main).service_mode_next();
 
 switch:
-  - <<: !include "common/common_switchs.yaml"
   - platform: template
     id: zilloscope_control_display
-    name: "${friendly_name} Control Display"
+    name: ${name} Control Display
     lambda: |-
       return id(zilloscope_display).get_enabled();
     turn_on_action:
@@ -133,6 +130,38 @@ switch:
 
 sensor:
   - <<: !include "common/common_sensors.yaml"
+  - platform: homeassistant
+    id: esphome_meteo_icon
+    entity_id: sensor.esphome_meteo_icon
+  - platform: homeassistant
+    id: esphome_meteo_current_temp
+    entity_id: sensor.esphome_meteo_current_temp
+
+button:
+  - <<: !include "common/common_button.yaml"
+  - platform: template
+    name: ${name} Next Mode
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_mode_next();
+
+  - platform: template
+    name: ${name} Previous Mode
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_mode_prev();
+
+  - platform: template
+    name: ${name} Next Effect
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_effect_next();
+
+  - platform: template
+    name: ${name} Previous Effect
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_effect_prev();
 
 time:
   - platform: homeassistant
@@ -145,7 +174,7 @@ light:
     pin: GPIO5
     num_leds: 256
     rgb_order: GRB
-    name: "$friendly_name Matrix"
+    name: ${name} Led Matrix
     id: zilloscope_matrix
     color_correct: [50%, 50%, 50%]
     default_transition_length : 0s
@@ -163,7 +192,6 @@ light:
               duration: 1000ms
             - state: False
               duration: 750ms
-
 
 display:
   - platform: addressable_light
@@ -198,9 +226,23 @@ animation:
   - file: "img/zilloscope/boot0.gif"
     id: splash_animation
     type: RGB24
-
   - file: "img/zilloscope/boot1.gif"
     id: boot_animation
+    type: RGB24
+  - file: "img/zilloscope/aliens/aliens.gif"
+    id: aliens
+    type: RGB24
+  - file: "img/zilloscope/meteo/sun1.gif"
+    id: meteo_sun
+    type: RGB24
+  - file: "img/zilloscope/meteo/rain1.gif"
+    id: meteo_rain
+    type: RGB24
+  - file: "img/zilloscope/meteo/cloud1.gif"
+    id: meteo_cloud
+    type: RGB24
+  - file: "img/zilloscope/meteo/fog1.gif"
+    id: meteo_fog
     type: RGB24
 
 color_line_scroller:
@@ -248,13 +290,20 @@ zilloscope:
         effects:
           #custom effect (lambda)
           - display_lambda:
-              name: mycustomeffect
+              name: aliens
+              lambda: |-
+                if(frame%6==0) {
+                  id(aliens).next_frame();
+                }
+                it.image(1, -1, id(aliens));
+          - display_lambda:
+              name: boot
               lambda: |-
                 //it=display
                 //frame= frame counter
                 //render same animation as the boot animation but you can code what you want instead
                 id(boot_animation).next_frame();
-                it.image(0, 0, id(boot_animation));
+                it.image(1, -1, id(boot_animation));
           #effet integré 'feu'
           - display_fire:
               name: fire
@@ -274,14 +323,46 @@ zilloscope:
               #background_color: 0x193291
               min_bubble_size: 1
               max_bubble_size: 16
-          - display_tiled_puzzle:
-              name: "puzzle"
+          - display_snow:
+              name: snow
+              snow_speed: 15
+              santa_speed: 15
+              reindeer_number: 3
               width: 32
               height: 8
-              tile_size: 5
+              min_snow_size: 1
+              max_snow_size: 6
+              background_color: 0x193291
+          #- display_tiled_puzzle:
+          #    name: "puzzle"
+          #    width: 32
+          #    height: 8
+          #    tile_size: 5
     #Paint mode (wip)
-    - mode_paint:
-        name: paint
+    #- mode_paint:
+    #    name: paint
+    - mode_meteo:
+        name: meteo
+        render_lambda: |-
+          it.printf(32, 0, id(font_8bithud), Color(0x61d3e3), TextAlign::RIGHT, "%.0f ", (id(esphome_meteo_current_temp).state + 0.5));
+          auto icon = (uint8_t)id(esphome_meteo_icon).state;
+          Animation* anim = nullptr;
+          if(icon==2) {
+            anim=id(meteo_rain);
+          } else if(icon==5) {
+            anim=id(meteo_cloud);
+          } else if(icon==16) {
+            anim=id(meteo_fog);
+          } else {
+            anim=id(meteo_sun);
+          }
+          it.image(2, 0, anim);
+          it.rectangle(29,0,3,3,Color(0x61d3e3));
+          if(frame%7==0) {
+            anim->next_frame();
+          }
+          return true;
+
 #render lambdas
 
   #boot animation forever

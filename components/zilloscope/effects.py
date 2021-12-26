@@ -2,13 +2,18 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL, CONF_SPEED, CONF_WIDTH, CONF_HEIGHT
 from esphome.util import Registry
-from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect, DisplayMatrixEffect, DisplayTiledPuzzleEffect
+from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect, DisplaySnowEffect, DisplayMatrixEffect, DisplayTiledPuzzleEffect
 
 CONF_DISPLAY_LAMBDA = 'display_lambda'
 CONF_DISPLAY_FIRE = 'fire'
 CONF_BACKGROUND_COLOR = 'background_color'
 CONF_BUBBLES_MINSIZE = 'min_bubble_size'
 CONF_BUBBLES_MAXSIZE = 'max_bubble_size'
+CONF_REINDEER_NUMBER = 'reindeer_number'
+CONF_SNOW_MINSIZE = 'min_snow_size'
+CONF_SNOW_MAXSIZE = 'max_snow_size'
+CONF_SNOW_SPEED = 'snow_speed'
+CONF_SANTA_SPEED = 'santa_speed'
 CONF_LINE_MINSIZE = 'min_line_size'
 CONF_LINE_MAXSIZE = 'max_line_size'
 CONF_TILE_SIZE = 'tile_size'
@@ -36,7 +41,7 @@ def register_display_effect(name, effect_type, default_name, schema, *extra_vali
     }
 )
 def display_lambda_effect_to_code(config, effect_id):
-    args = [(DisplayBufferRef, 'it'), (bool, 'initial_run')]
+    args = [(DisplayBufferRef, 'it'), (int, 'frame'), (bool, 'initial_run')]
     lambda_ = yield cg.process_lambda(config[CONF_LAMBDA], args, return_type=cg.void)
     var = cg.new_Pvariable(effect_id, config[CONF_NAME], lambda_,
                            config[CONF_UPDATE_INTERVAL])
@@ -73,6 +78,29 @@ def addressable_bubbles_effect_to_code(config, effect_id):
     cg.add(var.set_background_color(config[CONF_BACKGROUND_COLOR]))
     cg.add(var.set_min_bubble_size(config[CONF_BUBBLES_MINSIZE]))
     cg.add(var.set_max_bubble_size(config[CONF_BUBBLES_MAXSIZE]))
+    yield var
+
+@register_display_effect('display_snow', DisplaySnowEffect, "Snow", {
+    cv.GenerateID(): cv.declare_id(DisplaySnowEffect),
+    cv.Optional(CONF_BACKGROUND_COLOR, default=0): cv.hex_uint32_t,
+    cv.Optional(CONF_SNOW_MINSIZE, default=1): cv.uint8_t,
+    cv.Optional(CONF_SNOW_MAXSIZE, default=6): cv.uint8_t,
+    cv.Optional(CONF_SNOW_SPEED, default=15): cv.uint32_t,
+    cv.Optional(CONF_SANTA_SPEED, default=15): cv.uint32_t,
+    cv.Optional(CONF_REINDEER_NUMBER, default=3): cv.uint32_t,
+    cv.Optional(CONF_WIDTH, default=8): cv.uint32_t,
+    cv.Optional(CONF_HEIGHT, default=8): cv.uint32_t,
+})
+def addressable_snow_effect_to_code(config, effect_id):
+    var = cg.new_Pvariable(effect_id, config[CONF_NAME])
+    cg.add(var.set_snow_speed(config[CONF_SNOW_SPEED]))
+    cg.add(var.set_santa_speed(config[CONF_SANTA_SPEED]))
+    cg.add(var.set_reindeer_number(config[CONF_REINDEER_NUMBER]))
+    cg.add(var.set_width(config[CONF_WIDTH]))
+    cg.add(var.set_height(config[CONF_HEIGHT]))
+    cg.add(var.set_background_color(config[CONF_BACKGROUND_COLOR]))
+    cg.add(var.set_min_snowflake_size(config[CONF_SNOW_MINSIZE]))
+    cg.add(var.set_max_snowflake_size(config[CONF_SNOW_MAXSIZE]))
     yield var
 
 @register_display_effect('display_tiled_puzzle', DisplayTiledPuzzleEffect, "TiledPuzzle", {

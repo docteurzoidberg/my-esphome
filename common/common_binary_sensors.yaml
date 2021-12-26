@@ -1,2 +1,3 @@
 - platform: status
-  name: "$friendly_name status"
+  name: ${name} Status
+  entity_category: diagnostic

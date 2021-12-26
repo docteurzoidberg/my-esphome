@@ -4,4 +4,3 @@ networks:
   - ssid: !secret home_wifi_ap2
     password: !secret home_wifi_pass2
 
-

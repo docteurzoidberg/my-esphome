@@ -1,10 +1,10 @@
 substitutions:
-  devicename: "zillominee"
-  friendly_name: "Zillominée"
+  device: "zillominee"
+  name: "Zillominée"
 
 esphome:
-  name: $devicename
-  build_path: build/$devicename
+  name: $device
+  build_path: build/$device
   platform: ESP32
   board: esp32doit-devkit-v1
   on_boot:
@@ -95,10 +95,38 @@ ota:
 binary_sensor:
   - <<: !include "common/common_binary_sensors.yaml"
 
+button:
+  - <<: !include "common/common_button.yaml"
+
+  - platform: template
+    name: ${name} Next Mode
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_mode_next();
+
+  - platform: template
+    name: ${name} Previous Mode
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_mode_prev();
+
+  - platform: template
+    name: ${name} Next Effect
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_effect_next();
+
+  - platform: template
+    name: ${name} Previous Effect
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_effect_prev();
+
+
 switch:
-  - <<: !include "common/common_switchs.yaml"
+
   - platform: gpio
-    name: "$friendly_name psu relay"
+    name: ${name} psu relay
     pin: GPIO32
     id: relay
     restore_mode: ALWAYS_OFF
@@ -106,7 +134,7 @@ switch:
 
   - platform: template
     id: zillominee_control_display
-    name: "${friendly_name} Control Display"
+    name: ${name} Control Display
     lambda: |-
       return id(zillominee_display).get_enabled();
     turn_on_action:
@@ -117,7 +145,15 @@ switch:
           id(zillominee_display).set_enabled(false);
 
 sensor:
-#  - <<: !include "common/common_sensors.yaml"
+  - <<: !include "common/common_sensors.yaml"
+
+  - platform: homeassistant
+    id: esphome_meteo_icon
+    entity_id: sensor.esphome_meteo_icon
+
+  - platform: homeassistant
+    id: esphome_meteo_current_temp
+    entity_id: sensor.esphome_meteo_current_temp
 
 #  - platform: homeassistant
 #    id: zillominee_test_bandes
@@ -158,8 +194,8 @@ light:
     num_leds: 875
     rgb_order: GRB
     max_refresh_rate: 16ms
-    id: "zillominee_matrix"
-    name: "$friendly_name Matrix"
+    id: zillominee_matrix
+    name: ${name} Matrix
     color_correct: [70%, 70%, 70%]
     default_transition_length : 0s
     #gamma_correct: 0
@@ -173,9 +209,6 @@ light:
           name: 'e131'
           universe: 1
           channels: RGB
-
-
-
 
 display:
   - platform: addressable_light
@@ -221,6 +254,21 @@ animation:
   - file: "img/zillominee/boot-aliens/boot-aliens.gif"
     id: boot_animation_aliens
     type: RGB24
+  - file: "img/zillominee/sapins/sapins1.gif"
+    id: anim_sapins
+    type: RGB24
+  - file: "img/zilloscope/meteo/sun1.gif"
+    id: meteo_sun
+    type: RGB24
+  - file: "img/zilloscope/meteo/rain1.gif"
+    id: meteo_rain
+    type: RGB24
+  - file: "img/zilloscope/meteo/cloud1.gif"
+    id: meteo_cloud
+    type: RGB24
+  - file: "img/zilloscope/meteo/fog1.gif"
+    id: meteo_fog
+    type: RGB24
 
 color_line_scroller:
   - id: notif_colorline_scroller
@@ -246,56 +294,90 @@ zilloscope:
           id(notif_colorline_scroller).draw(it, 0, 23);
           id(notif_colorline_scroller).scroll();
           return false;
+    - mode_meteo:
+        render_lambda: |-
+          it.printf(32, 0, id(font_8bithud), Color(0x61d3e3), TextAlign::RIGHT, "%.0f ", (id(esphome_meteo_current_temp).state + 0.5));
+          auto icon = (uint8_t)id(esphome_meteo_icon).state;
+          Animation* anim = nullptr;
+          if(icon==2) {
+            anim=id(meteo_rain);
+          } else if(icon==5) {
+            anim=id(meteo_cloud);
+          } else if(icon==16) {
+            anim=id(meteo_fog);
+          } else {
+            anim=id(meteo_sun);
+          }
+          it.image(2, 0, anim);
+          it.rectangle(29,0,3,3,Color(0x61d3e3));
+          if(frame%7==0) {
+            anim->next_frame();
+          }
+          return true;
     - mode_effects:
         effects:
-          #effet custom (lambda)
+          #Custom display effect (aliens.gif)
           - display_lambda:
-              name: "moneeffetcustom"
+              name: aliens
               lambda: |-
                 //it=display
                 //frame= frame counter
                 id(boot_animation_aliens).next_frame();
                 it.image(1, 6, id(boot_animation_aliens));
-          #effet integré 'feu'
+          #Custom display effect (trees.gif)
+          - display_lambda:
+              name: sapins
+              lambda: |-
+                id(anim_sapins).next_frame();
+                it.image(1, 1, id(anim_sapins));
+          #Fire display Effect
           - display_fire:
               name: "lefeu"
               width: 35
               height: 25
-          #effet integré 'bulles'
+          #Bubbles display effect
           - display_bubbles:
               id: bidule
-              name: "bubulles"
+              name: bubulles
               speed: 15
               width: 35
               height: 25
               background_color: 0x321911
               min_bubble_size: 1
               max_bubble_size: 16
-          #effet integré matrix
+          #Snow display effect
+          - display_snow:
+              name: snow
+              snow_speed: 15
+              santa_speed: 15
+              reindeer_number: 3
+              width: 35
+              height: 25
+              min_snow_size: 1
+              max_snow_size: 6
+              background_color: 0x193291
+          #Matrix display effect
           - display_matrix:
               name: "matrix"
               width: 35
               height: 25
-          #effet integré 'taquin'
-          - display_tiled_puzzle:
-              name: "puzzle"
-              width: 35
-              height: 25
-              tile_size: 5
-    #etc
-    - mode_paint:
-      #<-- want this one to be registered as an asyncwebhandler
+          #not working
+          #- display_tiled_puzzle:
+          #    name: "puzzle"
+          #    width: 35
+          #    height: 25
+          #    tile_size: 5
+    #- mode_paint:
+    # //TODO
 
   #boot animation forever
   render_boot: |-
     //it=display
     //frame= frame counter
-
     if(frame%6==0) {
       id(boot_animation_aliens).next_frame();
     }
     id(zillominee_display).image(1, 6, id(boot_animation_aliens));
-
     id(boot_colorline_scroller).draw(it, 0, 18);
     id(boot_colorline_scroller).scroll();
     return true; //continue
@@ -318,6 +400,7 @@ zilloscope:
     id(zillominee_display).image(0, 0, id(splash_animation));
     return true;  //splash continue
 
+  #render notifications (top priority over modes)
   render_notification: |-
     //it=display
     //frame= frame counter

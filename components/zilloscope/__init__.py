@@ -1,4 +1,3 @@
-from typing import Optional
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
@@ -24,7 +23,6 @@ CONF_MODES = 'modes'
 
 CONF_RENDER_BOOT = 'render_boot'
 CONF_RENDER_SPLASH = 'render_splash'
-CONF_RENDER_TIME = 'render_time'
 CONF_RENDER_OTA = 'render_ota'
 CONF_RENDER_SHUTDOWN = 'render_shutdown'
 CONF_RENDER_NOTIFICATION = 'render_notification'
@@ -57,10 +55,6 @@ CONFIG_SCHEMA = cv.Schema({
 
     #Todo: validate at least one mode in [...]
     cv.Required(CONF_MODES): validate_modes(ZILLO_MODES),
-
-    #Todo: validate at least one effect
-    #Todo: validate mode effect present in modes?
-    #cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_DISPLAY_EFFECTS),
 
     #optional automation triggers
     cv.Optional(CONF_ON_BOOT): automation.validate_automation({

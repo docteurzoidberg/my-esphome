@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/log.h"
 #include "esphome/components/display/display_buffer.h"
 #include "display_effect.h"
 #include "zilloscope_mode.h"

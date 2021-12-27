@@ -1,11 +1,11 @@
 #include "esphome/core/log.h"
 #include "esphome/core/color.h"
-#include "alarm_keypad_component.h"
+#include "alarm_keypad.h"
 
 namespace esphome {
-namespace alarm_keypad_component {
+namespace alarm_keypad {
 
-static const char *TAG = "alarm_keypad_component.component";
+static const char *TAG = "alarm_keypad.component";
 
 static unsigned long _typing_timer=0;
 static unsigned long _service_timer=0;
@@ -23,11 +23,11 @@ static homeassistant::HomeassistantTextSensor *_alarmstatus=NULL;
 static text_sensor::TextSensor *_keypadtext=NULL;
 
 // component
-void AlarmKeypadComponent::setup() {
+void AlarmKeypad::setup() {
   //fastled_base_fastledlightoutput->get_controller()->setDither(0);
 }
 
-void AlarmKeypadComponent::loop() {
+void AlarmKeypad::loop() {
 
   if(_state==STATE_BOOTING){
     if(!_has_state) {
@@ -70,23 +70,23 @@ void AlarmKeypadComponent::loop() {
   }
 }
 
-void AlarmKeypadComponent::dump_config(){
+void AlarmKeypad::dump_config(){
   ESP_LOGCONFIG(TAG, "Alarm keypad component");
 }
 
-void AlarmKeypadComponent::start_typing() {
+void AlarmKeypad::start_typing() {
   ESP_LOGD(TAG, "typing");
   _typing_timer=millis();
   _state = STATE_TYPING;
 }
 
-void AlarmKeypadComponent::typing_timeout() {
+void AlarmKeypad::typing_timeout() {
   ESP_LOGD(TAG, "typing timeout");
   _typing_timer=millis();
   _state = STATE_ALARM_STATUS_DISPLAY;
 }
 
-void AlarmKeypadComponent::start_service() {
+void AlarmKeypad::start_service() {
   ESP_LOGD(TAG, "service");
   this->on_code_check_callback_.call();
   _service_timer=millis();
@@ -99,7 +99,7 @@ void AlarmKeypadComponent::start_service() {
   }
 }
 
-void AlarmKeypadComponent::service_timeout() {
+void AlarmKeypad::service_timeout() {
   ESP_LOGD(TAG, "service timeout");
   this->on_code_ko_callback_.call();
   _service_timer=millis();
@@ -107,7 +107,7 @@ void AlarmKeypadComponent::service_timeout() {
 }
 // lambdas
 
-void AlarmKeypadComponent::display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
+void AlarmKeypad::display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay & it, std::string text) {
   if(_state==STATE_BOOTING) {
     it.set_brightness(.1);
     std::string toprint ("  BOOT  ");
@@ -169,7 +169,7 @@ void AlarmKeypadComponent::display_lambdacall(ht16k33_alpha::HT16K33AlphaDisplay
     }
 }
 
-void AlarmKeypadComponent::leds_keypad_lambdacall(light::AddressableLight & it) {
+void AlarmKeypad::leds_keypad_lambdacall(light::AddressableLight & it) {
   if(_state==STATE_BOOTING) {
     it.all() = Color(0, 0, 0);
   }
@@ -178,7 +178,7 @@ void AlarmKeypadComponent::leds_keypad_lambdacall(light::AddressableLight & it) 
   }
 }
 
-void AlarmKeypadComponent::leds_case_lambdacall(light::AddressableLight & it) {
+void AlarmKeypad::leds_case_lambdacall(light::AddressableLight & it) {
   if(_state==STATE_BOOTING) {
     it.all() = Color(0, 0, 0);
   }
@@ -187,7 +187,7 @@ void AlarmKeypadComponent::leds_case_lambdacall(light::AddressableLight & it) {
   }
 }
 
-void AlarmKeypadComponent::leds_rfid_lambdacall(light::AddressableLight & it) {
+void AlarmKeypad::leds_rfid_lambdacall(light::AddressableLight & it) {
   if(_state==STATE_BOOTING) {
     it.all() = Color(255, 255, 255);
   }
@@ -198,20 +198,20 @@ void AlarmKeypadComponent::leds_rfid_lambdacall(light::AddressableLight & it) {
 
 // events
 
-void AlarmKeypadComponent::on_boot() {
+void AlarmKeypad::on_boot() {
   ESP_LOGD(TAG, "boot");
   _display->set_brightness(.2);
   _display->update();
 }
 
-void AlarmKeypadComponent::on_shutdown() {
+void AlarmKeypad::on_shutdown() {
   ESP_LOGD(TAG, "shutdown");
   _state=STATE_SHUTDOWN;
   _display->print("OTA");
   _display->update();
 }
 
-void AlarmKeypadComponent::on_keypad_progress(std::string x) {
+void AlarmKeypad::on_keypad_progress(std::string x) {
 
   _typing_progress=x;
 
@@ -226,7 +226,7 @@ void AlarmKeypadComponent::on_keypad_progress(std::string x) {
   }
 }
 
-void AlarmKeypadComponent::on_keypad_value(std::string x) {
+void AlarmKeypad::on_keypad_value(std::string x) {
   ESP_LOGD(TAG,"keypad value: %s", x.c_str());
   if(_state==STATE_TYPING){
     _typing_progress=x;
@@ -237,27 +237,27 @@ void AlarmKeypadComponent::on_keypad_value(std::string x) {
 
 // getters / setters
 
-char AlarmKeypadComponent::get_arm_key() {
+char AlarmKeypad::get_arm_key() {
   return _arm_key;
 }
 
-void AlarmKeypadComponent::set_arm_key(char key) {
+void AlarmKeypad::set_arm_key(char key) {
   _arm_key=key;
 }
 
-uint8_t AlarmKeypadComponent::get_state() {
+uint8_t AlarmKeypad::get_state() {
   return _state;
 }
 
-void AlarmKeypadComponent::set_display(ht16k33_alpha::HT16K33AlphaDisplay *it) {
+void AlarmKeypad::set_display(ht16k33_alpha::HT16K33AlphaDisplay *it) {
   _display=it;
 }
 
-void AlarmKeypadComponent::set_alarmstatusentity(homeassistant::HomeassistantTextSensor *hatext) {
+void AlarmKeypad::set_alarmstatusentity(homeassistant::HomeassistantTextSensor *hatext) {
   _alarmstatus=hatext;
 }
 
-void AlarmKeypadComponent::set_keypadtext(text_sensor::TextSensor *kptext) {
+void AlarmKeypad::set_keypadtext(text_sensor::TextSensor *kptext) {
   _keypadtext=kptext;
 }
 

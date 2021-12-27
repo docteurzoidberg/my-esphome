@@ -1,5 +1,6 @@
 #include "keypad.h"
 #include "esphome/core/log.h"
+#include "esphome/core/gpio.h"
 
 namespace esphome {
 namespace keypad {
@@ -8,9 +9,9 @@ static const char *TAG = "keypad";
 
 void Keypad::setup() {
   for (auto *pin : this->rows_)
-    pin->pin_mode(INPUT);
+    pin->pin_mode(gpio::FLAG_INPUT);
   for (auto *pin : this->columns_)
-    pin->pin_mode(INPUT_PULLUP);
+    pin->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 }
 
 void Keypad::loop() {
@@ -21,7 +22,7 @@ void Keypad::loop() {
   bool error = false;
   int pos = 0, row, col;
   for (auto *row : this->rows_) {
-    row->pin_mode(OUTPUT);
+    row->pin_mode(gpio::FLAG_OUTPUT);
     row->digital_write(false);
     for (auto *col : this->columns_) {
       if (!col->digital_read()) {
@@ -33,7 +34,7 @@ void Keypad::loop() {
       pos++;
     }
     row->digital_write(true);
-    row->pin_mode(INPUT);
+    row->pin_mode(gpio::FLAG_INPUT);
   }
   if (error)
     return;

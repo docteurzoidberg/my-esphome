@@ -25,11 +25,11 @@ void HT16K33AlphaDisplay::setup() {
 }
 
 void HT16K33AlphaDisplay::loop() {
-  unsigned long now = millis();
+  unsigned long now = esphome::millis();
   int numc = this->displays_.size() * 8;
   // check if the buffer has shrunk past the current position since last update
   if (this->offset_ + numc > this->buffer_fill_) {
-    this->offset_ = max(this->buffer_fill_ - numc, 0);
+    this->offset_ = std::max(this->buffer_fill_ - numc, 0);
     this->display_();
   }
   if (!this->scroll_ || (this->buffer_fill_ <= numc))
@@ -61,12 +61,12 @@ void HT16K33AlphaDisplay::display_() {
 }
 
 void HT16K33AlphaDisplay::update() {
-  memset(this->buffer_, 0, 64);
+  std::memset(this->buffer_, 0, 64);
   int prev_fill = this->buffer_fill_;
   this->buffer_fill_ = 0;
   this->call_writer();
   if (this->scroll_ && (prev_fill != this->buffer_fill_)) {
-    this->last_scroll_ = millis();
+    this->last_scroll_ = esphome::millis();
     this->offset_ = 0;
   }
   this->display_();

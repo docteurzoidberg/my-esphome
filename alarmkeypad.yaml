@@ -1,12 +1,15 @@
 substitutions:
-  devicename: "alarmkeypad"
-  friendly_name: "Alarm Keypad"
+  device: "alarmkeypad"
+  name: "Alarm Keypad"
+
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: arduino
 
 esphome:
-  name: $devicename
-  build_path: build/$devicename
-  platform: ESP32
-  board: esp32doit-devkit-v1
+  name: ${device}
+  build_path: build/${device}
 
   on_boot:
     - priority: 1000
@@ -36,7 +39,13 @@ esphome:
       - lambda: |-
           id(mainobj).on_shutdown();
 
-wifi: !include "common/wifimulti.yaml"
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [ht16k33_alpha,keypad,alarm_keypad]
+
+wifi: !include "common/wifi.yaml"
 
 logger:
   level: DEBUG
@@ -154,7 +163,7 @@ light:
     pin: 13
     num_leds: 13
     rgb_order: GRB
-    name: "$friendly_name key backlight leds"
+    name: ${name} key backlight leds
     gamma_correct: 0
     color_correct: [30%, 30%, 30%]
     effects:
@@ -178,7 +187,7 @@ light:
     pin: 19
     num_leds: 22
     rgb_order: GRB
-    name: "$friendly_name case glow leds"
+    name: ${name} case glow leds
     gamma_correct: 0
     color_correct: [30%, 30%, 30%]
     effects:
@@ -201,7 +210,7 @@ light:
     pin: 18
     num_leds: 12
     rgb_order: GRB
-    name: "$friendly_name Rfid ring leds"
+    name: ${name} Rfid ring leds
     gamma_correct: 0
     color_correct: [30%, 30%, 30%]
     effects:
@@ -242,14 +251,15 @@ text_sensor:
 
     #Text set from/to home assistant
   - platform: homeassistant
-    name: "$friendly_name text"
+    name: ${name} Text Display
     entity_id: input_text.alarm_keypad_text
     id: text
 
     #Home assistant alarm status
   - platform: homeassistant
-    name: "$friendly_name alarm state"
+    name: ${name} Alarm State
     entity_id: alarm_control_panel.alarme
+    internal: true
     id: alarmtext
     on_value:
       then:
@@ -293,15 +303,15 @@ binary_sensor:
         - lambda: !lambda |-
             id(mainobj).set_arm_key('A');
 
-switch:
-  - <<: !include "common/common_switchs.yaml"
+button:
+  - <<: !include "common/common_button.yaml"
 
 sensor:
   - <<: !include "common/common_sensors.yaml"
 
 
 
-alarm_keypad_component:
+alarm_keypad:
   id: mainobj
   keypad_text_id: reader
   alarm_status_id: alarmtext

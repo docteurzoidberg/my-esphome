@@ -2,11 +2,10 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
-from esphome.components import homeassistant, text_sensor
-from custom_components import ht16k33_alpha
-from esphome.const import CONF_ID, CONF_OUTPUT, CONF_TRIGGER_ID
+from esphome.components import homeassistant, text_sensor, ht16k33_alpha
+from esphome.const import CONF_ID, CONF_TRIGGER_ID
 
-DEPENDENCIES = ['display','light','api']
+DEPENDENCIES = ['display','light','api', 'text_sensor']
 
 CONF_ON_READY = 'on_ready'
 CONF_ON_CODE_CHECK = 'on_code_check'
@@ -18,16 +17,16 @@ CONF_ALARM_STATUS_ID = 'alarm_status_id'
 CONF_KEYPAD_TEXT_ID = 'keypad_text_id'
 
 
-alarm_keypad_component_ns = cg.esphome_ns.namespace('alarm_keypad_component')
-AlarmKeypadComponent = alarm_keypad_component_ns.class_('AlarmKeypadComponent', cg.Component)
+alarm_keypad_ns = cg.esphome_ns.namespace('alarm_keypad')
+AlarmKeypad = alarm_keypad_ns.class_('AlarmKeypad', cg.Component)
 
-ReadyTrigger = alarm_keypad_component_ns.class_('ReadyTrigger', automation.Trigger.template())
-CodeCheckTrigger = alarm_keypad_component_ns.class_('CodeCheckTrigger', automation.Trigger.template())
-CodeOKTrigger = alarm_keypad_component_ns.class_('CodeOKTrigger', automation.Trigger.template())
-CodeKOTrigger = alarm_keypad_component_ns.class_('CodeKOTrigger', automation.Trigger.template())
+ReadyTrigger = alarm_keypad_ns.class_('ReadyTrigger', automation.Trigger.template())
+CodeCheckTrigger = alarm_keypad_ns.class_('CodeCheckTrigger', automation.Trigger.template())
+CodeOKTrigger = alarm_keypad_ns.class_('CodeOKTrigger', automation.Trigger.template())
+CodeKOTrigger = alarm_keypad_ns.class_('CodeKOTrigger', automation.Trigger.template())
 
 CONFIG_SCHEMA = cv.Schema({
-    cv.GenerateID(): cv.declare_id(AlarmKeypadComponent),
+    cv.GenerateID(): cv.declare_id(AlarmKeypad),
      #references
     cv.Required(CONF_DISPLAY_ID): cv.use_id(ht16k33_alpha.display.HT16K33AlphaDisplay),
     cv.Required(CONF_ALARM_STATUS_ID): cv.use_id(homeassistant.text_sensor.HomeassistantTextSensor),

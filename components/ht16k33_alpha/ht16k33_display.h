@@ -1,5 +1,7 @@
 #pragma once
-
+#include <cstring>
+#include <pgmspace.h>
+#include "esphome/core/hal.h"
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/components/i2c/i2c.h"

@@ -18,8 +18,8 @@
 
 
 namespace esphome {
-  namespace alarm_keypad_component {
-    class AlarmKeypadComponent : public Component {
+  namespace alarm_keypad {
+    class AlarmKeypad : public Component {
     public:
 
       void setup() override;
@@ -74,28 +74,28 @@ namespace esphome {
 
     class ReadyTrigger : public Trigger<> {
     public:
-      explicit ReadyTrigger(AlarmKeypadComponent *parent) {
+      explicit ReadyTrigger(AlarmKeypad *parent) {
         parent->add_on_ready_callback([this]() { this->trigger(); });
       }
     };
 
     class CodeCheckTrigger : public Trigger<> {
     public:
-      explicit CodeCheckTrigger(AlarmKeypadComponent *parent) {
+      explicit CodeCheckTrigger(AlarmKeypad *parent) {
         parent->add_on_code_check_callback([this]() { this->trigger(); });
       }
     };
 
     class CodeOKTrigger : public Trigger<> {
     public:
-      explicit CodeOKTrigger(AlarmKeypadComponent *parent) {
+      explicit CodeOKTrigger(AlarmKeypad *parent) {
         parent->add_on_code_ok_callback([this]() { this->trigger(); });
       }
     };
 
     class CodeKOTrigger : public Trigger<> {
     public:
-      explicit CodeKOTrigger(AlarmKeypadComponent *parent) {
+      explicit CodeKOTrigger(AlarmKeypad *parent) {
         parent->add_on_code_ko_callback([this]() { this->trigger(); });
       }
     };

@@ -11,6 +11,7 @@ esphome:
     - src/custom_lora_receiver/custom_lora_receiver.h
     - src/custom_lora_receiver/structures.h
   libraries:
+    - SPI
     - "LoRa"
     - "https://github.com/docteurzoidberg/esplib-lorasensorpackets/archive/master.zip"
 
@@ -31,7 +32,7 @@ display:
     reset_pin: 16
     address: 0x3C
     rotation: 90
-    brightness: 20%
+    contrast: 20%
     lambda: |-
       it.image(0, 32, id(img_lora_logo));
 

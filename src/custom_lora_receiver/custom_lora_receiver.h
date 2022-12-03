@@ -268,7 +268,7 @@ class LoraReceiver : public Component {
       //pinMode(25,OUTPUT);
       //digitalWrite(16, LOW);
 
-      SPI.begin(PIN_SCK,PIN_MISO,PIN_MOSI,PIN_SS);
+      //SPI.begin(PIN_SCK,PIN_MISO,PIN_MOSI,PIN_SS);
       LoRa.setPins(PIN_SS,PIN_RST,PIN_DI00);
 
       if (!LoRa.begin(BAND))

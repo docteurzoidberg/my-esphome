@@ -1,6 +1,6 @@
 substitutions:
   device: "zillominee"
-  name: "Zillominée"
+  name: "Zillominee"
 
 esphome:
   name: $device
@@ -29,7 +29,7 @@ external_components:
       path: components
     components: [ zilloscope, color_line_scroller, text_scroller ]
 
-wifi: !include "common/wifimulti.yaml"
+wifi: !include "common/wifi.yaml"
 
 logger:
   level: DEBUG
@@ -277,15 +277,21 @@ color_line_scroller:
 text_scroller:
   - id: notif_text_scroller
 
+text_sensor:
+  - platform: zilloscope
+    valuetype: current_mode_name
+    name: ${name} Current Mode
+
+
 zilloscope:
   id: zilloscope_main
   display_id: zillominee_display
-  time_id: homeassistant_time
   use_splash: "true"
   default_mode: "time"
 
   modes:
     - mode_time:
+        homeassistant_time_id: homeassistant_time
         render_lambda: |-
           it.strftime(17, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::RIGHT, "%H", id(homeassistant_time).now());
           it.print(17, 8, id(font_8bithud), Color(0xFFFFFF), ((millis()/1000)%2==0)?":":".");
@@ -332,12 +338,11 @@ zilloscope:
                 it.image(1, 1, id(anim_sapins));
           #Fire display Effect
           - display_fire:
-              name: "lefeu"
+              name: lefeu
               width: 35
               height: 25
           #Bubbles display effect
           - display_bubbles:
-              id: bidule
               name: bubulles
               speed: 15
               width: 35
@@ -455,18 +460,3 @@ zilloscope:
     }
     return true;
 
-  render_ota: |-
-    //it=display
-    //frame= frame counter
-
-    //TODO
-    it.print(0, 0, id(tinyfont), Color(0x0000FF), "OTA");
-    return false;
-
-  render_shutdown: |-
-    //it=display
-    //frame= frame counter
-
-    //TODO
-    it.print(0, 0, id(tinyfont), Color(0xFF0000), "STOP");
-    return false;

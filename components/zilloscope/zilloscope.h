@@ -3,7 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/automation.h"
 #include "esphome/components/display/display_buffer.h"
-
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "display_effect.h"
 #include "zilloscope_mode.h"
 
@@ -15,6 +15,7 @@ namespace esphome {
 
     using display_writer_t = std::function<bool(display::DisplayBuffer &, uint32_t)>;
     using notification_display_writer_t = std::function<bool(display::DisplayBuffer &, uint32_t, std::string, uint32_t)>;
+
     //states of the zilloscope
     enum state
     {
@@ -93,13 +94,13 @@ namespace esphome {
       state get_state();
       std::string get_notification_text();
       uint32_t get_notification_type();
-
-      std::string get_mode_name();
+      std::string get_active_effect_name();
+      std::string get_active_mode_type();
+      std::string get_active_mode_name();
       uint32_t get_mode_index(std::string name);
       const std::vector<Mode *> &get_modes() const;
 
       void set_state(state state);
-      void set_time(time::RealTimeClock * time);
       void set_display(display::DisplayBuffer * it);
       void set_config_use_splash(bool value);
       void set_config_default_mode(std::string value);
@@ -116,8 +117,19 @@ namespace esphome {
       void set_render_boot(display_writer_t  &&render_boot_f) { this->render_boot_f_ = render_boot_f; }
       void set_render_splash(display_writer_t  &&render_splash_f) { this->render_splash_f_ = render_splash_f; }
       void set_render_notification(notification_display_writer_t  &&render_notification_f) { this->render_notification_f_ = render_notification_f; }
-      void set_render_ota(display_writer_t  &&render_ota_f) { this->render_ota_f_ = render_ota_f; }
-      void set_render_shutdown(display_writer_t &&render_shutdown_f) { this->render_shutdown_f_ = render_shutdown_f; }
+
+
+      void set_text_sensor_mode_name(text_sensor::TextSensor* sensor) {
+        this->text_sensor_mode_name_ = sensor;
+      }
+      void set_text_sensor_effect_name(text_sensor::TextSensor* sensor) {
+        this->text_sensor_effect_name_ = sensor;
+      }
+
+      void register_text_sensor(text_sensor::TextSensor* sensor, std::string valuetype) {
+        if(valuetype=="current_mode_name") set_text_sensor_mode_name(sensor);
+        if(valuetype=="current_effect_name") set_text_sensor_effect_name(sensor);
+      }
 
       void display_lambdacall(display::DisplayBuffer & it);
 
@@ -134,11 +146,16 @@ namespace esphome {
       void service_mode(std::string name);
       void service_mode_next();
       void service_mode_prev();
+      void service_mode_back();
 
       void service_effect_start(std::string name);
       void service_effect_stop();
+      void service_effect_back();
       void service_effect_next();
       void service_effect_prev();
+
+      void service_start_stream();
+      void service_stop_stream();
 
     protected:
 
@@ -147,20 +164,14 @@ namespace esphome {
       std::vector<Mode *> modes_;
 
       /// Value for storing the index of the currently active effect. 0 if no effect is active
-
       uint32_t active_mode_index_{0};
+      
+      /// Value for storing the index of the last active effect. 0 if no effect previously running
       uint32_t last_mode_index_{0};
-
-      /// Internal method to start an effect with the given index
-      //void start_effect_(uint32_t effect_index);
 
       /// Internal method to enter mode with the given index
       void start_mode_(uint32_t mode_index);
 
-      /// Internal method to stop the current effect (if one is active).
-      //void stop_effect_();
-
-      //DisplayEffect *get_active_effect_();
       Mode *get_active_mode_();
 
       //triggers
@@ -168,12 +179,14 @@ namespace esphome {
       CallbackManager<void()> on_splash_callback_;  //not used
       CallbackManager<void()> on_ready_callback_;
 
+      //Sensors
+      text_sensor::TextSensor* text_sensor_mode_name_{nullptr};
+      text_sensor::TextSensor* text_sensor_effect_name_{nullptr};
+
       //display lambdas
       display_writer_t render_boot_f_;
       display_writer_t render_splash_f_;
       notification_display_writer_t render_notification_f_;
-      display_writer_t render_ota_f_;
-      display_writer_t render_shutdown_f_;
     };
 
     //Automation triggers

@@ -15,22 +15,22 @@ static uint32_t _default_mode_index = 0;     //can be overidden in config
 static uint32_t _default_effect_index = 0;     //can be overidden in config
 
 static state _state = state::booting;
-static bool _has_time=false;
+static bool _ready=false;
 
 //config
 static bool _config_use_splash = false;
 
 //references
 static display::DisplayBuffer *_display=NULL;
-static time::RealTimeClock *_time=NULL;
+//static time::RealTimeClock *_time=NULL;
 
 //display frame counters
 static uint32_t _frame_counter_boot=0;
 static uint32_t _frame_counter_splash=0;
-static uint32_t _frame_counter_time=0;
-static uint32_t _frame_counter_ota=0;
+//static uint32_t _frame_counter_time=0;
+//static uint32_t _frame_counter_ota=0;
 static uint32_t _frame_counter_notify=0;
-static uint32_t _frame_counter_shutdown=0;
+//static uint32_t _frame_counter_shutdown=0;
 
 //notifications
 static std::queue<Notification*> _queue;
@@ -43,12 +43,23 @@ void ZilloScope::setup() {
 
 void ZilloScope::loop() {
 
-  //Waiting until we got a valid time to enter state::time after boot
-  if(!_has_time && _time->now().is_valid()) {
-    _has_time=true;
+  //ask all modes if they are 'ready' (let's them get their dependdencies states)
+  bool all_modes_ready = true;
+  for (uint32_t i=0;i<modes_.size();i++) {  
+    all_modes_ready = all_modes_ready && modes_[i]->is_ready();
+  }
+  if(!_ready && all_modes_ready) {
+    _ready = true;
     on_splash();
     return;
   }
+  
+  //Waiting until we got a valid time to enter state::time after boot
+  //if(!_has_time && _time->now().is_valid()) {
+  //  _has_time=true;
+  //  on_splash();
+  //  return;
+  //}
 
   //Start new notification if present in queue and in time mode
   if(_state==state::main && !_queue.empty()) {
@@ -82,10 +93,10 @@ void ZilloScope::next_notification() {
 }
 
 void ZilloScope::end_notification() {
-   _current_notification->end();
-   if(!_queue.empty()) {
+  _current_notification->end();
+  if(!_queue.empty()) {
     next_notification();
-   }
+  }
 }
 
 //display
@@ -104,8 +115,7 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
       _frame_counter_splash++;
     else {
       _frame_counter_splash=0;
-      if(_has_time)
-        on_ready();
+      on_ready();
     }
     return;
   }
@@ -121,10 +131,10 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
     return;
   }
   else if(_state==state::ota) {
-    if(render_ota_f_(it,_frame_counter_ota))
-      _frame_counter_ota++;
-    else
-      _frame_counter_ota=0;
+    //if(render_ota_f_(it,_frame_counter_ota))
+    //  _frame_counter_ota++;
+    //else
+    //  _frame_counter_ota=0;
     return;
   }
   else if(_state==state::notify) {
@@ -135,10 +145,10 @@ void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
     return;
   }
   else if(_state==state::shutdown) {
-    if(render_shutdown_f_(it,_frame_counter_shutdown))
-      _frame_counter_shutdown++;
-    else
-      _frame_counter_shutdown=0;
+    //if(render_shutdown_f_(it,_frame_counter_shutdown))
+    //  _frame_counter_shutdown++;
+    //else
+    //  _frame_counter_shutdown=0;
     return;
   }
 }
@@ -157,6 +167,16 @@ void ZilloScope::service_mode(std::string name) {
   }
   ESP_LOGD(TAG, "Entering mode %s", name.c_str());
   start_mode_(mode_index);
+}
+
+void ZilloScope::service_mode_back() {
+  active_mode_index_ = last_mode_index_;
+  if(active_mode_index_>modes_.size()) {
+    active_mode_index_=1;
+  }
+  auto mode = modes_[active_mode_index_-1];
+  ESP_LOGD(TAG, "Entering mode %s (#%d)", mode->get_name().c_str(), active_mode_index_);
+  start_mode_(active_mode_index_);
 }
 
 void ZilloScope::service_mode_next() {
@@ -229,6 +249,14 @@ void ZilloScope::service_effect_stop() {
   }
 }
 
+void ZilloScope::service_effect_back() {
+  auto mode = get_active_mode_();
+  if(mode->get_type()=="ModeEffects") {
+    ModeEffects *modeeffect = static_cast <ModeEffects*>(mode);
+    modeeffect->back_effect();
+  }
+}
+
 void ZilloScope::service_effect_next() {
   auto mode = get_active_mode_();
   if(mode->get_type()=="ModeEffects") {
@@ -245,6 +273,14 @@ void ZilloScope::service_effect_prev() {
   }
 }
 
+void ZilloScope::service_stop_stream() {
+  //todo
+}
+
+void ZilloScope::service_start_stream() {
+  //todo
+}
+
 //modes
 
 uint32_t ZilloScope::get_mode_index(std::string name) {
@@ -257,20 +293,48 @@ uint32_t ZilloScope::get_mode_index(std::string name) {
 }
 
 Mode *ZilloScope::get_active_mode_() {
- if (this->active_mode_index_ == 0)
+  if (this->active_mode_index_ == 0)
     return nullptr;
   else
     return this->modes_[this->active_mode_index_ - 1];
 }
 
+std::string ZilloScope::get_active_effect_name() {
+  auto mode = modes_[active_mode_index_];
+  auto modetype = modes_[active_mode_index_]->get_type();
+  if(modetype=="ModeEffects") {
+    ModeEffects *modeeffects= static_cast <ModeEffects*>(modes_[active_mode_index_]);
+    if(modeeffects!=nullptr) {
+      return modeeffects->get_effect_name();
+    }
+  }
+  return "No active effect";
+}
+
+std::string ZilloScope::get_active_mode_name() {
+  Mode * active_mode = get_active_mode_();
+  if(active_mode != nullptr) {
+    return active_mode->get_name();
+  }
+  return "";
+}
+
+std::string ZilloScope::get_active_mode_type() {
+  Mode * active_mode = get_active_mode_();
+  if(active_mode != nullptr) {
+    return active_mode->get_type();
+  }
+}
+
+
 void ZilloScope::start_mode_(uint32_t mode_index) {
-  auto *curmode = this->get_active_mode_();
+  auto *curmode = get_active_mode_();
   if(curmode!=nullptr)
     curmode->stop();
   if (mode_index == 0)
     return;
-  this->last_mode_index_=this->active_mode_index_;
-  this->active_mode_index_ = mode_index;
+  last_mode_index_=active_mode_index_;
+  active_mode_index_ = mode_index;
   Mode *mode = modes_[active_mode_index_-1];
   if(mode==nullptr){
     ESP_LOGE(TAG, "Error retrieving mode index %d",active_mode_index_-1);
@@ -279,6 +343,7 @@ void ZilloScope::start_mode_(uint32_t mode_index) {
   ESP_LOGD(TAG, "starting mode %s", mode->get_name().c_str());
   ESP_LOGD(TAG, "before start internal");
   mode->start_internal();
+  text_sensor_mode_name_->publish_state(mode->get_name().c_str());
 }
 
 //events
@@ -343,9 +408,9 @@ void ZilloScope::set_display(display::DisplayBuffer *it) {
   _display=it;
 }
 
-void ZilloScope::set_time(time::RealTimeClock *time) {
-  _time=time;
-}
+//void ZilloScope::set_time(time::RealTimeClock *time) {
+//  _time=time;
+//}
 
 void ZilloScope::set_config_default_mode(std::string value) {
   uint32_t mode_index = get_mode_index(value);

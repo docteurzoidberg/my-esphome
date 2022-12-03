@@ -2,20 +2,19 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
 from esphome.components import display
-from esphome.components import time as time_
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
 
 from .modes import validate_modes, ZILLO_MODES, ZILLO_MODES_REGISTRY
 
 DEPENDENCIES = ["network"]
-AUTO_LOAD = ["web_server_base"]
+AUTO_LOAD = ["text_sensor", "web_server_base"]
 
 CONF_ON_BOOT = 'on_boot'
 CONF_ON_SPLASH = 'on_splash'
 CONF_ON_READY = 'on_ready'
 
 CONF_DISPLAY_ID = 'display_id'
-CONF_TIME_ID = 'time_id'
+#CONF_TIME_ID = 'time_id'
 
 CONF_USE_SPLASH = 'use_splash'
 CONF_DEFAULT_MODE = 'default_mode'
@@ -23,8 +22,8 @@ CONF_MODES = 'modes'
 
 CONF_RENDER_BOOT = 'render_boot'
 CONF_RENDER_SPLASH = 'render_splash'
-CONF_RENDER_OTA = 'render_ota'
-CONF_RENDER_SHUTDOWN = 'render_shutdown'
+#CONF_RENDER_OTA = 'render_ota'
+#CONF_RENDER_SHUTDOWN = 'render_shutdown'
 CONF_RENDER_NOTIFICATION = 'render_notification'
 
 zilloscope_ns = cg.esphome_ns.namespace('zilloscope')
@@ -40,7 +39,7 @@ CONFIG_SCHEMA = cv.Schema({
 
     #references
     cv.Required(CONF_DISPLAY_ID): cv.use_id(display.DisplayBuffer),
-    cv.Required(CONF_TIME_ID): cv.use_id(time_.RealTimeClock),
+    #cv.Required(CONF_TIME_ID): cv.use_id(time_.RealTimeClock),
 
     #config options
     cv.Optional(CONF_DEFAULT_MODE, default=""): cv.string_strict,
@@ -48,8 +47,8 @@ CONFIG_SCHEMA = cv.Schema({
 
     #display render lambdas
     cv.Required(CONF_RENDER_BOOT): cv.lambda_,
-    cv.Required(CONF_RENDER_OTA): cv.lambda_,
-    cv.Required(CONF_RENDER_SHUTDOWN): cv.lambda_,
+    #cv.Required(CONF_RENDER_OTA): cv.lambda_,
+    #cv.Required(CONF_RENDER_SHUTDOWN): cv.lambda_,
     cv.Required(CONF_RENDER_NOTIFICATION): cv.lambda_,
     cv.Optional(CONF_RENDER_SPLASH): cv.lambda_,
 
@@ -72,11 +71,11 @@ CONFIG_SCHEMA = cv.Schema({
 def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     wrapped_display = yield cg.get_variable(config[CONF_DISPLAY_ID])
-    wrapped_time = yield cg.get_variable(config[CONF_TIME_ID])
+    #wrapped_time = yield cg.get_variable(config[CONF_TIME_ID])
     default_mode = yield cg.std_string(config[CONF_DEFAULT_MODE])
 
     cg.add(var.set_display(wrapped_display))
-    cg.add(var.set_time(wrapped_time))
+    #cg.add(var.set_time(wrapped_time))
     yield cg.register_component(var, config)
 
     modes = yield cg.build_registry_list(ZILLO_MODES_REGISTRY, config.get(CONF_MODES, []))
@@ -85,13 +84,13 @@ def to_code(config):
 
     render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
     render_notification_template_ = yield cg.process_lambda(config[CONF_RENDER_NOTIFICATION],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame'),(cg.std_string,'text'),(cg.uint32, 'type')],return_type=cg.bool_)
-    render_ota_template_ = yield cg.process_lambda(config[CONF_RENDER_OTA],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
-    render_shutdown_template_ = yield cg.process_lambda(config[CONF_RENDER_SHUTDOWN],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+    #render_ota_template_ = yield cg.process_lambda(config[CONF_RENDER_OTA],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+    #render_shutdown_template_ = yield cg.process_lambda(config[CONF_RENDER_SHUTDOWN],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
 
     cg.add(var.set_render_boot(render_boot_template_))
     cg.add(var.set_render_notification(render_notification_template_))
-    cg.add(var.set_render_ota(render_ota_template_))
-    cg.add(var.set_render_shutdown(render_shutdown_template_))
+    #cg.add(var.set_render_ota(render_ota_template_))
+    #cg.add(var.set_render_shutdown(render_shutdown_template_))
 
     if CONF_USE_SPLASH in config:
         wrapped_usesplash = yield cg.bool_(config[CONF_USE_SPLASH])

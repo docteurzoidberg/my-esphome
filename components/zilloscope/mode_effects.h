@@ -16,7 +16,6 @@ namespace zilloscope {
     /*
     TODO: handle effect's interval instal of global 'effects' one
     */
-
       void add_effects(const std::vector<DisplayEffect *> effects) {
         this->effects_.reserve(this->effects_.size() + effects.size());
         for (auto *effect : effects) {
@@ -81,19 +80,30 @@ namespace zilloscope {
       }
 
       void start_effect_(uint32_t effect_index) {
-        this->stop_effect_();
+        stop_effect_();
         if (effect_index == 0)
           return;
-        this->active_effect_index_ = effect_index;
-        auto *effect = this->get_active_effect_();
+        active_effect_index_ = effect_index;
+        last_effect_index_ = active_effect_index_;
+        auto *effect = get_active_effect_();
         effect->start_internal();
       }
 
       void stop_effect_() {
-        auto *effect = this->get_active_effect_();
+        auto *effect = get_active_effect_();
         if (effect != nullptr)
           effect->stop();
-        this->active_effect_index_ = 0;
+        active_effect_index_ = 0;
+      }
+
+      void back_effect() {
+        if(last_effect_index_ == 0) {
+          return;
+        }
+        active_effect_index_ = last_effect_index_;
+        auto effect = effects_[active_effect_index_-1];
+        ESP_LOGD("ModeEffects", "Starting effect %s (#%d)", effect->get_name().c_str(), active_effect_index_);
+        start_effect_(active_effect_index_);
       }
 
       void next_effect() {
@@ -123,6 +133,7 @@ namespace zilloscope {
       optional<uint32_t> effect_;
       uint32_t default_effect_index_{0};
       uint32_t active_effect_index_{0};
+      uint32_t last_effect_index_{0};
 
       std::vector<DisplayEffect *> effects_;
 

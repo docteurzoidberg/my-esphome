@@ -12,7 +12,8 @@ namespace zilloscope {
 
       Mode(const std::string &name) : name_(name) {}
       Mode(const std::string &name, const std::string &type) : name_(name), type_(type) {}
-
+      
+      virtual bool is_ready() { return this->ready_; }
       virtual void start() { this->initial_run_ = true; }
       virtual void start_internal() {  }
       virtual void stop() {  }
@@ -36,6 +37,7 @@ namespace zilloscope {
       std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> f_;
 
       bool initial_run_{false};
+      bool ready_{true};
       uint32_t update_interval_{16};
       uint32_t last_run_{0};
       uint32_t frame_counter_{0};

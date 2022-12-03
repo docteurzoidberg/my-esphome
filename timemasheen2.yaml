@@ -12,14 +12,22 @@ esphome:
       then:
         - lambda: |-
             fastled_base_fastledlightoutput->get_controller()->setDither(0);
-        - delay: 1s
-        - light.turn_on:
-            id: clockleds
-            brightness: 0.2
-            effect: render
+    - priority: 600
+      then:
+      - light.turn_on:
+          id: clockleds
+          brightness: 1
+          effect: render
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [timemasheen]
 
 wifi: !include "common/wifi.yaml"
 logger:
+  level: DEBUG
 api:
 ota:
 
@@ -37,24 +45,22 @@ light:
     chipset: WS2812B
     pin: GPIO25
     num_leds: 252
-    rgb_order: GRB
+    rgb_order: RGB
     max_refresh_rate: 16ms
     id: clockleds
     name: "$friendly_name Clock Leds"
-    color_correct: [70%, 70%, 70%]
-    default_transition_length : 0s
+    #color_correct: [700%, 70%, 70%]
+    default_transition_length : 2s
     #gamma_correct: 0
-    restore_mode : ALWAYS_OFF
     effects:
       - e131:
           name: 'e131'
           universe: 1
           channels: RGB
       - addressable_lambda:
-          name: time
+          name: render
           lambda: |-
             id(main).addressable_lights_lambdacall(it);
-
 
   #leds cases
   - platform: fastled_clockless
@@ -79,3 +85,13 @@ timemasheen:
   id: main
   clock_addressable_light_id: clockleds
   time_id: homeassistant_time
+  on_ready:
+    then:
+      - light.turn_on:
+          id: clockleds
+          brightness: 0.5
+          color_mode: RGB
+          red: 100%
+          green: 100%
+          blue: 100%
+          effect: render

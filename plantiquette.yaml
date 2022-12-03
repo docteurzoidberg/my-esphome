@@ -1,0 +1,234 @@
+substitutions:
+  devicename: "plantiquette"
+  friendly_name: "Plantiquette"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32dev
+  on_boot:
+    - priority: 399
+      then:
+        - display.page.show: page1
+        - component.update: etiquette
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [plantiquette]
+
+wifi: !include "common/wifi.yaml"
+logger:
+api:
+ota:
+
+plantiquette:
+  id: main
+  tag1_id: tag1_name
+  tag2_id: tag2_name
+  on_ready:
+    then:
+      - display.page.show: page1
+      - component.update: etiquette
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO39
+      mode: INPUT_PULLUP
+      inverted: true
+    name: nextpage
+    id: nextpage
+    on_release:
+      then:
+        - display.page.show_next: etiquette
+        - component.update: etiquette
+
+deep_sleep:
+  run_duration: 30s
+  sleep_duration: 1d
+  wakeup_pin:
+    number: GPIO39
+    inverted: True
+
+font:
+  - file: 'fonts/Roboto-Regular.ttf'
+    id: roboto
+  - file: 'fonts/8-bit-hud.ttf'
+    id: eightbithud_12
+    size: 12
+  - file: 'fonts/8-bit-hud.ttf'
+    id: eightbithud_16
+    size: 16
+  - file: 'fonts/8-bit-hud.ttf'
+    id: eightbithud_20
+    size: 20
+
+text_sensor:
+  - platform: homeassistant
+    id: tag1_name
+    entity_id: sensor.beuhdb_tags_tag1
+  - platform: homeassistant
+    id: tag1_stage
+    entity_id: sensor.beuhdb_tags_tag1
+    attribute: stage
+  - platform: homeassistant
+    id: tag2_name
+    entity_id: sensor.beuhdb_tags_tag2
+  - platform: homeassistant
+    id: tag2_stage
+    entity_id: sensor.beuhdb_tags_tag2
+    attribute: stage
+  - platform: homeassistant
+    id: tag3_name
+    entity_id: sensor.beuhdb_tags_tag3
+  - platform: homeassistant
+    id: tag3_stage
+    entity_id: sensor.beuhdb_tags_tag3
+    attribute: stage
+
+sensor:
+  - platform: homeassistant
+    id: tag1_batch
+    entity_id: sensor.beuhdb_tags_tag1
+    attribute: batch
+  - platform: homeassistant
+    id: tag1_weekcounter
+    entity_id: sensor.beuhdb_tags_tag1
+    attribute: weekcounter
+  - platform: homeassistant
+    id: tag1_bg
+    entity_id: sensor.beuhdb_tags_tag1
+    attribute: bg
+  - platform: homeassistant
+    id: tag1_bb
+    entity_id: sensor.beuhdb_tags_tag1
+    attribute: bb
+  - platform: homeassistant
+    id: tag1_tm
+    entity_id: sensor.beuhdb_tags_tag1
+    attribute: tm
+  - platform: homeassistant
+    id: tag1_bh
+    entity_id: sensor.beuhdb_tags_tag1
+    attribute: bh
+  - platform: homeassistant
+    id: tag2_batch
+    entity_id: sensor.beuhdb_tags_tag2
+    attribute: batch
+  - platform: homeassistant
+    id: tag2_weekcounter
+    entity_id: sensor.beuhdb_tags_tag2
+    attribute: weekcounter
+  - platform: homeassistant
+    id: tag2_bg
+    entity_id: sensor.beuhdb_tags_tag2
+    attribute: bg
+  - platform: homeassistant
+    id: tag2_bb
+    entity_id: sensor.beuhdb_tags_tag2
+    attribute: bb
+  - platform: homeassistant
+    id: tag2_tm
+    entity_id: sensor.beuhdb_tags_tag2
+    attribute: tm
+  - platform: homeassistant
+    id: tag2_bh
+    entity_id: sensor.beuhdb_tags_tag2
+    attribute: bh
+
+  - platform: homeassistant
+    id: tag3_batch
+    entity_id: sensor.beuhdb_tags_tag3
+    attribute: batch
+  - platform: homeassistant
+    id: tag3_weekcounter
+    entity_id: sensor.beuhdb_tags_tag3
+    attribute: weekcounter
+  - platform: homeassistant
+    id: tag3_bg
+    entity_id: sensor.beuhdb_tags_tag3
+    attribute: bg
+  - platform: homeassistant
+    id: tag3_bb
+    entity_id: sensor.beuhdb_tags_tag3
+    attribute: bb
+  - platform: homeassistant
+    id: tag3_tm
+    entity_id: sensor.beuhdb_tags_tag3
+    attribute: tm
+  - platform: homeassistant
+    id: tag3_bh
+    entity_id: sensor.beuhdb_tags_tag3
+    attribute: bh
+
+spi:
+  clk_pin: 18
+  mosi_pin: 23
+
+display:
+  - platform: waveshare_epaper
+    id: etiquette
+    cs_pin: 5
+    dc_pin: 17
+    busy_pin: 4
+    reset_pin: 16
+    model: 2.13in-ttgo-b73
+    full_update_every: 1
+    update_interval: never
+    rotation: 90
+    pages:
+      - id: page1
+        lambda: |-
+          if(id(main).get_state()==STATE_BOOTING) {
+            it.print(125, 45, id(eightbithud_16),COLOR_ON, TextAlign::CENTER_HORIZONTAL, "CHARGEMENT...");
+            return;
+          }
+          it.filled_rectangle(0,0,250,35);
+          it.printf(5, 5, id(eightbithud_20), COLOR_OFF, "Semaine %d", (int)id(tag1_weekcounter).state);
+
+          it.printf(35, 40, id(eightbithud_12), COLOR_ON, "BG %d", (int)id(tag1_bg).state);
+          it.printf(35, 60, id(eightbithud_12), COLOR_ON, "BB %d", (int)id(tag1_bb).state);
+          it.printf(155, 40, id(eightbithud_12), COLOR_ON, "TM %d", (int)id(tag1_tm).state);
+          it.printf(155, 60, id(eightbithud_12), COLOR_ON, "BH %d", (int)id(tag1_bh).state);
+
+          it.filled_rectangle(0,90,250,32);
+          it.print(125, 95, id(eightbithud_16),COLOR_OFF, TextAlign::CENTER_HORIZONTAL, id(tag1_stage).state.c_str());
+
+
+      - id: page2
+        lambda: |-
+          if(id(main).get_state()==STATE_BOOTING) {
+            it.print(125, 45, id(eightbithud_16),COLOR_ON, TextAlign::CENTER_HORIZONTAL, "CHARGEMENT...");
+            return;
+          }
+          it.filled_rectangle(0,0,250,35);
+          it.printf(5, 5, id(eightbithud_20), COLOR_OFF, "Semaine %d", (int)id(tag2_weekcounter).state);
+
+          it.printf(35, 40, id(eightbithud_12), COLOR_ON, "BG %d", (int)id(tag2_bg).state);
+          it.printf(35, 60, id(eightbithud_12), COLOR_ON, "BB %d", (int)id(tag2_bb).state);
+          it.printf(155, 40, id(eightbithud_12), COLOR_ON, "TM %d", (int)id(tag2_tm).state);
+          it.printf(155, 60, id(eightbithud_12), COLOR_ON, "BH %d", (int)id(tag2_bh).state);
+
+          it.filled_rectangle(0,90,250,32);
+          it.print(125, 95, id(eightbithud_16),COLOR_OFF, TextAlign::CENTER_HORIZONTAL, id(tag2_stage).state.c_str());
+
+      - id: page3
+        lambda: |-
+          if(id(main).get_state()==STATE_BOOTING) {
+            it.print(125, 45, id(eightbithud_16),COLOR_ON, TextAlign::CENTER_HORIZONTAL, "CHARGEMENT...");
+            return;
+          }
+          it.filled_rectangle(0,0,250,35);
+          it.printf(5, 5, id(eightbithud_20), COLOR_OFF, "Semaine %d", (int)id(tag3_weekcounter).state);
+
+          it.printf(35, 40, id(eightbithud_12), COLOR_ON, "BG %d", (int)id(tag3_bg).state);
+          it.printf(35, 60, id(eightbithud_12), COLOR_ON, "BB %d", (int)id(tag3_bb).state);
+          it.printf(155, 40, id(eightbithud_12), COLOR_ON, "TM %d", (int)id(tag3_tm).state);
+          it.printf(155, 60, id(eightbithud_12), COLOR_ON, "BH %d", (int)id(tag3_bh).state);
+
+          it.filled_rectangle(0,90,250,32);
+          it.print(125, 95, id(eightbithud_16),COLOR_OFF, TextAlign::CENTER_HORIZONTAL, id(tag3_stage).state.c_str());
+

@@ -1,0 +1,37 @@
+substitutions:
+  devicename: "minecraftcube"
+  friendly_name: "minecraft cube"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32doit-devkit-v1
+  on_boot:
+    - priority: 1000
+      then:
+        - lambda: |-
+            fastled_base_fastledlightoutput->get_controller()->setDither(0);
+    - priority: 0
+      then:
+        - light.turn_on:
+            id: leds
+            brightness: 1
+            effect: Rainbow
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO25
+    num_leds: 17
+    rgb_order: GRB
+    id: leds
+    name: "$friendly_name Leds"
+    #color_correct: [60%, 60%, 60%]
+    default_transition_length: 5s
+    restore_mode: ALWAYS_ON
+    effects:
+      - addressable_rainbow:
+          name: Rainbow
+          width: 512
+          speed: 1
+

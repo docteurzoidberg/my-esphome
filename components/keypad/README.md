@@ -1,4 +1,4 @@
-# keypad component
+# keypad component (@ssieb)
 
 This component matrix keypads.  Define a `keypad` component then add `binary_sensor`s or a `text_sensor` to handle the keys.
 

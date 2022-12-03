@@ -1,4 +1,4 @@
-# HT16K33 4 character alphanumeric display
+# HT16K33 4 character alphanumeric display (@ssieb)
 
 There are no print functions for addressing rows and columns.  With such a small display I didn't see any point.
 All the print functions without the row and column parameters are available.

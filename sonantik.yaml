@@ -1,0 +1,66 @@
+esphome:
+  name: sonantik
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "IXtLv6At6abIVZk2wnVF26nRmFDH5PKsGLWszjqGlNc="
+  services:
+    - service: ring_short
+      then:
+      - switch.turn_on: ring
+      - delay: 15ms
+      - switch.turn_off: ring
+    - service: ring_three_short
+      then:
+      - switch.turn_on: ring
+      - delay: 50ms
+      - switch.turn_off: ring
+      - delay: 300ms
+      - switch.turn_on: ring
+      - delay: 50ms
+      - switch.turn_off: ring
+      - delay: 300ms
+      - switch.turn_on: ring
+      - delay: 50ms
+      - switch.turn_off: ring
+    - service: ring_one
+      then:
+        - switch.turn_on: ring
+        - delay: 0.5s
+        - switch.turn_off: ring
+    - service: ring_three
+      then:
+        - switch.turn_on: ring
+        - delay: 0.2s
+        - switch.turn_off: ring
+        - delay: 0.2s
+        - switch.turn_on: ring
+        - delay: 0.2s
+        - switch.turn_off: ring
+        - delay: 0.2s
+        - switch.turn_on: ring
+        - delay: 0.2s
+        - switch.turn_off: ring
+
+ota:
+  password: "8a6c9a20684f18e102fa334484e87742"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+switch:
+  - platform: gpio
+    inverted: true
+    id: ring
+    pin: 33
+    name: sonantik

@@ -1,0 +1,93 @@
+substitutions:
+  devicename: "ventibus"
+  friendly_name: "Ventibus"
+
+esphome:
+  name: $devicename
+  build_path: build/$devicename
+  platform: ESP32
+  board: esp32dev
+
+logger:
+  level: DEBUG
+api:
+ota:
+wifi: !include "common/wifimulti.yaml"
+
+binary_sensor:
+  - <<: !include "common/common_binary_sensors.yaml"
+  - platform: gpio
+    pin: GPIO14
+    id: ventibus_auto_mode
+    name: "Ventibus Automatic Mode"
+    filters:
+      - delayed_on: 10ms
+  - platform: template
+    id: ventibus_manual_mode
+    name: "Ventibus Manual Mode"
+    filters:
+      - delayed_on: 10ms
+    lambda: |-
+      return !id(ventibus_auto_mode).state;
+
+sensor:
+  - <<: !include "common/common_sensors.yaml"
+#potentiometre
+  - platform: adc
+    pin: A0
+    id: ventibus_fan_speed
+
+switch:
+  - <<: !include "common/common_switchs.yaml"
+
+fan:
+  - platform: speed
+    output: ventibus_fan_pwm_output
+    name: "Ventibus Fan Controller"
+    on_turn_on:
+      - logger.log: "Fan Turned On!"
+    on_turn_off:
+      - logger.log: "Fan Turned Off!"
+    on_speed_set:
+      - logger.log: "Fan Speed was changed!"
+
+output:
+#leds
+  - id: ventibus_led_output_1
+    platform: gpio
+    pin: GPIO16
+  - id: ventibus_led_output_2
+    platform: gpio
+    pin: GPIO17
+  - id: ventibus_led_output_3
+    platform: gpio
+    pin: GPIO18
+  - id: ventibus_led_output_4
+    platform: gpio
+    pin: GPIO19
+#ventilo
+  - id: ventibus_fan_pwm_output
+    platform: ledc
+    pin: GPIO33
+
+light:
+#led wifi OK (bleu)
+  - platform: binary
+    id: ventibus_led_wifi_ok
+    output: ventibus_led_output_1
+    name: "Ventibus Wifi Ok Led"
+#led wifi KO (rouge)
+  - platform: binary
+    id: ventibus_led_wifi_ko
+    output: ventibus_led_output_2
+    name: "Ventibus Wifi Ko Led"
+#led AUTO (orange)
+  - platform: binary
+    id: ventibus_led_mode_manual
+    output: ventibus_led_output_3
+    name: "Ventibus Mode Manual Led"
+#led MANU (orange)
+  - platform: binary
+    id: ventibus_led_mode_auto
+    output: ventibus_led_output_4
+    name: "Ventibus Mode Auto Led"

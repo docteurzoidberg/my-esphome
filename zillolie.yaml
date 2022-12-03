@@ -1,0 +1,358 @@
+substitutions:
+  device: "zillolie"
+  name: "ZilloLie"
+
+esphome:
+  name: $device
+  build_path: build/$device
+  platform: ESP32
+  board: esp32doit-devkit-v1
+  on_boot:
+  - priority: 1000
+    then:
+      - lambda: |-
+          fastled_base_fastledlightoutput->get_controller()->setDither(0);
+          id(boot_colorline_scroller).setup(15,2,3);
+          id(notif_colorline_scroller).setup(15,2,3);
+      - switch.turn_on: zillolie_control_display
+      - lambda: |-
+          id(zilloscope_main).on_boot();
+
+  on_shutdown:
+    then:
+      - lambda: |-
+          id(zilloscope_main).on_shutdown();
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [ zilloscope, color_line_scroller, text_scroller ]
+
+wifi: !include "common/wifi.yaml"
+
+logger:
+  level: DEBUG
+
+api:
+  services:
+    - service: start_effect
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_start(name);
+    - service: stop_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_stop();
+    - service: next_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_next();
+    - service: previous_effect
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_effect_prev();
+    - service: mode
+      variables:
+        name: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode(name);
+    - service: mode_back
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_back();
+    - service: mode_next
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_next();
+    - service: mode_prev
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_mode_prev();
+    - service: notify
+      variables:
+        type: int
+        text: string
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_notify(type,text,-1);
+    - service: start_stream
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_start_stream();
+            id(zillolie_display).set_enabled(false);
+        - light.turn_on:
+            id: zillolie_matrix
+            effect: "e131"
+    - service: stop_stream
+      then:
+        - light.turn_on:
+            id: zillolie_matrix
+            effect: "none"
+        - lambda: |-
+            id(zilloscope_main).service_stop_stream();
+            id(zillolie_display).set_enabled(true);
+
+ota:
+
+web_server:
+  port: 80
+  local: true
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time_paris
+    timezone: Europe/Paris
+
+binary_sensor:
+  - <<: !include "common/common_binary_sensors.yaml"
+
+button:
+  - <<: !include "common/common_button.yaml"
+
+  - platform: template
+    name: ${name} Next Mode
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_mode_next();
+
+  - platform: template
+    name: ${name} Previous Mode
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_mode_prev();
+
+  - platform: template
+    name: ${name} Next Effect
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_effect_next();
+
+  - platform: template
+    name: ${name} Previous Effect
+    on_press:
+      then:
+        - lambda: id(zilloscope_main).service_effect_prev();
+
+  - platform: template
+    name: ${name} Start e1.31 stream
+    on_press:
+      then:
+        - lambda: |-
+            id(zilloscope_main).service_start_stream();
+            id(zillolie_display).set_enabled(false);
+        - light.turn_on:
+            id: zillolie_matrix
+            effect: "e131"
+
+  - platform: template
+    name: ${name} Stop e1.31 stream
+    on_press:
+      then:
+      - light.turn_on:
+          id: zillolie_matrix
+          effect: "none"
+      - lambda: |-
+          id(zilloscope_main).service_stop_stream();
+          id(zillolie_display).set_enabled(true);
+
+switch:
+  - platform: template
+    id: zillolie_control_display
+    name: ${name} Control Display
+    lambda: |-
+      return id(zillolie_display).get_enabled();
+    turn_on_action:
+      - lambda: |-
+          id(zillolie_display).set_enabled(true);
+    turn_off_action:
+      - lambda: |-
+          id(zillolie_display).set_enabled(false);
+
+text_sensor:
+  - platform: zilloscope
+    id: current_mode
+    valuetype: current_mode_name
+    zilloscope_id: zilloscope_main
+    name: ${name} Current Display Mode 
+
+
+sensor:
+  - <<: !include "common/common_sensors.yaml"
+
+e131:
+  method: multicast
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812B
+    pin: GPIO5
+    num_leds: 256
+    rgb_order: GRB
+    max_refresh_rate: 16ms
+    id: zillolie_matrix
+    name: ${name} Matrix
+    color_correct: [70%, 70%, 70%]
+    default_transition_length : 0s
+    #gamma_correct: 0
+    restore_mode : ALWAYS_ON
+    effects:
+      - e131:
+          name: 'e131'
+          universe: 1
+          channels: RGB
+
+display:
+  - platform: addressable_light
+    id: zillolie_display
+    addressable_light_id: zillolie_matrix
+    width: 16
+    height: 16
+    update_interval: 16ms
+    lambda: |-
+      id(zilloscope_main).display_lambdacall(it);
+    pixel_mapper: |-
+      if (y % 2 == 0) {
+        return (y * 16) + (15 - x);
+      }
+      return (y * 16) + x;
+
+font:
+  - id: tinyfont
+    file: "fonts/pixelmix.ttf"
+    size: 8
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font6px
+    file: "fonts/6px-Normal.ttf"
+    size: 8
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_8bithud
+    file: "fonts/8-bit-hud.ttf"
+    size: 5
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_monogram
+    file: "fonts/monogram.ttf"
+    size: 5
+    glyphs: '!"%()+,-_.:*=°?~#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'
+  - id: font_clock
+    file: "fonts/PressStart2P-Regular.ttf"
+    size: 8
+    glyphs: '.:0123456789'
+
+animation:
+  - file: "img/zillolie/boot-aliens/boot-aliens-16x16.gif"
+    id: boot_anim
+    type: RGB24
+
+color_line_scroller:
+  - id: notif_colorline_scroller
+  - id: boot_colorline_scroller
+
+text_scroller:
+  - id: notif_text_scroller
+
+zilloscope:
+  id: zilloscope_main
+  display_id: zillolie_display
+  use_splash: true
+  default_mode: effects
+
+  modes:
+    - mode_time: 
+        name: time_paris
+        homeassistant_time_id: homeassistant_time_paris
+        render_lambda: |-
+          it.strftime(1, 0, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%H", id(homeassistant_time_paris).now());
+          it.strftime(1, 8, id(font_8bithud),  Color(0xFFFFFF), TextAlign::LEFT, "%M", id(homeassistant_time_paris).now());
+          it.draw_pixel_at(15,15, ((millis()/1000)%2==0)? Color(0xFFFFFF): Color(0x000000));
+          return false;
+    - mode_paint:
+        name: paint
+    - mode_effects:
+        name: effects
+        default_effect: fire
+        effects:
+          - display_fire:
+              name: fire
+              width: 16
+              height: 16
+
+  #boot animation forever
+  render_boot: |-
+    if(frame%6==0) {
+      id(boot_anim).next_frame();
+    }
+    id(zillolie_display).image(1, 1, id(boot_anim));
+    id(boot_colorline_scroller).draw(it, 0, 15);
+    id(boot_colorline_scroller).scroll();
+    return true; //continue forever until boot finishes
+
+  #splash screen
+  render_splash: |-
+    if(frame==6*16) {
+      return false; //if returning false, it goes to on_ready component side
+    }
+    if(frame%6==0) {
+      id(boot_anim).next_frame();
+    }
+    id(zillolie_display).image(1, 1, id(boot_anim));
+    return true;
+
+  #render notifications (top priority over modes)
+  render_notification: |-
+    //it=display
+    //frame= frame counter
+    //text= notification text
+    //type= notification type
+
+    if(frame==0){
+      id(notif_text_scroller).setup(it,id(font_8bithud),text,1,1,8);
+    }
+
+    if(type==4) {
+      //id(bidule).stop();
+      //Text scroller
+      id(notif_text_scroller).draw(it, id(font_8bithud),Color(0xFFFFFF));
+      if(frame%4==0) {
+        //scroll every 4 frame
+        if(id(notif_text_scroller).scroll()) {
+          id(zilloscope_main).end_notification();
+          return false;
+        }
+      }
+      return true;
+    }
+
+
+    //Multicolor line scroller
+    id(notif_colorline_scroller).draw(it, 0, 23);
+    id(notif_colorline_scroller).scroll();
+
+    //Notification type
+    if(type==1) {
+      it.print(17, 4, id(font_8bithud), Color(0xebd320), TextAlign::CENTER, "!");
+    }
+    else if(type==2) {
+      it.print(17, 4, id(font_8bithud), Color(0xe35100), TextAlign::CENTER, "alert");
+    }
+    else if(type==4) {
+
+    }
+    else {
+      it.print(17, 4, id(font_8bithud), Color(0x61d3e3), TextAlign::CENTER, "info");
+    }
+
+    //Text scroller
+    id(notif_text_scroller).draw(it, id(font_8bithud),Color(0xFFFFFF));
+    if(frame%4==0) {
+      //scroll every 4 frame
+      if(id(notif_text_scroller).scroll()) {
+        id(zilloscope_main).end_notification();
+        return false;
+      }
+    }
+    return true;
+

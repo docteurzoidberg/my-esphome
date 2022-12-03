@@ -1,2 +1,3 @@
 ssid: !secret home_wifi_ap
 password: !secret home_wifi_pass
+fast_connect: true

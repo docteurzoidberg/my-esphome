@@ -1,0 +1,77 @@
+substitutions:
+  device: "linky"
+  name: "Linky Teleinfo"
+
+esphome:
+  name: $device
+  build_path: build/$device
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+  baud_rate: 0
+  level: DEBUG                                  # INFO for less log, put DEBUG to view all the linky's "étiquettes" received  in the logs
+  esp8266_store_log_strings_in_flash: False     # recommanded for ESP8266 https://esphome.io/components/sensor/custom.html
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "lOnWnl90SFZuTBsx6vbUHpAuiD/Rm9OGzyepvslmahw="
+
+ota:
+  password: "389a74ed223ebd2127bff6b4a494e0b9"
+
+
+wifi: !include "common/wifi.yaml"
+
+# Example configuration entry
+uart:
+  id: uart_bus
+  rx_pin: GPIO3
+  #tx_pin: GPIO1
+  baud_rate: 1200
+  parity: EVEN
+  data_bits: 7
+
+teleinfo:
+  id: myteleinfo
+  update_interval: 30s
+  historical_mode: true
+
+binary_sensor:
+  - <<: !include "common/common_binary_sensors.yaml"
+button:
+  - <<: !include "common/common_button.yaml"
+sensor:
+  - <<: !include "common/common_sensors.yaml"
+  - platform: teleinfo
+    tag_name: "HCHC"
+    name: "hchc"
+    unit_of_measurement: "Wh"
+    icon: mdi:flash
+    teleinfo_id: myteleinfo
+  - platform: teleinfo
+    tag_name: "HCHP"
+    name: "hchp"
+    unit_of_measurement: "Wh"
+    icon: mdi:flash
+    teleinfo_id: myteleinfo
+  - platform: teleinfo
+    tag_name: "PAPP"
+    name: "papp"
+    unit_of_measurement: "VA"
+    icon: mdi:flash
+    teleinfo_id: myteleinfo
+  - platform: teleinfo
+    tag_name: "IINST"
+    name: "iinst"
+    unit_of_measurement: "A"
+    icon: mdi:current-ac
+
+text_sensor:
+  - platform: teleinfo
+    tag_name: "OPTARIF"
+    name: "optarif"
+    teleinfo_id: myteleinfo

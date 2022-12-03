@@ -1,2 +1,2 @@
 - platform: restart
-  name: Restart ${name}
+  name: "Restart ${name}"

@@ -217,6 +217,9 @@ void ZilloScope::service_effect_start(std::string name) {
       if(effectindex>0) {
         modeeffectfound=modeeffect;
         effectindexfound = effectindex;
+        if(text_sensor_effect_name_!=nullptr) {
+          text_sensor_effect_name_->publish_state(modeeffect->get_effect_name().c_str());
+        }
         break;
       }
     }
@@ -254,6 +257,9 @@ void ZilloScope::service_effect_back() {
   if(mode->get_type()=="ModeEffects") {
     ModeEffects *modeeffect = static_cast <ModeEffects*>(mode);
     modeeffect->back_effect();
+    if(text_sensor_effect_name_!=nullptr) {
+      text_sensor_effect_name_->publish_state(modeeffect->get_effect_name().c_str());
+    }
   }
 }
 
@@ -262,6 +268,9 @@ void ZilloScope::service_effect_next() {
   if(mode->get_type()=="ModeEffects") {
     ModeEffects *modeeffect = static_cast <ModeEffects*>(mode);
     modeeffect->next_effect();
+    if(text_sensor_effect_name_!=nullptr) {
+      text_sensor_effect_name_->publish_state(modeeffect->get_effect_name().c_str());
+    }
   }
 }
 
@@ -270,6 +279,9 @@ void ZilloScope::service_effect_prev() {
   if(mode->get_type()=="ModeEffects") {
     ModeEffects *modeeffect = static_cast <ModeEffects*>(mode);
     modeeffect->prev_effect();
+    if(text_sensor_effect_name_!=nullptr) {
+      text_sensor_effect_name_->publish_state(modeeffect->get_effect_name().c_str());
+    }
   }
 }
 
@@ -300,15 +312,17 @@ Mode *ZilloScope::get_active_mode_() {
 }
 
 std::string ZilloScope::get_active_effect_name() {
-  auto mode = modes_[active_mode_index_];
-  auto modetype = modes_[active_mode_index_]->get_type();
-  if(modetype=="ModeEffects") {
-    ModeEffects *modeeffects= static_cast <ModeEffects*>(modes_[active_mode_index_]);
-    if(modeeffects!=nullptr) {
-      return modeeffects->get_effect_name();
+  auto mode = modes_[active_mode_index_-1];
+  if(mode!=nullptr) {
+    auto modetype = mode->get_type();
+    if(modetype=="ModeEffects") {
+      ModeEffects *modeeffects= static_cast <ModeEffects*>(mode);
+      if(modeeffects!=nullptr) {
+        return modeeffects->get_effect_name();
+      }
     }
   }
-  return "No active effect";
+  return "";
 }
 
 std::string ZilloScope::get_active_mode_name() {
@@ -340,10 +354,17 @@ void ZilloScope::start_mode_(uint32_t mode_index) {
     ESP_LOGE(TAG, "Error retrieving mode index %d",active_mode_index_-1);
     return;
   }
+
+  auto modetype = mode->get_type();
   ESP_LOGD(TAG, "starting mode %s", mode->get_name().c_str());
   ESP_LOGD(TAG, "before start internal");
   mode->start_internal();
-  text_sensor_mode_name_->publish_state(mode->get_name().c_str());
+  if(text_sensor_mode_name_!=nullptr) {
+    text_sensor_mode_name_->publish_state(mode->get_name().c_str());
+  }
+  if(text_sensor_effect_name_!=nullptr) {
+    text_sensor_effect_name_->publish_state(get_active_effect_name().c_str());
+  }
 }
 
 //events

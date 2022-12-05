@@ -174,12 +174,14 @@ switch:
 
 text_sensor:
   - platform: zilloscope
-    id: current_mode
     valuetype: current_mode_name
     zilloscope_id: zilloscope_main
     name: ${name} Current Display Mode 
-
-
+  - platform: zilloscope
+    valuetype: current_effect_name
+    zilloscope_id: zilloscope_main
+    name: ${name} Current Display Effect 
+    
 sensor:
   - <<: !include "common/common_sensors.yaml"
 

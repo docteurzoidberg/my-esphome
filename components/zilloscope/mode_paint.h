@@ -8,8 +8,6 @@
 namespace esphome {
 namespace zilloscope {
 
-
-
 struct UrlMatch {
   std::string domain;  ///< The domain of the component, for example "sensor"
   std::string id;      ///< The id of the device that's being accessed, for example "living_room_fan"
@@ -17,86 +15,82 @@ struct UrlMatch {
   bool valid;          ///< Whether this match is valid
 };
 
-class ModePaint: public Mode, public Component, public AsyncWebHandler  {
+class ModePaint: public Mode, public Component {
   public:
     const char *TAG = "zilloscope.modepaint";
-    ModePaint(const std::string &name,
-              web_server_base::WebServerBase *base
-              )
-    : Mode(name,"ModePaint") , webserverbase_(base) {}
+    ModePaint(const std::string &name)
+    : Mode(name,"ModePaint") {
+      ESP_LOGD(TAG, "mode paint constructor");
+      //resize buffer from (width * height *4)
+      //todo get width and height from config
+       width = 16;
+       height = 16;
+      //try{
+        buffer_.resize(width*height*4, 0);
+        ESP_LOGD(TAG, "vector size: %d", buffer_.size());
+      //}
+      //catch(std::bad_alloc&) {
+        //ESP_LOGE(TAG, "bad alloc for pain buffer");
+      //}
+    }
 
     void setup() {
-      this->webserverbase_->init();
+     
     }
 
     void loop() {
     }
 
     virtual void draw(display::DisplayBuffer &it) override {
-      //TODO
+      if(is_filling) 
+        return;
+      int w = it.get_width();
+      int h = it.get_height();
+      for(int x=0;x<w;x++) {
+        for(int y=0;y<h;y++) {
+          //pixel index in 32 bit
+          int index = (y*h + x)*4;
+          //ESP_LOGD(TAG, "index: %d", index);
+          Color color32 = Color();
+          color32.r = buffer_[index+0];
+          color32.g = buffer_[index+1];
+          color32.b = buffer_[index+2];
+          color32.w = 0;
+          it.draw_pixel_at(x,y,color32);
+          //it.draw_pixel_at(x,y,Color::random_color());
+        }
+      }
     }
 
-    UrlMatch match_url(const std::string &url, bool only_domain = false) {
-      UrlMatch match;
-      match.valid = false;
-      size_t domain_end = url.find('/', 1);
-      if (domain_end == std::string::npos)
-        return match;
-      match.domain = url.substr(1, domain_end - 1);
-      if (only_domain) {
-        match.valid = true;
-        return match;
-      }
-      if (url.length() == domain_end - 1)
-        return match;
-      size_t id_begin = domain_end + 1;
-      size_t id_end = url.find('/', id_begin);
-      match.valid = true;
-      if (id_end == std::string::npos) {
-        match.id = url.substr(id_begin, url.length() - id_begin);
-        return match;
-      }
-      match.id = url.substr(id_begin, id_end - id_begin);
-      size_t method_begin = id_end + 1;
-      match.method = url.substr(method_begin, url.length() - method_begin);
-      return match;
+    void fill_buffer_start() {
+      ESP_LOGD(TAG, "Start filling buffer");
+      is_filling = true;
+      //clear to be sure
+      //std::fill(buffer_.begin(), buffer_.end(), 0);
+    } 
+    
+    void fill_buffer_end() {
+      ESP_LOGD(TAG, "End filling buffer");
+      is_filling = false;
     }
 
-    bool canHandle(AsyncWebServerRequest *request) {
-      if(request->url() == "/paint")
-        return true;
-
-      //#ifdef WEBSERVER_CSS_INCLUDE
-      //  if (request->url() == "/paint.css")
-      //    return true;
-      //#endif
-
-      //#ifdef WEBSERVER_JS_INCLUDE
-      //  if (request->url() == "/paint.js")
-      //    return true;
-      //#endif
-
-      UrlMatch match = match_url(request->url().c_str(), true);
-      if(!match.valid)
-        return false;
-
-
-      if(request->url() == "/paint/getbuffer")
-        return true;
-      if(request->url() == "/paint/setbuffer")
-        return true;
-      if(request->url() == "/paint/setpixelat")
-        return true;
-      if(request->url() == "/paint/getpixelat")
-        return true;
-
-      return false;
+    void fill_uint8_buffer(size_t from, size_t len, uint8_t *data) {
+      ESP_LOGD(TAG, "Fill buffer, from: %d, len: %d", from, len);
+      if((from+len)>buffer_.size()){
+        ESP_LOGE(TAG, "buffer overflow, cancelling");
+        return;
+      }
+      for(int i=from; i<(from+len); i++) {
+        buffer_[i] = data[i];
+      }
     }
 
   protected:
-    web_server_base::WebServerBase *webserverbase_;
+    bool is_filling = false;
+    std::vector<uint8_t> buffer_;
+    uint8_t width = 0;
+    uint8_t height = 0;
   };
-
 }
 }
 

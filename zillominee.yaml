@@ -32,7 +32,7 @@ external_components:
 wifi: !include "common/wifi.yaml"
 
 logger:
-  level: DEBUG
+  level: VERBOSE
 
 api:
   services:
@@ -124,14 +124,12 @@ button:
 
 
 switch:
-
   - platform: gpio
     name: ${name} psu relay
     pin: GPIO32
     id: relay
     restore_mode: ALWAYS_OFF
     inverted: no
-
   - platform: template
     id: zillominee_control_display
     name: ${name} Control Display
@@ -278,10 +276,14 @@ text_scroller:
   - id: notif_text_scroller
 
 text_sensor:
-  - platform: zilloscope
-    valuetype: current_mode_name
-    name: ${name} Current Mode
-
+    - platform: zilloscope
+      valuetype: current_mode_name
+      zilloscope_id: zilloscope_main
+      name: ${name} Current Display Mode 
+    - platform: zilloscope
+      valuetype: current_effect_name
+      zilloscope_id: zilloscope_main
+      name: ${name} Current Display Effect 
 
 zilloscope:
   id: zilloscope_main

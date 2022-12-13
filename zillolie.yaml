@@ -2,11 +2,14 @@ substitutions:
   device: "zillolie"
   name: "ZilloLie"
 
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
 esphome:
   name: $device
   build_path: build/$device
-  platform: ESP32
-  board: esp32doit-devkit-v1
   on_boot:
   - priority: 1000
     then:
@@ -27,12 +30,12 @@ external_components:
   - source:
       type: local
       path: components
-    components: [ zilloscope, color_line_scroller, text_scroller ]
+    components: [ zilloscope, zillo_web_server, color_line_scroller, text_scroller ]
 
 wifi: !include "common/wifi.yaml"
 
 logger:
-  level: DEBUG
+  level: VERBOSE
 
 api:
   services:
@@ -98,9 +101,8 @@ api:
 
 ota:
 
-web_server:
-  port: 80
-  local: true
+zillo_web_server:
+  zilloscope_id: zilloscope_main
 
 time:
   - platform: homeassistant
@@ -181,9 +183,6 @@ text_sensor:
     valuetype: current_effect_name
     zilloscope_id: zilloscope_main
     name: ${name} Current Display Effect 
-    
-sensor:
-  - <<: !include "common/common_sensors.yaml"
 
 e131:
   method: multicast

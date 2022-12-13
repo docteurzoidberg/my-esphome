@@ -42,7 +42,6 @@ void ZilloScope::setup() {
 }
 
 void ZilloScope::loop() {
-
   //ask all modes if they are 'ready' (let's them get their dependdencies states)
   bool all_modes_ready = true;
   for (uint32_t i=0;i<modes_.size();i++) {  
@@ -325,6 +324,55 @@ std::string ZilloScope::get_active_effect_name() {
   return "";
 }
 
+void ZilloScope::drawBufferAt(size_t index, uint8_t *data, size_t len) {
+  //ESP_LOGD(TAG, "zillo drawbufferat");
+  for (auto *mode : this->modes_) {
+    if(mode!=nullptr) {
+      auto modetype = mode->get_type();
+      if(modetype=="ModePaint") {
+        ModePaint *modepaint= static_cast <ModePaint*>(mode);
+        if(modepaint!=nullptr) {
+          ESP_LOGD(TAG, "calling fillbuffer");
+          modepaint->fill_uint8_buffer(index, len, data);
+        }
+      }
+    }
+  }
+}
+
+void ZilloScope::drawBufferStart() {
+  //ESP_LOGD(TAG, "zillo drawBufferStart");
+  for (auto *mode : this->modes_) {
+    if(mode!=nullptr) {
+      auto modetype = mode->get_type();
+      if(modetype=="ModePaint") {
+        ModePaint *modepaint= static_cast <ModePaint*>(mode);
+        if(modepaint!=nullptr) {
+          ESP_LOGD(TAG, "calling fillbufferstart");
+          modepaint->fill_buffer_start();
+        }
+      }
+    }
+  }
+}
+
+void ZilloScope::drawBufferEnd() {
+  //ESP_LOGD(TAG, "zillo drawBufferStart");
+  for (auto *mode : this->modes_) {
+    if(mode!=nullptr) {
+      auto modetype = mode->get_type();
+      if(modetype=="ModePaint") {
+        ModePaint *modepaint= static_cast <ModePaint*>(mode);
+        if(modepaint!=nullptr) {
+          ESP_LOGD(TAG, "calling fillbufferend");
+          modepaint->fill_buffer_end();
+        }
+      }
+    }
+  }
+}
+
+
 std::string ZilloScope::get_active_mode_name() {
   Mode * active_mode = get_active_mode_();
   if(active_mode != nullptr) {
@@ -414,6 +462,14 @@ std::string ZilloScope::get_notification_text() {
   return _current_notification->get_text();
 }
 
+uint8_t ZilloScope::get_height() {
+  return _display->get_height();
+}
+
+uint8_t ZilloScope::get_width() {
+  return _display->get_width();
+}
+
 void ZilloScope::add_modes(const std::vector<Mode *> modes) {
   this->modes_.reserve(this->modes_.size() + modes.size());
   for (auto *mode : modes) {
@@ -428,10 +484,6 @@ void ZilloScope::set_state(state state) {
 void ZilloScope::set_display(display::DisplayBuffer *it) {
   _display=it;
 }
-
-//void ZilloScope::set_time(time::RealTimeClock *time) {
-//  _time=time;
-//}
 
 void ZilloScope::set_config_default_mode(std::string value) {
   uint32_t mode_index = get_mode_index(value);

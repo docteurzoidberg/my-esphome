@@ -93,16 +93,14 @@ def mode_meteo_to_code(config, mode_id):
 
 @register_mode(
     'mode_paint', ModePaint, "paint", {
-        cv.GenerateID(): cv.declare_id(ModePaint),
-        cv.GenerateID(CONF_WEB_SERVER_BASE_ID): cv.use_id(
-            web_server_base.WebServerBase
-        ),
+        cv.GenerateID(): cv.declare_id(ModePaint)
     }
 )
 def mode_paint_to_code(config, mode_id):
-    paren = yield cg.get_variable(config[CONF_WEB_SERVER_BASE_ID])
+    #paren = yield cg.get_variable(config[CONF_WEB_SERVER_BASE_ID])
     name = yield cg.std_string(config[CONF_NAME])
-    var = cg.new_Pvariable(mode_id, name, paren)
+    #var = cg.new_Pvariable(mode_id, name, paren)
+    var = cg.new_Pvariable(mode_id, name)
     print('this is it')
     #yield cg.register_component(var, config)
     yield var

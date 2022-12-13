@@ -97,6 +97,8 @@ namespace esphome {
       std::string get_active_effect_name();
       std::string get_active_mode_type();
       std::string get_active_mode_name();
+      uint8_t get_width();
+      uint8_t get_height();
       uint32_t get_mode_index(std::string name);
       const std::vector<Mode *> &get_modes() const;
 
@@ -132,6 +134,11 @@ namespace esphome {
       }
 
       void display_lambdacall(display::DisplayBuffer & it);
+
+      void drawBufferAt(size_t index, uint8_t *data, size_t len);
+      void drawBufferStart();
+      void drawBufferEnd();
+
 
     //events
       void on_boot();

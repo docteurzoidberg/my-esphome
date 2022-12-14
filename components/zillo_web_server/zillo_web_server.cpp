@@ -230,17 +230,23 @@ void WebServer::handle_setpixel_request(AsyncWebServerRequest *request, const Ur
     b= atoi(request->getParam("b")->value().c_str());
   }
 
-  //Color color = Color(r,g,b);
+  ESP_LOGD(TAG, "setpixelrequest: x=%d,y=%d r=%d,g=%d,b=%d", x, y, r, g, b);
+
   uint8_t color[4];
   color[0]=r;
   color[1]=g;
   color[2]=b;
   color[3]=0;
-  int index = (x * this->zillo_->get_width() + y)*4;
+
+  if(x>this->zillo_->get_width() || y>this->zillo_->get_height()) {
+    ESP_LOGE(TAG, "setpixelrequest: incorrect coordinates x=%d,y=%d, should not be greater than %d,%d", x,y,this->zillo_->get_width(),this->zillo_->get_height());
+  }
+
+  uint32_t index = (y * this->zillo_->get_width() + x)*4;
+  ESP_LOGD(TAG, "setpixelrequest: index=%d", index);
   this->zillo_->drawBufferStart();
   this->zillo_->drawBufferAt(index, color, 4);
   this->zillo_->drawBufferEnd();
-
   request->send(200, "application/json", "true");
 }
 

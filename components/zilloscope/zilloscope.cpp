@@ -341,6 +341,7 @@ void ZilloScope::drawBufferAt(size_t index, uint8_t *data, size_t len) {
 }
 
 void ZilloScope::drawBufferStart() {
+ 
   //ESP_LOGD(TAG, "zillo drawBufferStart");
   for (auto *mode : this->modes_) {
     if(mode!=nullptr) {
@@ -483,6 +484,7 @@ void ZilloScope::set_state(state state) {
 
 void ZilloScope::set_display(display::DisplayBuffer *it) {
   _display=it;
+  _display->set_auto_clear(false);
 }
 
 void ZilloScope::set_config_default_mode(std::string value) {

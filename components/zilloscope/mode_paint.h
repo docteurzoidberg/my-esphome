@@ -44,8 +44,11 @@ class ModePaint: public Mode, public Component {
     virtual void draw(display::DisplayBuffer &it) override {
       if(is_filling) 
         return;
+      
       int w = it.get_width();
       int h = it.get_height();
+      //Image::Image img = new Image::Image(buffer_, w, h, ImageType::IMAGE_TYPE_TRANSPARENT_BINARY );
+
       for(int x=0;x<w;x++) {
         for(int y=0;y<h;y++) {
           //pixel index in 32 bit
@@ -65,8 +68,6 @@ class ModePaint: public Mode, public Component {
     void fill_buffer_start() {
       ESP_LOGD(TAG, "Start filling buffer");
       is_filling = true;
-      //clear to be sure
-      //std::fill(buffer_.begin(), buffer_.end(), 0);
     } 
     
     void fill_buffer_end() {
@@ -80,8 +81,9 @@ class ModePaint: public Mode, public Component {
         ESP_LOGE(TAG, "buffer overflow, cancelling");
         return;
       }
-      for(int i=from; i<(from+len); i++) {
-        buffer_[i] = data[i];
+      for(int i=0; i<len; i++) {
+        //ESP_LOGV(TAG, "copying %02x to %d", data[i], from + i);
+        buffer_[from + i] = data[i];
       }
     }
 

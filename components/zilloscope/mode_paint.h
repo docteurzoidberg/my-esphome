@@ -25,9 +25,10 @@ class ModePaint: public Mode, public Component {
       //todo get width and height from config
        width = 16;
        height = 16;
+       init_internal_(width*height*4);
       //try{
-        buffer_.resize(width*height*4, 0);
-        ESP_LOGD(TAG, "vector size: %d", buffer_.size());
+        //buffer_.resize(width*height*4, 0);
+        //ESP_LOGD(TAG, "vector size: %d", buffer_.size());
       //}
       //catch(std::bad_alloc&) {
         //ESP_LOGE(TAG, "bad alloc for pain buffer");
@@ -35,10 +36,23 @@ class ModePaint: public Mode, public Component {
     }
 
     void setup() {
-     
     }
 
     void loop() {
+    }
+
+
+    void HOT init_internal_(uint32_t buffer_length) {
+      ExternalRAMAllocator<uint8_t> allocator(ExternalRAMAllocator<uint8_t>::ALLOW_FAILURE);
+      this->buffer_ = allocator.allocate(buffer_length);
+      if (this->buffer_ == nullptr) {
+        ESP_LOGE(TAG, "Could not allocate buffer for display!");
+        return;
+      }
+      for(int i=0;i<buffer_length;i++) {
+        buffer_[i]=0;
+      }
+      buffer_size_=buffer_length;
     }
 
     virtual void draw(display::DisplayBuffer &it) override {
@@ -77,7 +91,7 @@ class ModePaint: public Mode, public Component {
 
     void fill_uint8_buffer(size_t from, size_t len, uint8_t *data) {
       ESP_LOGD(TAG, "Fill buffer, from: %d, len: %d", from, len);
-      if((from+len)>buffer_.size()){
+      if((from+len)>buffer_size_){
         ESP_LOGE(TAG, "buffer overflow, cancelling");
         return;
       }
@@ -89,7 +103,9 @@ class ModePaint: public Mode, public Component {
 
   protected:
     bool is_filling = false;
-    std::vector<uint8_t> buffer_;
+    //std::vector<uint8_t> buffer_;
+    uint8_t *buffer_{nullptr};
+    uint32_t buffer_size_ = 0;
     uint8_t width = 0;
     uint8_t height = 0;
   };

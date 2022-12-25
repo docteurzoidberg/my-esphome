@@ -10,6 +10,8 @@
 #include <string>
 #include <queue>
 
+#define FASTLED_RMT_BUILTIN_DRIVER 1
+
 namespace esphome {
   namespace zilloscope {
 

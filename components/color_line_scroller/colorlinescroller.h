@@ -1,7 +1,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
-#include "esphome/components/display/display_buffer.h"
+#include "esphome/components/display/display.h"
 
 namespace esphome {
 namespace colorlinescroller {
@@ -24,7 +24,7 @@ class ColorLineScroller : public Component {
 
   ColorLineScroller();
   void setup(uint16_t width, uint16_t height, uint16_t pixels_per_color);
-  void draw(display::DisplayBuffer &it,int xpos, int ypos);
+  void draw(display::Display &it,int xpos, int ypos);
   void scroll();
 
   protected:

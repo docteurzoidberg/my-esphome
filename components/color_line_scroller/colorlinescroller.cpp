@@ -24,7 +24,7 @@ void ColorLineScroller::scroll() {
   _indexscroll = (_indexscroll + 1) % _width;
 }
 
-void ColorLineScroller::draw(display::DisplayBuffer & it,int xpos=0, int ypos=0) {
+void ColorLineScroller::draw(display::Display & it,int xpos=0, int ypos=0) {
   for(int x=0;x<_width;x++){
     for(int y=0;y<_height;y++) {
       _bufferindex = (x + _indexscroll + _width) % _width;

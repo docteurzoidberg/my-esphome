@@ -11,7 +11,6 @@ esphome:
   - priority: 1000
     then:
       - lambda: |-
-          fastled_base_fastledlightoutput->get_controller()->setDither(0);
           id(boot_colorline_scroller).setup(35,3,5);
           id(notif_colorline_scroller).setup(35,2,5);
       - switch.turn_on: zillominee_control_display
@@ -32,7 +31,7 @@ external_components:
 wifi: !include "common/wifi.yaml"
 
 logger:
-  level: VERBOSE
+  level: DEBUG
 
 api:
   services:
@@ -71,10 +70,10 @@ api:
     - service: notify
       variables:
         type: int
-        text: string
+        content: string
       then:
         - lambda: |-
-            id(zilloscope_main).service_notify(type,text,-1);
+            id(zilloscope_main).service_notify(type,content,-1);
     - service: start_stream
       then:
         - lambda: |-
@@ -186,11 +185,13 @@ time:
     timezone: Europe/Paris
 
 light:
-  - platform: fastled_clockless
-    chipset: WS2812B
-    pin: GPIO25
-    num_leds: 875
+  - platform: esp32_rmt_led_strip
     rgb_order: GRB
+    chipset: WS2812
+    pin: GPIO25
+    rmt_channel: 0
+    num_leds: 875
+
     max_refresh_rate: 16ms
     id: zillominee_matrix
     name: ${name} Matrix
@@ -244,6 +245,7 @@ font:
     file: "fonts/PressStart2P-Regular.ttf"
     size: 8
     glyphs: '.:0123456789'
+
 
 animation:
   - file: "img/zillominee/splash1.gif"
@@ -306,7 +308,7 @@ zilloscope:
         render_lambda: |-
           it.printf(32, 0, id(font_8bithud), Color(0x61d3e3), TextAlign::RIGHT, "%.0f ", (id(esphome_meteo_current_temp).state + 0.5));
           auto icon = (uint8_t)id(esphome_meteo_icon).state;
-          Animation* anim = nullptr;
+          esphome::animation::Animation* anim = nullptr;
           if(icon==2) {
             anim=id(meteo_rain);
           } else if(icon==5) {
@@ -411,11 +413,11 @@ zilloscope:
   render_notification: |-
     //it=display
     //frame= frame counter
-    //text= notification text
+    //content= notification text
     //type= notification type
 
     if(frame==0){
-      id(notif_text_scroller).setup(it,id(font_8bithud),text,1,1,8);
+      id(notif_text_scroller).setup(it,id(font_8bithud),content,1,1,8);
     }
 
     if(type==4) {

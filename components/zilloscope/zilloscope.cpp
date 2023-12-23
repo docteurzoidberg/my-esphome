@@ -100,7 +100,7 @@ void ZilloScope::end_notification() {
 
 //display
 
-void ZilloScope::display_lambdacall(display::DisplayBuffer & it) {
+void ZilloScope::display_lambdacall(display::Display & it) {
 
   if(_state== state::booting) {
     if(render_boot_f_(it,_frame_counter_boot))

@@ -22,6 +22,8 @@ static ht16k33_alpha::HT16K33AlphaDisplay *_display=NULL;
 static homeassistant::HomeassistantTextSensor *_alarmstatus=NULL;
 static text_sensor::TextSensor *_keypadtext=NULL;
 
+static std::string current_state = "";
+
 // component
 void AlarmKeypad::setup() {
   //fastled_base_fastledlightoutput->get_controller()->setDither(0);
@@ -39,6 +41,8 @@ void AlarmKeypad::loop() {
       else {
         ESP_LOGD(TAG, "waiting alarm state");
       }
+      current_state = _alarmstatus->get_state();
+      ESP_LOGD(TAG, "state: %s", current_state.c_str());
     }
   }
   //handle typing timeout

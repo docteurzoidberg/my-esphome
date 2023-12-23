@@ -1,7 +1,8 @@
 #pragma once
 
 #include "esphome/core/component.h"
-#include "esphome/components/display/display_buffer.h"
+#include "esphome/components/display/display.h"
+#include "esphome/components/font/font.h"
 
 namespace esphome {
 namespace textscroller {
@@ -10,8 +11,8 @@ class TextScroller : public Component {
  public:
 
   TextScroller();
-  void setup(display::DisplayBuffer & it, display::Font * font, std::string text, int times, int xoffset, int ypos);
-  void draw(display::DisplayBuffer & it, display::Font * font, Color color);
+  void setup(display::Display & it, font::Font * font, std::string text, int times, int xoffset, int ypos);
+  void draw(display::Display & it, font::Font * font, Color color);
   bool scroll();
 
   protected:

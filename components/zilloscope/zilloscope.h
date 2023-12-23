@@ -15,8 +15,8 @@
 namespace esphome {
   namespace zilloscope {
 
-    using display_writer_t = std::function<bool(display::DisplayBuffer &, uint32_t)>;
-    using notification_display_writer_t = std::function<bool(display::DisplayBuffer &, uint32_t, std::string, uint32_t)>;
+    using display_writer_t = std::function<bool(display::Display &, uint32_t)>;
+    using notification_display_writer_t = std::function<bool(display::Display &, uint32_t, std::string, uint32_t)>;
 
     //states of the zilloscope
     enum state
@@ -135,7 +135,7 @@ namespace esphome {
         if(valuetype=="current_effect_name") set_text_sensor_effect_name(sensor);
       }
 
-      void display_lambdacall(display::DisplayBuffer & it);
+      void display_lambdacall(display::Display & it);
 
       void drawBufferAt(size_t index, uint8_t *data, size_t len);
       void drawBufferStart();

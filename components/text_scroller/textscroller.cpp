@@ -6,7 +6,7 @@ namespace textscroller {
 TextScroller::TextScroller() {
 }
 
-void TextScroller::setup(display::DisplayBuffer & it, display::Font * font, std::string text, int times, int xoffset=1, int ypos=0) {
+void TextScroller::setup(display::Display & it, font::Font * font, std::string text, int times, int xoffset=1, int ypos=0) {
   _times=times;
   _text=text;
   _screen_width=it.get_width();
@@ -28,7 +28,7 @@ bool TextScroller::scroll() {
   return false;
 }
 
-void TextScroller::draw(display::DisplayBuffer & it, display::Font * font, Color color) {
+void TextScroller::draw(display::Display & it, font::Font * font, Color color) {
   it.print(_indexscroll,_ypos,font,color,_text.c_str());
 }
 

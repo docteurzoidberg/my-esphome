@@ -2,6 +2,7 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/display/display_buffer.h"
+#include "esphome/components/time/real_time_clock.h"
 #include "zilloscope_mode.h"
 
 namespace esphome {

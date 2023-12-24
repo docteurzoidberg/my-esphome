@@ -27,6 +27,8 @@ external_components:
       type: local
       path: components
     components: [ zilloscope, color_line_scroller, text_scroller ]
+  - source: github://pr#6009
+    components: [ display ]
 
 wifi: !include "common/wifi.yaml"
 

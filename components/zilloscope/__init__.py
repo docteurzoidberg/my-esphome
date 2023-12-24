@@ -38,7 +38,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(ZilloScope),
 
     #references
-    cv.Required(CONF_DISPLAY_ID): cv.use_id(display.DisplayBuffer),
+    cv.Required(CONF_DISPLAY_ID): cv.use_id(display.Display),
     #cv.Required(CONF_TIME_ID): cv.use_id(time_.RealTimeClock),
 
     #config options

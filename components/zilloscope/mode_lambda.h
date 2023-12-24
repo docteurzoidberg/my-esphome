@@ -10,7 +10,7 @@ namespace zilloscope {
     public:
       const char *TAG = "zilloscope.modelambda";
       ModeLambda(const std::string &name,
-                          const std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> &f,
+                          const std::function<bool(display::Display &, uint32_t frame, bool initial_run)> &f,
                           uint32_t update_interval)
           : Mode(name,"ModeLambda",f,update_interval) {}
   };

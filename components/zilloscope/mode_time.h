@@ -12,7 +12,7 @@ namespace zilloscope {
       const char *TAG = "zilloscope.modetime";
       
       ModeTime(const std::string &name,
-                          const std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> &f, 
+                          const std::function<bool(display::Display &, uint32_t frame, bool initial_run)> &f, 
                           time::RealTimeClock * time,
                           uint32_t update_interval)
           : Mode(name,"ModeTime",f,update_interval) {

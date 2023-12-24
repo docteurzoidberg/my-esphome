@@ -9,7 +9,7 @@ namespace zilloscope {
   class ModeMeteo: public Mode  {
     public:
       const char *TAG = "zilloscope.modemeteo";
-      ModeMeteo(const std::string &name, const std::function<bool(display::DisplayBuffer &, uint32_t frame, bool initial_run)> &f,
+      ModeMeteo(const std::string &name, const std::function<bool(display::Display &, uint32_t frame, bool initial_run)> &f,
                           uint32_t update_interval)
           : Mode(name,"ModeMeteo",f,update_interval) {}
 

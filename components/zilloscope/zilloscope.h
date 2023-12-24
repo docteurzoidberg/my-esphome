@@ -105,7 +105,7 @@ namespace esphome {
       const std::vector<Mode *> &get_modes() const;
 
       void set_state(state state);
-      void set_display(display::DisplayBuffer * it);
+      void set_display(display::Display * it);
       void set_config_use_splash(bool value);
       void set_config_default_mode(std::string value);
 

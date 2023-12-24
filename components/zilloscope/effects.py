@@ -2,7 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL, CONF_SPEED, CONF_WIDTH, CONF_HEIGHT
 from esphome.util import Registry
-from .types import DisplayBufferRef, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect, DisplaySnowEffect, DisplayMatrixEffect, DisplayTiledPuzzleEffect
+from .types import Display, DisplayLambdaEffect, DisplayFireEffect, DisplayBubblesEffect, DisplaySnowEffect, DisplayMatrixEffect, DisplayTiledPuzzleEffect
 
 CONF_DISPLAY_LAMBDA = 'display_lambda'
 CONF_DISPLAY_FIRE = 'fire'
@@ -41,7 +41,7 @@ def register_display_effect(name, effect_type, default_name, schema, *extra_vali
     }
 )
 def display_lambda_effect_to_code(config, effect_id):
-    args = [(DisplayBufferRef, 'it'), (int, 'frame'), (bool, 'initial_run')]
+    args = [(Display, 'it'), (int, 'frame'), (bool, 'initial_run')]
     lambda_ = yield cg.process_lambda(config[CONF_LAMBDA], args, return_type=cg.void)
     var = cg.new_Pvariable(effect_id, config[CONF_NAME], lambda_,
                            config[CONF_UPDATE_INTERVAL])

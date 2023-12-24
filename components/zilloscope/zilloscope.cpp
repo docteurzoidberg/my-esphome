@@ -21,7 +21,7 @@ static bool _ready=false;
 static bool _config_use_splash = false;
 
 //references
-static display::DisplayBuffer *_display=NULL;
+static display::Display *_display=NULL;
 //static time::RealTimeClock *_time=NULL;
 
 //display frame counters
@@ -387,6 +387,7 @@ std::string ZilloScope::get_active_mode_type() {
   if(active_mode != nullptr) {
     return active_mode->get_type();
   }
+  return "";
 }
 
 
@@ -482,7 +483,7 @@ void ZilloScope::set_state(state state) {
   _state=state;
 }
 
-void ZilloScope::set_display(display::DisplayBuffer *it) {
+void ZilloScope::set_display(display::Display *it) {
   _display=it;
   _display->set_auto_clear(false);
 }

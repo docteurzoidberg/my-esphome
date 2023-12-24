@@ -55,7 +55,7 @@ class ModePaint: public Mode, public Component {
       buffer_size_=buffer_length;
     }
 
-    virtual void draw(display::DisplayBuffer &it) override {
+    virtual void draw(display::Display &it) override {
       if(is_filling) 
         return;
       

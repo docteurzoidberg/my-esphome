@@ -21,29 +21,29 @@ namespace zilloscope {
       /// Called when this effect is about to be removed
       virtual void stop() {}
       /// Apply this effect. Use the provided state for starting transitions, ...
-      virtual void apply(display::DisplayBuffer &it) = 0;
+      virtual void apply(display::Display &it) = 0;
       /// Internal method called by the LightState when this light effect is registered in it.
       virtual void init() {}
-      void init_internal(display::DisplayBuffer *display) {
+      void init_internal(display::Display *display) {
         this->display_ = display;
         this->init();
       }
     protected:
-      display::DisplayBuffer *get_display_() const { return (display::DisplayBuffer *) this->display_; }
-      display::DisplayBuffer *display_{nullptr};
+      display::Display *get_display_() const { return (display::Display *) this->display_; }
+      display::Display *display_{nullptr};
       std::string name_;
   };
 
   class DisplayLambdaEffect : public DisplayEffect {
     public:
       DisplayLambdaEffect(const std::string &name,
-                          const std::function<void(display::DisplayBuffer &, uint32_t frame, bool initial_run)> &f,
+                          const std::function<void(display::Display &, uint32_t frame, bool initial_run)> &f,
                           uint32_t update_interval)
           : DisplayEffect(name), f_(f), update_interval_(update_interval) {}
 
       void start() override { this->initial_run_ = true; }
       void stop() override {}
-      void apply(display::DisplayBuffer &it) override {
+      void apply(display::Display &it) override {
         const uint32_t now = esphome::millis();
         if (now - this->last_run_ >= this->update_interval_) {
           this->last_run_ = now;
@@ -53,7 +53,7 @@ namespace zilloscope {
         }
       }
     protected:
-      std::function<void(display::DisplayBuffer &, uint32_t frame, bool initial_run)> f_;
+      std::function<void(display::Display &, uint32_t frame, bool initial_run)> f_;
       uint32_t update_interval_;
       uint32_t frame_counter_{0};
       uint32_t last_run_{0};
@@ -152,7 +152,7 @@ namespace zilloscope {
       }
 
       //each frame
-      void apply(display::DisplayBuffer &it) override {
+      void apply(display::Display &it) override {
         unsigned long timer = millis();
         int begin_time = timer > starting_speed ? 1000 : (int) (timer * 1000 / starting_speed);
 
@@ -188,7 +188,7 @@ namespace zilloscope {
     public:
       explicit DisplayRainbowEffect(const std::string &name) : DisplayEffect(name) {}
 
-      void apply(display::DisplayBuffer &it) override {
+      void apply(display::Display &it) override {
         //TODO
       }
       void set_speed(uint32_t speed) { this->speed_ = speed; }
@@ -287,7 +287,7 @@ namespace zilloscope {
           return n | (n >> 8) | (n >> 16);
         }
 
-      void apply(display::DisplayBuffer &it) override {
+      void apply(display::Display &it) override {
         unsigned long timer = esphome::millis();
         for(int x = 0 ; x < width_ ; x ++) {
           for(int y = 0 ; y < height_ ; y ++) {
@@ -433,7 +433,7 @@ namespace zilloscope {
         return n | (n >> 8) | (n >> 16);
       }
 
-      void apply(display::DisplayBuffer &it) override {
+      void apply(display::Display &it) override {
 
         unsigned long timer = esphome::millis();
 
@@ -578,7 +578,7 @@ namespace zilloscope {
       return n;
     }
 
-  void apply(display::DisplayBuffer &it) override {
+  void apply(display::Display &it) override {
     unsigned long timer = millis();
     for(int x = 0 ; x < width_ ; x ++) {
       for(int y = 0 ; y < height_ ; y ++) {
@@ -731,7 +731,7 @@ namespace zilloscope {
         border_color= (border_red << 16) | (border_green << 8) | border_blue;
       }
 
-      void apply(display::DisplayBuffer &it) override {
+      void apply(display::Display &it) override {
         unsigned long timer = millis();
 
         //select new tile to move

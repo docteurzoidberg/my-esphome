@@ -70,7 +70,7 @@ namespace zilloscope {
         start_effect_(active_effect_index_);
       }
 
-      virtual void draw(display::DisplayBuffer &it) override {
+      virtual void draw(display::Display &it) override {
         //ESP_LOGD("TOTO", "ModeEffects %s's Draw", get_name().c_str());
         DisplayEffect *effect = get_active_effect_();
         if(effect==nullptr)

@@ -28,6 +28,7 @@ external_components:
       path: components
     components: [ zilloscope, color_line_scroller, text_scroller ]
   - source: github://pr#6009
+    refresh: 0s
     components: [ display ]
 
 wifi: !include "common/wifi.yaml"
@@ -134,6 +135,7 @@ switch:
   - platform: template
     id: zillominee_control_display
     name: ${name} Control Display
+    restore_mode : ALWAYS_ON
     lambda: |-
       return id(zillominee_display).get_enabled();
     turn_on_action:
@@ -381,7 +383,7 @@ zilloscope:
     #- mode_paint:
     # //TODO
 
-  #boot animation forever
+  #boot animation repeated forever (until ready)
   render_boot: |-
     //it=display
     //frame= frame counter
@@ -393,7 +395,7 @@ zilloscope:
     id(boot_colorline_scroller).scroll();
     return true; //continue
 
-  #splash screen after boot
+  #splash screen after boot (if enabled)
   render_splash: |-
     //it=display
     //frame= frame counter

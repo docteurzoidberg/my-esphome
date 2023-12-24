@@ -6,6 +6,7 @@ display_ns = cg.esphome_ns.namespace('display')
 zilloscope_ns = cg.esphome_ns.namespace('zilloscope')
 
 Display = display_ns.class_('Display', cg.Component)
+DisplayRef = Display.operator('ref')
 
 DisplayLambdaEffect = zilloscope_ns.class_('DisplayLambdaEffect')
 DisplayFireEffect =  zilloscope_ns.class_('DisplayFireEffect')

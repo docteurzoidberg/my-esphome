@@ -218,5 +218,5 @@ namespace esphome {
         parent->add_on_ready_callback([this]() { this->trigger(); });
       }
     };
-  }  // namespace alarm_keypad_component
+  }  // namespace zilloscope
 }  // namespace esphome

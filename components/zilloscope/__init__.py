@@ -82,8 +82,8 @@ def to_code(config):
     cg.add(var.add_modes(modes))
     cg.add(var.set_config_default_mode(default_mode))
 
-    render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.Display, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
-    render_notification_template_ = yield cg.process_lambda(config[CONF_RENDER_NOTIFICATION],[(display.Display, 'it'),(cg.uint32,'frame'),(cg.std_string,'text'),(cg.uint32, 'type')],return_type=cg.bool_)
+    render_boot_template_ = yield cg.process_lambda(config[CONF_RENDER_BOOT],[(display.DisplayRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+    render_notification_template_ = yield cg.process_lambda(config[CONF_RENDER_NOTIFICATION],[(display.DisplayRef, 'it'),(cg.uint32,'frame'),(cg.std_string,'content'),(cg.uint32, 'type')],return_type=cg.bool_)
     #render_ota_template_ = yield cg.process_lambda(config[CONF_RENDER_OTA],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
     #render_shutdown_template_ = yield cg.process_lambda(config[CONF_RENDER_SHUTDOWN],[(display.DisplayBufferRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
 
@@ -96,7 +96,7 @@ def to_code(config):
         wrapped_usesplash = yield cg.bool_(config[CONF_USE_SPLASH])
         cg.add(var.set_config_use_splash(wrapped_usesplash))
         #TODO: how to raise error if use splash is set to true but no lambda specified?
-        render_splash_template_ = yield cg.process_lambda(config[CONF_RENDER_SPLASH],[(display.Display, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
+        render_splash_template_ = yield cg.process_lambda(config[CONF_RENDER_SPLASH],[(display.DisplayRef, 'it'),(cg.uint32,'frame')],return_type=cg.bool_)
         cg.add(var.set_render_splash(render_splash_template_))
 
     for conf in config.get(CONF_ON_BOOT, []):

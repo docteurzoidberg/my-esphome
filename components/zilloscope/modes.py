@@ -5,7 +5,7 @@ from esphome.util import Registry
 from esphome.components import web_server_base
 from esphome.components import time as time_
 from esphome.components.web_server_base import CONF_WEB_SERVER_BASE_ID
-from .types import Display, ModeTime, ModeEffects, ModePaint, ModeMeteo, ModeLambda
+from .types import DisplayRef, ModeTime, ModeEffects, ModePaint, ModeMeteo, ModeLambda
 from .effects import validate_effects, ADDRESSABLE_DISPLAY_EFFECTS, ADDRESSABLE_DISPLAY_EFFECTS_REGISTRY
 
 
@@ -37,7 +37,7 @@ def register_mode(name, mode_type, default_name, schema, *extra_validators):
     }
 )
 def mode_time_to_code(config, mode_id):
-    args = [(Display, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
+    args = [(DisplayRef, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
     time_id_ = yield cg.get_variable(config[CONF_TIME_ID])
     render_lambda_ = yield cg.process_lambda(config[CONF_RENDER_LAMBDA], args, return_type=cg.bool_)
     update_interval_ = yield cg.uint32(config[CONF_UPDATE_INTERVAL])
@@ -52,7 +52,7 @@ def mode_time_to_code(config, mode_id):
     }
 )
 def mode_lambda_to_code(config, mode_id):
-    args = [(Display, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
+    args = [(DisplayRef, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
     render_lambda_ = yield cg.process_lambda(config[CONF_RENDER_LAMBDA], args, return_type=cg.bool_)
     update_interval_ = yield cg.uint32(config[CONF_UPDATE_INTERVAL])
     name = yield cg.std_string(config[CONF_NAME])
@@ -83,7 +83,7 @@ def mode_effects_to_code(config, mode_id):
     }
 )
 def mode_meteo_to_code(config, mode_id):
-    args = [(Display, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
+    args = [(DisplayRef, 'it'), (cg.uint32, 'frame'), (bool, 'initial_run')]
     render_lambda_ = yield cg.process_lambda(config[CONF_RENDER_LAMBDA], args, return_type=cg.bool_)
     update_interval_ = yield cg.uint32(config[CONF_UPDATE_INTERVAL])
     name = yield cg.std_string(config[CONF_NAME])
